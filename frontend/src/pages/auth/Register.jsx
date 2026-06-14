@@ -45,14 +45,11 @@ export default function Register() {
     try {
       // Connect to Laravel backend register API
       const response = await axios.post('http://localhost:8000/api/register', {
-        name: namaLengkap,
+        nama: namaLengkap,
+        nama_pengguna: username,
         email: email,
-        no_telepon: noTelepon,
-        jabatan: jabatan,
-        unit_kerja: unitKerja,
-        username: username,
         password: password,
-        password_confirmation: konfirmasiPassword
+        area: unitKerja
       });
 
       setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');

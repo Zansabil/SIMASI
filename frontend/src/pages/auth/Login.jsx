@@ -27,6 +27,23 @@ export default function Login() {
 
   // Eye and logo assets are imported from assets folder
 
+  // Helper to map numeric role ID from backend to string role name for frontend
+  const mapRoleIdToRoleName = (idPeran) => {
+    switch (Number(idPeran)) {
+      case 1:
+        return 'super-admin';
+      case 2:
+        return 'kepala-yayasan';
+      case 3:
+        return 'admin';
+      case 4:
+        return 'petugas-perbaikan';
+      case 5:
+      default:
+        return 'guru';
+    }
+  };
+
   // Handle Login submission
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -41,54 +58,41 @@ export default function Login() {
         password: password,
       });
 
-      setSuccessMsg('Login berhasil! Mengalihkan...');
-      
-      // Store token and user data in localStorage
-      localStorage.setItem('auth_token', response.data.access_token);
-      localStorage.setItem('user_role', response.data.user.role);
-      localStorage.setItem('user_name', response.data.user.name);
-      
-      // Redirect based on role immediately
-      const role = response.data.user.role;
-      if (role === 'super-admin') navigate('/super-admin/dashboard');
-      else if (role === 'admin') navigate('/admin/dashboard');
-      else if (role === 'guru') navigate('/guru/dashboard');
-      else if (role === 'petugas-perbaikan') navigate('/petugas-perbaikan/dashboard');
-      else if (role === 'kepala-yayasan') navigate('/kepala-yayasan/dashboard');
-      else navigate('/admin/dashboard');
+      if (response.data && response.data.success) {
+        setSuccessMsg('Login berhasil! Mengalihkan...');
+        
+        const token = response.data.access_token;
+        const user = response.data.data_user;
+        const role = mapRoleIdToRoleName(user.id_peran);
+        const name = user.nama;
+
+        // Store token and user data in localStorage
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_role', role);
+        localStorage.setItem('user_name', name);
+        
+        // Redirect based on role immediately
+        if (role === 'super-admin') navigate('/super-admin/dashboard');
+        else if (role === 'admin') navigate('/admin/dashboard');
+        else if (role === 'guru') navigate('/guru/dashboard');
+        else if (role === 'petugas-perbaikan') navigate('/petugas-perbaikan/dashboard');
+        else if (role === 'kepala-yayasan') navigate('/kepala-yayasan/dashboard');
+        else navigate('/admin/dashboard');
+      } else {
+        setErrorMsg(response.data.message || 'Login gagal.');
+      }
 
     } catch (err) {
-      // Fallback for Demo Mode if backend API is not running
-      console.warn('API error, falling back to mock login:', err);
-      
-      let fallbackRole = 'admin';
-      let fallbackName = 'Admin Aset';
-      let targetPath = '/admin/dashboard';
-      
-      const inputVal = (email || '').toLowerCase();
-      if (inputVal.includes('guru')) {
-        fallbackRole = 'guru';
-        fallbackName = 'Guru Demo';
-        targetPath = '/guru/dashboard';
-      } else if (inputVal.includes('petugas')) {
-        fallbackRole = 'petugas-perbaikan';
-        fallbackName = 'Petugas Perbaikan Demo';
-        targetPath = '/petugas-perbaikan/dashboard';
-      } else if (inputVal.includes('yayasan') || inputVal.includes('kepala')) {
-        fallbackRole = 'kepala-yayasan';
-        fallbackName = 'Kepala Yayasan Demo';
-        targetPath = '/kepala-yayasan/dashboard';
-      } else if (inputVal.includes('super')) {
-        fallbackRole = 'super-admin';
-        fallbackName = 'Super Admin Demo';
-        targetPath = '/super-admin/dashboard';
+      console.error('API login error:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        setErrorMsg(err.response.data.message);
+      } else if (err.response && err.response.data && err.response.data.errors) {
+        const errors = err.response.data.errors;
+        const firstErrorKey = Object.keys(errors)[0];
+        setErrorMsg(errors[firstErrorKey][0]);
+      } else {
+        setErrorMsg('Gagal terhubung ke server backend. Pastikan Laravel sudah berjalan.');
       }
-      
-      localStorage.setItem('auth_token', 'mock_token');
-      localStorage.setItem('user_role', fallbackRole);
-      localStorage.setItem('user_name', email || fallbackName);
-      
-      navigate(targetPath);
     } finally {
       setIsLoading(false);
     }
@@ -174,12 +178,12 @@ export default function Login() {
           /* Condition State: Default Login Mode */
           <form className="login-form" onSubmit={handleLoginSubmit}>
             <div className="form-group">
-              <label className="form-label" htmlFor="email">Username</label>
+              <label className="form-label" htmlFor="email">Email</label>
               <input
                 id="email"
-                type="text"
+                type="email"
                 className="form-input"
-                placeholder="Masukkan username Anda"
+                placeholder="Masukkan email Anda"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
