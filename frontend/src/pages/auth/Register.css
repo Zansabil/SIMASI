@@ -1,0 +1,293 @@
+/* Reset & Typography */
+.register-container * {
+  box-sizing: border-box;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Page Container (White Background) */
+.register-container {
+  align-items: center;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 20px;
+  width: 100%;
+}
+
+/* Logo Image above Card */
+.register-logo-img {
+  width: 144px;
+  height: 130px;
+  object-fit: contain;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+/* Registration Card (980x940) */
+.register-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.02);
+  width: 980px;
+  height: 840px;
+  max-width: 980px;
+  padding: 32px 48px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+/* Card Header with Divider */
+.register-card-header {
+  align-items: center;
+  border-bottom: 1.5px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.register-card-title {
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Close/X Button */
+.close-button {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.close-button:hover {
+  color: #64748b;
+}
+
+/* Form Layout */
+.register-form {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
+}
+
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Form Sections */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-heading {
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 700;
+  border-left: 3px solid #2563eb;
+  padding-left: 8px;
+  text-align: left;
+}
+
+/* Grid for Side-by-Side inputs */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.form-label {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.required-asterisk {
+  color: #ef4444;
+}
+
+/* Inputs & Select Dropdowns */
+.form-input,
+.form-select {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-size: 13px;
+  outline: none;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Custom styling for select to match input */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  padding-right: 40px;
+}
+
+/* Small note text */
+.input-note {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+  text-align: left;
+}
+
+/* Terms and Conditions checkbox */
+.terms-checkbox {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  gap: 8px;
+  margin-top: 4px;
+  user-select: none;
+}
+
+.terms-checkbox input {
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+  accent-color: #2563eb;
+}
+
+.terms-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+/* Form Footer Actions */
+.form-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: auto;
+  /* Push footer to the bottom of the 940px card on desktop */
+  padding-top: 24px;
+  /* Ensure spacing if card height becomes auto */
+  width: 100%;
+}
+
+.btn-primary {
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.redirect-prompt {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.redirect-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.redirect-link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .register-card {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    /* Allow auto height to prevent content cutoff */
+    padding: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .register-container {
+    padding: 20px 10px;
+  }
+
+  .register-card {
+    border-radius: 12px;
+    padding: 24px 16px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .register-card-header {
+    margin-bottom: 16px;
+  }
+
+  .form-body {
+    gap: 20px;
+  }
+
+  .register-logo-img {
+    margin-bottom: 16px;
+  }
+}

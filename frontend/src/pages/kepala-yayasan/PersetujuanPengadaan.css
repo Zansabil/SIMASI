@@ -1,0 +1,391 @@
+/* Styles for Persetujuan Pengadaan Aset (Kepala Yayasan) */
+
+.approval-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.approval-page-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.approval-page-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Card Styling */
+.procurement-approval-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.02), 0 2px 4px -1px rgba(15, 23, 42, 0.02);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.procurement-approval-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.05), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  border-color: #cbd5e1;
+}
+
+/* Clickable Header */
+.card-header-clickable {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.card-header-clickable:hover {
+  background-color: #f8fafc;
+}
+
+/* Meta Data Left Side */
+.card-meta-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.card-letter-number {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.card-submitter-info {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0;
+}
+
+.card-date-badge {
+  display: inline-block;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+/* Right Side: Status Counters & Dropdown Chevron */
+.card-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Match Image 2 structure exactly */
+.card-counters-wrapper {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.counter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.counter-number {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.counter-number.waiting {
+  color: #d97706; /* Yellow/Orange */
+}
+
+.counter-number.approved {
+  color: #16a34a; /* Green */
+}
+
+.counter-number.rejected {
+  color: #dc2626; /* Red */
+}
+
+.counter-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #475569;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.chevron-icon-wrapper {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.chevron-icon-wrapper.expanded {
+  transform: rotate(180deg);
+}
+
+/* Expandable details area */
+.card-details-expandable {
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+.expandable-inner-padding {
+  padding: 24px;
+}
+
+/* Items Table inside Card (Match Image 1) */
+.approval-table-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.approval-table-el {
+  border-collapse: collapse;
+  font-family: 'Inter', system-ui, sans-serif;
+  text-align: left;
+  width: 100%;
+  min-width: 800px;
+}
+
+.approval-table-el th {
+  background-color: #f8fafc;
+  border-bottom: 1.5px solid #cbd5e1;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 14px 16px;
+  white-space: nowrap;
+}
+
+.approval-table-el td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 16px;
+  vertical-align: middle;
+}
+
+.approval-table-el tr:last-child td {
+  border-bottom: none;
+}
+
+/* Setuju and Tolak Action Buttons (Match Image 1 layout) */
+.action-decision-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-approve-item {
+  align-items: center;
+  background-color: #10b981; /* Premium Green */
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 7px 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-approve-item:hover {
+  background-color: #059669;
+}
+
+.btn-reject-item {
+  align-items: center;
+  background-color: #ef4444; /* Premium Red */
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  gap: 6px;
+  padding: 7px 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-reject-item:hover {
+  background-color: #dc2626;
+}
+
+/* Decision Modal for Notes */
+.decision-modal-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  overflow: hidden;
+  padding: 28px;
+  box-sizing: border-box;
+  animation: modalScaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+.decision-modal-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.decision-modal-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.decision-textarea {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1e293b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  margin-bottom: 20px;
+}
+
+.decision-textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.decision-btn-submit {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.decision-btn-submit:hover {
+  background-color: #1d4ed8;
+}
+
+.decision-btn-submit.approve {
+  background-color: #10b981;
+}
+
+.decision-btn-submit.approve:hover {
+  background-color: #059669;
+}
+
+.decision-btn-submit.reject {
+  background-color: #ef4444;
+}
+
+.decision-btn-submit.reject:hover {
+  background-color: #dc2626;
+}
+
+/* Card closing footer info */
+.card-footer-notes {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #475569;
+  text-align: left;
+  border-left: 3px solid #cbd5e1;
+}
+
+.item-notes-text {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+/* View Full Letter Button */
+.btn-view-full-letter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-view-full-letter:hover {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+  color: #d97706; /* gold/orange hover color */
+}
+

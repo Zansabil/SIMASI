@@ -1,0 +1,3 @@
+// Placeholder for assetService
+export {}
+

@@ -1,0 +1,562 @@
+/* ============================================================
+   DASHBOARD SHARED STYLES
+   File ini adalah SATU-SATUNYA sumber CSS untuk semua halaman
+   dashboard dan komponen reusable dashboard.
+
+   Di-import oleh: DashboardLayout.jsx
+   Dipakai oleh:
+     - DashboardLayout  (sidebar, navbar, main wrapper)
+     - DashboardHeader  (.content-header, .welcome-title, .welcome-subtitle)
+     - DashboardStatsGrid (.statistics-grid)
+     - StatCard         (.stat-card, .stat-card-*, .stat-total, dsb)
+     - ActivityList     (.activities-section, .activity-row, .status-badge, dsb)
+   ============================================================ */
+
+/* ── Reset & Base ────────────────────────────────────────── */
+.dashboard-layout,
+.dashboard-layout * {
+  box-sizing: border-box;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+.dashboard-layout h1,
+.dashboard-layout h2,
+.dashboard-layout h3,
+.dashboard-layout h4,
+.dashboard-layout h5,
+.dashboard-layout h6,
+.dashboard-layout p,
+.dashboard-layout ul,
+.dashboard-layout ol,
+.dashboard-layout li,
+.dashboard-layout figure,
+.dashboard-layout blockquote,
+.dashboard-layout dl,
+.dashboard-layout dd {
+  margin: 0;
+  padding: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Layout Shell ────────────────────────────────────────── */
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  width: 100%;
+  position: relative;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+.sidebar {
+  background-color: #ffffff;
+  border-right: 1.5px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 260px;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo-container {
+  align-items: center;
+  border-bottom: 1.5px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+  height: 70px;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.sidebar-logo {
+  height: auto;
+  max-width: 100%;
+  max-height: 38px;
+  object-fit: contain;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+}
+
+/* Nav Link Items */
+.nav-link-item {
+  align-items: center;
+  border-radius: 8px;
+  color: #475569;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.nav-link-item svg {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Active State (Blue filled) */
+.nav-link-item.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Hover State */
+.nav-link-item:hover:not(.active) {
+  background-color: #f1f5f9;
+  color: #2563eb;
+}
+
+/* Logout Button */
+.logout-container {
+  padding: 16px;
+  border-top: 1.5px solid #f1f5f9;
+}
+
+.logout-link {
+  align-items: center;
+  border-radius: 8px;
+  color: #dc2626;
+  display: flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+.logout-link:hover {
+  background-color: #fef2f2;
+}
+
+/* ── Main Content Area ───────────────────────────────────── */
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-left: 260px;
+  min-height: 100vh;
+  width: calc(100% - 260px);
+}
+
+/* ── Navbar Top ──────────────────────────────────────────── */
+.dashboard-navbar {
+  align-items: center;
+  background-color: #ffffff;
+  border-bottom: 1.5px solid #f1f5f9;
+  display: flex;
+  height: 70px;
+  justify-content: flex-end;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 90;
+}
+
+/* Hamburger button (hidden on desktop) */
+.hamburger-toggle {
+  background: none;
+  border: none;
+  color: #334155;
+  cursor: pointer;
+  display: none;
+  padding: 8px;
+  position: absolute;
+  left: 20px;
+}
+
+/* Mobile logo header (hidden on desktop) */
+.mobile-logo-header {
+  display: none;
+}
+
+.nav-actions {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+}
+
+.nav-notification-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.nav-notification-btn:hover {
+  color: #334155;
+}
+
+.notification-badge-red {
+  background-color: #ef4444;
+  border: 1.5px solid #ffffff;
+  border-radius: 50%;
+  height: 8px;
+  position: absolute;
+  right: 2px;
+  top: 0px;
+  width: 8px;
+}
+
+.nav-profile-circle {
+  align-items: center;
+  background-color: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  color: #475569;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.nav-profile-circle:hover {
+  border-color: #64748b;
+}
+
+/* ── Dashboard Body Content ──────────────────────────────── */
+.dashboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 32px 40px;
+  width: 100%;
+}
+
+/* ── DashboardHeader Component ───────────────────────────── */
+.content-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.welcome-title {
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.welcome-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── DashboardStatsGrid Component ────────────────────────── */
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+}
+
+/* ── StatCard Component ──────────────────────────────────── */
+.stat-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015), 0 1px 3px rgba(15, 23, 42, 0.005);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  width: 100%;
+}
+
+.stat-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.stat-card-label {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.stat-card-value {
+  color: #0f172a;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+.stat-card-icon-box {
+  align-items: center;
+  border-radius: 10px;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+  flex-shrink: 0;
+}
+
+/* Warna ikon per kategori statistik */
+.stat-total     { background-color: #eff6ff; color: #2563eb; }
+.stat-active    { background-color: #f0fdf4; color: #16a34a; }
+.stat-repair    { background-color: #fef9c3; color: #ca8a04; }
+.stat-computer  { background-color: #f3e8ff; color: #9333ea; }
+.stat-furniture { background-color: #ffedd5; color: #ea580c; }
+
+/* ── ActivityList Component ──────────────────────────────── */
+.activities-section {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015), 0 1px 3px rgba(15, 23, 42, 0.005);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  width: 100%;
+}
+
+.activities-header-text {
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.activities-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-row {
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  width: 100%;
+}
+
+.activity-row:last-child {
+  padding-bottom: 0;
+}
+
+.activity-row-left {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+}
+
+.activity-icon-container {
+  align-items: center;
+  background-color: #eff6ff;
+  border-radius: 8px;
+  color: #2563eb;
+  display: flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.activity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.activity-title {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.activity-meta {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Status Badges */
+.status-badge {
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 16px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.badge-pending   { background-color: #eff6ff; color: #1e40af; }
+.badge-progress  { background-color: #ffedd5; color: #c2410c; }
+.badge-completed { background-color: #e8fdf0; color: #15803d; }
+.badge-rejected  { background-color: #fef2f2; color: #dc2626; }
+
+/* ── Sidebar Overlay (Mobile Drawer) ─────────────────────── */
+.sidebar-overlay {
+  background-color: rgba(15, 23, 42, 0.45);
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 95;
+  transition: opacity 0.3s ease;
+}
+
+/* ── Responsive Breakpoints ──────────────────────────────── */
+
+/* Layar sedang (tablet landscape) */
+@media (max-width: 1200px) {
+  .statistics-grid {
+    gap: 16px;
+  }
+  .stat-card {
+    padding: 16px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .main-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .dashboard-navbar {
+    height: 70px;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+
+  .hamburger-toggle {
+    display: block;
+  }
+
+  .mobile-logo-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    margin: 0 40px;
+  }
+
+  .mobile-logo-img {
+    height: auto;
+    max-height: 36px;
+    max-width: 180px;
+    object-fit: contain;
+  }
+
+  .dashboard-body {
+    padding: 24px 20px;
+    gap: 24px;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+  }
+
+  .statistics-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 16px 8px;
+    gap: 12px;
+  }
+
+  .stat-card-left {
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+  }
+
+  .stat-card-icon-box {
+    order: -1;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+
+  .stat-card-label {
+    font-size: 11px;
+  }
+
+  .stat-card-value {
+    font-size: 20px;
+  }
+
+  .activity-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .status-badge {
+    margin-left: 56px;
+    align-self: flex-start;
+  }
+}
+
+/* Layar sangat sempit */
+@media (max-width: 480px) {
+  .stat-card-label {
+    font-size: 10px;
+  }
+  .stat-card-value {
+    font-size: 16px;
+  }
+}

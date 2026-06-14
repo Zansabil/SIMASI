@@ -1,0 +1,282 @@
+/* Reset & General Styles inside Dashboard Layout */
+.dashboard-layout,
+.dashboard-layout * {
+  box-sizing: border-box;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+.dashboard-layout h1,
+.dashboard-layout h2,
+.dashboard-layout h3,
+.dashboard-layout h4,
+.dashboard-layout.h5,
+.dashboard-layout h6,
+.dashboard-layout p,
+.dashboard-layout ul,
+.dashboard-layout ol,
+.dashboard-layout li {
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  width: 100%;
+  position: relative;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  background-color: #ffffff;
+  border-right: 1.5px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: space-between;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 260px;
+  z-index: 100;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo-container {
+  align-items: center;
+  border-bottom: 1.5px solid #f1f5f9;
+  display: flex;
+  justify-content: center;
+  height: 70px;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.sidebar-logo {
+  height: auto;
+  max-width: 100%;
+  max-height: 38px;
+  object-fit: contain;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+}
+
+/* Nav Link Items */
+.nav-link-item {
+  align-items: center;
+  border-radius: 8px;
+  color: #475569;
+  display: flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.nav-link-item svg {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Active State (Blue filled) */
+.nav-link-item.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Hover State */
+.nav-link-item:hover:not(.active) {
+  background-color: #f1f5f9;
+  color: #2563eb;
+}
+
+/* Logout Button */
+.logout-container {
+  padding: 16px;
+  border-top: 1.5px solid #f1f5f9;
+}
+
+.logout-link {
+  align-items: center;
+  border-radius: 8px;
+  color: #dc2626;
+  display: flex;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+.logout-link:hover {
+  background-color: #fef2f2;
+}
+
+/* Main Content Wrapper */
+.main-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  margin-left: 260px;
+  min-height: 100vh;
+  width: calc(100% - 260px);
+}
+
+/* Navbar Top */
+.dashboard-navbar {
+  align-items: center;
+  background-color: #ffffff;
+  border-bottom: 1.5px solid #f1f5f9;
+  display: flex;
+  height: 70px;
+  justify-content: flex-end;
+  padding: 0 40px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 90;
+}
+
+/* Hamburger button (hidden on desktop) */
+.hamburger-toggle {
+  background: none;
+  border: none;
+  color: #334155;
+  cursor: pointer;
+  display: none;
+  padding: 8px;
+  position: absolute;
+  left: 20px;
+}
+
+/* Mobile logo header (hidden on desktop) */
+.mobile-logo-header {
+  display: none;
+}
+
+.nav-actions {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+}
+
+.nav-profile-circle {
+  align-items: center;
+  background-color: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 50%;
+  color: #475569;
+  display: flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.nav-profile-circle:hover {
+  border-color: #64748b;
+}
+
+/* Overlay Background for Mobile Drawer */
+.sidebar-overlay {
+  background-color: rgba(15, 23, 42, 0.45);
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 95;
+  transition: opacity 0.3s ease;
+}
+
+/* Badges for roles in Manajemen Pengguna */
+.badge-current-user {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.role-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.role-admin { background-color: #eff6ff; color: #1e40af; }
+.role-yayasan { background-color: #f3e8ff; color: #6b21a8; }
+.role-adminsd { background-color: #ecfdf5; color: #065f46; }
+.role-petugas { background-color: #fef9c3; color: #854d0e; }
+.role-guru { background-color: #fff7ed; color: #9a3412; }
+
+/* Responsive Layout Breakpoints */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .main-wrapper {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .dashboard-navbar {
+    height: 70px;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+
+  .hamburger-toggle {
+    display: block;
+  }
+
+  .mobile-logo-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    margin: 0 40px;
+  }
+
+  .mobile-logo-img {
+    height: auto;
+    max-height: 36px;
+    max-width: 180px;
+    object-fit: contain;
+  }
+}

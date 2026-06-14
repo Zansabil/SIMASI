@@ -1,0 +1,144 @@
+/* StatusModal CSS Styles */
+.status-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* Ensure it stays on top of everything */
+  animation: statusModalFadeIn 0.2s ease-out;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.status-modal-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 28px;
+  text-align: center;
+  width: 380px;
+  max-width: 100%;
+  animation: statusModalScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.status-icon-wrapper {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-icon-wrapper.success {
+  color: #22c55e;
+}
+
+.status-icon-wrapper.error {
+  color: #ef4444;
+}
+
+.status-icon-wrapper.warning {
+  color: #f59e0b;
+}
+
+.status-modal-title {
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+}
+
+.status-modal-message {
+  color: #475569;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0 0 28px 0;
+}
+
+.status-modal-btn {
+  border: none;
+  border-radius: 9px;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Success Button */
+.status-modal-btn.success {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.status-modal-btn.success:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.status-modal-btn.success:active {
+  transform: translateY(0);
+}
+
+/* Error Button */
+.status-modal-btn.error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.status-modal-btn.error:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.status-modal-btn.error:active {
+  transform: translateY(0);
+}
+
+/* Warning Button */
+.status-modal-btn.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+}
+
+.status-modal-btn.warning:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+
+.status-modal-btn.warning:active {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes statusModalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes statusModalScaleUp {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

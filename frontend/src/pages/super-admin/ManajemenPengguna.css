@@ -1,0 +1,477 @@
+/* Page Header styling with orange button */
+.users-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.users-page-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.users-page-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.btn-tambah-pengguna {
+  align-items: center;
+  background-color: #f59e0b;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+}
+
+.btn-tambah-pengguna:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+}
+
+.btn-tambah-pengguna:active {
+  transform: translateY(0);
+}
+
+/* Filter Row & Search Input */
+.users-filter-row {
+  display: flex;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.users-search-container {
+  display: flex;
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.users-search-input {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  outline: none;
+  padding: 11px 16px 11px 42px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.users-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.users-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-icon-wrapper {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  left: 14px;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+}
+
+/* Table layout styling */
+.users-table-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015);
+  overflow-x: auto;
+  width: 100%;
+}
+
+.users-table-el {
+  border-collapse: collapse;
+  font-family: 'Inter', system-ui, sans-serif;
+  text-align: left;
+  width: 100%;
+  table-layout: fixed;
+  min-width: 970px;
+}
+
+.users-table-el th {
+  background-color: #ffffff;
+  border-bottom: 1.5px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 16px 20px;
+  white-space: nowrap;
+}
+
+.users-table-el td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 20px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.users-table-el tr:last-child td {
+  border-bottom: none;
+}
+
+.users-table-el tr:hover td {
+  background-color: #f8fafc;
+}
+
+.users-table-footer {
+  padding: 16px 20px;
+  color: #64748b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
+}
+
+/* User Badges & Role Pills */
+.badge-current-user {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  display: inline-block;
+}
+
+.role-badge {
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  display: inline-block;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.role-admin {
+  background-color: #fee2e2;
+  color: #ef4444;
+}
+
+.role-yayasan {
+  background-color: #f3e8ff;
+  color: #a855f7;
+}
+
+.role-adminsd {
+  background-color: #dcfce7;
+  color: #22c55e;
+}
+
+.role-petugas {
+  background-color: #ffedd5;
+  color: #f97316;
+}
+
+.role-guru {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.unit-badge {
+  background-color: #f1f5f9;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.status-active {
+  background-color: #dcfce7;
+  color: #16a34a;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  display: inline-block;
+}
+
+.status-inactive {
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 100px;
+  display: inline-block;
+}
+
+/* User Actions buttons style */
+.user-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-action-edit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1e293b;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.btn-action-edit:hover {
+  color: #2563eb;
+}
+
+.btn-action-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ef4444;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.btn-action-delete:hover {
+  color: #b91c1c;
+}
+
+.btn-action-delete.disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Responsive Overrides */
+@media (max-width: 768px) {
+  .users-header-row {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .users-page-title {
+    font-size: 20px;
+  }
+  
+  .btn-tambah-pengguna {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+  
+  .users-table-el th,
+  .users-table-el td {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+}
+
+/* Hak Akses Menu Styling */
+.modal-form-group.full-width {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.access-rights-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 16px 0 4px 0;
+}
+
+.access-rights-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.access-rights-card {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.access-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Custom Checkbox Design matching screenshot layout but blue */
+.access-checkbox-label input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  outline: none;
+  background-color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.access-checkbox-label input[type="checkbox"]:checked {
+  background-color: #2563eb; /* Blue checked color requested by user */
+  border-color: #2563eb;
+}
+
+.access-checkbox-label input[type="checkbox"]::after {
+  content: '';
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.access-checkbox-label input[type="checkbox"]:checked::after {
+  opacity: 1;
+}
+
+/* ===== DELETE CONFIRMATION MODAL ===== */
+.modal-delete-confirm-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18);
+  padding: 28px 32px 24px 32px;
+  max-width: 440px;
+  width: 90%;
+  font-family: 'Inter', system-ui, sans-serif;
+  animation: slideUpFade 0.22s ease;
+}
+
+.delete-confirm-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.delete-confirm-body {
+  font-size: 14px;
+  font-weight: 400;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+}
+
+.delete-confirm-name {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-btn-batal {
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 22px;
+  transition: all 0.18s ease;
+}
+
+.delete-btn-batal:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.delete-btn-hapus {
+  background-color: #dc2626;
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 22px;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.delete-btn-hapus:hover {
+  background-color: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  transform: translateY(-1px);
+}
+
+.delete-btn-hapus:active {
+  transform: translateY(0);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

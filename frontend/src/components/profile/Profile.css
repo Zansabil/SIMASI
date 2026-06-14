@@ -1,0 +1,326 @@
+/* ===== PROFILE PAGE — Shared Stylesheet ===== */
+
+/* Page Header */
+.profile-header-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.profile-page-icon-wrap {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.profile-page-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 3px 0;
+}
+
+.profile-page-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Profile Card Container */
+.profile-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  padding: 32px 36px;
+  max-width: 680px;
+  width: 100%;
+}
+
+.profile-card-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.profile-card-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 28px 0;
+}
+
+.profile-card-divider {
+  border: none;
+  border-top: 1px solid #f1f5f9;
+  margin: 0 0 28px 0;
+}
+
+/* Avatar Section */
+.profile-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.profile-avatar-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.profile-avatar-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  position: relative;
+}
+
+.profile-avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-avatar-upload-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-avatar-upload-btn {
+  background-color: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  color: #334155;
+  cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 18px;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+}
+
+.profile-avatar-upload-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.profile-avatar-hint {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Form Fields */
+.profile-form-group {
+  margin-bottom: 20px;
+}
+
+.profile-form-label {
+  display: block;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 7px;
+}
+
+.profile-form-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #0f172a;
+  background-color: #ffffff;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.profile-form-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.profile-form-input.readonly {
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+.profile-form-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Role Badge inside input */
+.profile-role-badge-wrap {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.profile-role-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 100px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.profile-role-superadmin { background: #fee2e2; color: #ef4444; }
+.profile-role-admin      { background: #dcfce7; color: #16a34a; }
+.profile-role-guru       { background: #e0f2fe; color: #0284c7; }
+.profile-role-petugas    { background: #ffedd5; color: #f97316; }
+.profile-role-yayasan    { background: #f3e8ff; color: #a855f7; }
+
+/* Save Button */
+.profile-save-btn {
+  margin-top: 8px;
+  padding: 11px 30px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border: none;
+  border-radius: 9px;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-save-btn:hover {
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  box-shadow: 0 5px 16px rgba(22, 163, 74, 0.4);
+  transform: translateY(-1px);
+}
+
+.profile-save-btn:active {
+  transform: translateY(0);
+}
+
+.profile-save-btn:disabled {
+  background: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Success Toast Notification */
+.profile-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: #166534;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 14px 22px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.35);
+  z-index: 9999;
+  animation: toastSlideIn 0.3s ease, toastSlideOut 0.3s ease 2.2s forwards;
+}
+
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(20px); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 22px 18px;
+    border-radius: 12px;
+  }
+
+  .profile-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .profile-avatar-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .profile-save-row {
+    justify-content: flex-start;
+  }
+}
+
+/* ===== CENTERED CARDS LAYOUT ===== */
+.profile-cards-center-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.profile-cards-center-wrap .profile-card {
+  width: 100%;
+  max-width: 680px;
+}
+
+/* ===== SAVE BUTTON ROW — right-aligned ===== */
+.profile-save-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
