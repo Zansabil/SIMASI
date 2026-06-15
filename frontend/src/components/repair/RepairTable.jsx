@@ -1,36 +1,7 @@
 import React from 'react';
 import { FiEye, FiEdit2 } from 'react-icons/fi';
-
-// Status mapping helper
-const renderStatusBadge = (status) => {
-  switch (status) {
-    case 'pending':
-    case 'approved':
-      return <span className="repair-status-badge status-waiting">Menunggu</span>;
-    case 'in_progress':
-      return <span className="repair-status-badge status-process">Sedang di Kerjakan</span>;
-    case 'completed':
-      return <span className="repair-status-badge status-done">Selesai</span>;
-    case 'rejected':
-      return <span className="repair-status-badge status-rejected">Ditolak</span>;
-    default:
-      return <span className="repair-status-badge">{status}</span>;
-  }
-};
-
-// Priority mapping helper
-const renderPriorityBadge = (priority) => {
-  switch (priority) {
-    case 'high':
-      return <span className="repair-priority-badge priority-high">Mendesak</span>;
-    case 'medium':
-      return <span className="repair-priority-badge priority-medium">Sedang</span>;
-    case 'low':
-      return <span className="repair-priority-badge priority-low">Tidak Mendesak</span>;
-    default:
-      return <span className="repair-priority-badge">{priority || 'Sedang'}</span>;
-  }
-};
+import RepairStatusBadge from './RepairStatusBadge';
+import PriorityBadge from './PriorityBadge';
 
 export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit }) {
   return (
@@ -74,10 +45,10 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                 <td className="col-asset font-semibold">{item.asset_name}</td>
                 <td className="col-location">{item.location}</td>
                 <td className="col-desc">{item.description}</td>
-                <td className="col-status">{renderStatusBadge(item.status)}</td>
+                <td className="col-status"><RepairStatusBadge status={item.status} /></td>
                 {hasStaffAccess && (
                   <td className="col-priority">
-                    {renderPriorityBadge(item.priority)}
+                    <PriorityBadge priority={item.priority} />
                   </td>
                 )}
                 <td className="col-photo">

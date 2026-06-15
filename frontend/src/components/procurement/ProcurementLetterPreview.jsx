@@ -68,6 +68,7 @@ export default function ProcurementLetterPreview({
             <tr>
               <th style={{ width: '40px' }}>No.</th>
               <th>Nama Aset / Barang</th>
+              <th style={{ width: '100px' }}>Unit</th>
               <th>Lokasi Penempatan</th>
               <th style={{ width: '80px' }}>Jumlah</th>
               <th style={{ width: '140px' }}>Harga Satuan</th>
@@ -79,6 +80,7 @@ export default function ProcurementLetterPreview({
               <tr key={index}>
                 <td className="text-center">{index + 1}.</td>
                 <td>{item.name}</td>
+                <td>{item.unit}</td>
                 <td>{item.location}</td>
                 <td className="text-center">{item.qty} Unit</td>
                 <td className="text-right">{formatRupiah(item.price)}</td>
@@ -86,7 +88,7 @@ export default function ProcurementLetterPreview({
               </tr>
             ))}
             <tr>
-              <td colSpan="5" style={{ textAlign: 'right', fontWeight: 'bold', padding: '8px' }}>Grand Total Biaya:</td>
+              <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold', padding: '8px' }}>Grand Total Biaya:</td>
               <td className="text-right" style={{ fontWeight: 'bold', fontSize: '14px', borderTop: '2px double #000' }}>
                 {formatRupiah(previewItem.total_cost)}
               </td>
@@ -111,7 +113,7 @@ export default function ProcurementLetterPreview({
             <span>Pengaju</span>
             <div className="sig-spacer"></div>
             <span className="sig-name">{previewItem.reporter_name}</span>
-            <span className="sig-role">{previewItem.reporter_role}</span>
+            <span className="sig-role">{previewItem.reporter_role} {previewItem.reporter_unit ? `(Unit ${previewItem.reporter_unit})` : ''}</span>
           </div>
         </div>
 

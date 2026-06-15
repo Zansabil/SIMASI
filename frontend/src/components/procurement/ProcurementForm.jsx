@@ -79,6 +79,7 @@ export default function ProcurementForm({
               <tr>
                 <th style={{ width: '40px' }}>No.</th>
                 <th>Nama Aset / Barang <span style={{ color: '#ef4444' }}>*</span></th>
+                <th style={{ width: '140px' }}>Unit <span style={{ color: '#ef4444' }}>*</span></th>
                 <th>Lokasi Penempatan <span style={{ color: '#ef4444' }}>*</span></th>
                 <th style={{ width: '100px' }}>Jumlah <span style={{ color: '#ef4444' }}>*</span></th>
                 <th style={{ width: '180px' }}>Harga Satuan (Rp) <span style={{ color: '#ef4444' }}>*</span></th>
@@ -99,6 +100,22 @@ export default function ProcurementForm({
                       onChange={(e) => onItemChange(index, 'name', e.target.value)}
                       required
                     />
+                  </td>
+                  <td>
+                    <select
+                      className="form-field-input"
+                      value={item.unit || ''}
+                      onChange={(e) => onItemChange(index, 'unit', e.target.value)}
+                      required
+                    >
+                      <option value="" disabled hidden>Unit</option>
+                      <option value="TK">TK</option>
+                      <option value="SD">SD</option>
+                      <option value="SMP">SMP</option>
+                      <option value="SMA">SMA</option>
+                      <option value="MA">MA</option>
+                      <option value="Yayasan">Yayasan</option>
+                    </select>
                   </td>
                   <td>
                     <input
@@ -122,12 +139,15 @@ export default function ProcurementForm({
                   </td>
                   <td>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       className="form-field-input"
-                      min="0"
                       placeholder="Rp..."
                       value={item.price}
-                      onChange={(e) => onItemChange(index, 'price', e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        onItemChange(index, 'price', val);
+                      }}
                       required
                     />
                   </td>

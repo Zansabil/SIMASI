@@ -1,6 +1,5 @@
-import React from 'react';
-import { FiEye, FiPrinter } from 'react-icons/fi';
-import ProcurementStatusBadge from './ProcurementStatusBadge';
+import React, { useState } from 'react';
+import { FiChevronDown, FiEye, FiCheck, FiX } from 'react-icons/fi';
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -11,70 +10,286 @@ const formatRupiah = (number) => {
   }).format(number);
 };
 
-export default function ProcurementTable({ procurements, onViewDetail, onPreviewLetter }) {
-  return (
-    <div className="procurement-table-wrapper">
-      <table className="procurement-table-el">
-        <thead>
-          <tr>
-            <th style={{ width: '50px', textAlign: 'center' }}>No.</th>
-            <th>No. Surat</th>
-            <th>Tanggal</th>
-            <th>Nama Pengaju</th>
-            <th>Jabatan</th>
-            <th style={{ textAlign: 'center' }}>Jumlah Item</th>
-            <th style={{ textAlign: 'right' }}>Total Biaya</th>
-            <th style={{ textAlign: 'center' }}>Status</th>
-            <th style={{ width: '130px', textAlign: 'center' }}>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {procurements.length === 0 ? (
+export default function ProcurementTable({ 
+  procurements, 
+  onViewDetail, 
+  onPreviewLetter, 
+  statusFilter = 'all',
+  showActions = false,
+  showUnit = true,
+  onApproveItem,
+  onRejectItem
+}) {
+  const [expandedCards, setExpandedCards] = useState({});
+
+  const toggleCardExpand = (id) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  const getCounters = (items) => {
+    let waiting = 0;
+    let approved = 0;
+    let rejected = 0;
+
+    items.forEach(item => {
+      const itemStatus = item.status || 'pending';
+      if (itemStatus === 'pending') waiting++;
+      else if (itemStatus === 'approved') approved++;
+      else if (itemStatus === 'rejected') rejected++;
+    });
+
+    return { waiting, approved, rejected };
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending': return 'Menunggu';
+      case 'approved': return 'Disetujui';
+      case 'rejected': return 'Ditolak';
+      default: return status;
+    }
+  };
+
+  // If statusFilter is not 'all', render the flat table directly
+  if (statusFilter !== 'all') {
+    const allFilteredItems = [];
+    procurements.forEach(proc => {
+      (proc.items || []).forEach(item => {
+        const itemStatus = item.status || 'pending';
+        if (itemStatus === statusFilter) {
+          allFilteredItems.push({
+            ...item,
+            parent: proc
+          });
+        }
+      });
+    });
+
+    return (
+      <div className="approval-table-wrapper" style={{ marginTop: '24px' }}>
+        <table className="approval-table-el">
+          <thead>
             <tr>
-              <td colSpan="9" style={{ textAlign: 'center', padding: '32px' }}>
-                Tidak ada data pengajuan pengadaan aset.
-              </td>
+              <th style={{ width: '40px', textAlign: 'center' }}>No</th>
+              <th>Nama Aset</th>
+              {showUnit && <th>Unit</th>}
+              <th>Spesifikasi / Lokasi</th>
+              <th style={{ width: '100px', textAlign: 'center' }}>Jumlah</th>
+              <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
+              <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
+              <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+              {showActions && <th style={{ width: '220px', textAlign: 'center' }}>Aksi</th>}
             </tr>
-          ) : (
-            procurements.map((item, idx) => (
-              <tr key={item.id}>
-                <td style={{ textAlign: 'center' }}>{idx + 1}.</td>
-                <td style={{ fontWeight: 600 }}>{item.letter_number}</td>
-                <td>{item.date}</td>
-                <td>{item.reporter_name}</td>
-                <td>{item.reporter_role}</td>
-                <td style={{ textAlign: 'center' }}>
-                  {item.items.reduce((acc, i) => acc + i.qty, 0)}
-                </td>
-                <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#1e293b' }}>
-                  {formatRupiah(item.total_cost)}
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <ProcurementStatusBadge status={item.status} />
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                    <button 
-                      className="action-icon-btn view-btn" 
-                      title="Detail Pengajuan"
-                      onClick={() => onViewDetail(item)}
-                    >
-                      <FiEye size={16} />
-                    </button>
-                    <button 
-                      className="action-icon-btn edit-btn" 
-                      title="Pratinjau / Cetak Surat"
-                      onClick={() => onPreviewLetter(item)}
-                    >
-                      <FiPrinter size={16} />
-                    </button>
-                  </div>
+          </thead>
+          <tbody>
+            {allFilteredItems.length === 0 ? (
+              <tr>
+                <td colSpan={showActions ? (showUnit ? 9 : 8) : (showUnit ? 8 : 7)} style={{ textAlign: 'center', padding: '32px' }}>
+                  Tidak ada data aset dengan status ini.
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              allFilteredItems.map((subItem, index) => (
+                <tr key={index}>
+                  <td style={{ textAlign: 'center' }}>{index + 1}.</td>
+                  <td className="font-semibold">{subItem.name}</td>
+                  {showUnit && <td>{subItem.unit || '-'}</td>}
+                  <td>{subItem.location}</td>
+                  <td style={{ textAlign: 'center' }}>{subItem.qty} unit</td>
+                  <td style={{ textAlign: 'right' }}>{formatRupiah(subItem.price)}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#1e293b' }}>
+                    {formatRupiah(subItem.qty * subItem.price)}
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={`status-badge ${(subItem.status || 'pending').toLowerCase()}`}>
+                      {getStatusText(subItem.status || 'pending')}
+                    </span>
+                    {subItem.notes && (
+                      <div className="item-notes-text">
+                        Catatan: "{subItem.notes}"
+                      </div>
+                    )}
+                  </td>
+                  {showActions && (
+                    <td style={{ textAlign: 'center' }}>
+                      {subItem.status === 'pending' ? (
+                        <div className="action-decision-cell">
+                          <button
+                            type="button"
+                            className="btn-approve-item"
+                            onClick={() => onApproveItem(subItem.parent.id, subItem.parent.items.indexOf(subItem))}
+                          >
+                            <FiCheck size={14} /> Setuju
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-reject-item"
+                            onClick={() => onRejectItem(subItem.parent.id, subItem.parent.items.indexOf(subItem))}
+                          >
+                            <FiX size={14} /> Tolak
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
+                          Keputusan Selesai
+                        </span>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  // Otherwise render the Collapsible Cards layout (for 'all' filter)
+  return (
+    <div style={{ marginTop: '24px' }}>
+      {procurements.length === 0 ? (
+        <div className="stat-card" style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#475569' }}>Tidak Ada Pengajuan</h3>
+          <p style={{ fontSize: '14px', color: '#94a3b8', margin: '4px 0 0 0' }}>Belum ada berkas pengajuan pengadaan aset yang masuk.</p>
+        </div>
+      ) : (
+        procurements.map((item) => {
+          const { waiting, approved, rejected } = getCounters(item.items || []);
+          const isExpanded = !!expandedCards[item.id];
+
+          return (
+            <div className="procurement-approval-card" key={item.id}>
+              {/* Card Header (Clickable) */}
+              <div className="card-header-clickable" onClick={() => toggleCardExpand(item.id)}>
+                <div className="card-meta-left">
+                  <span className="card-date-badge">{item.date}</span>
+                  <h4 className="card-letter-number">{item.letter_number}</h4>
+                  <p className="card-submitter-info">
+                    Diajukan oleh: <span className="font-semibold">{item.reporter_name}</span> ({item.reporter_role})
+                  </p>
+                </div>
+
+                <div className="card-meta-right">
+                  {/* Counters Block matching Image 1 */}
+                  <div className="card-counters-group">
+                    <div className="card-counters-wrapper">
+                      <div className="counter-item">
+                        <span className="counter-number waiting">{waiting}</span>
+                        <span className="counter-label">Menunggu</span>
+                      </div>
+                      <div className="counter-item">
+                        <span className="counter-number approved">{approved}</span>
+                        <span className="counter-label">Disetujui</span>
+                      </div>
+                      <div className="counter-item">
+                        <span className="counter-number rejected">{rejected}</span>
+                        <span className="counter-label">Ditolak</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chevron Icon toggler */}
+                  <div className={`chevron-icon-wrapper ${isExpanded ? 'expanded' : ''}`}>
+                    <FiChevronDown size={22} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Expandable Details Area (Visible when isExpanded is true) */}
+              {isExpanded && (
+                <div className="card-details-expandable">
+                  <div className="expandable-inner-padding">
+                    <div className="approval-table-wrapper">
+                      <table className="approval-table-el">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px', textAlign: 'center' }}>No</th>
+                            <th>Nama Aset</th>
+                            {showUnit && <th>Unit</th>}
+                            <th>Spesifikasi / Lokasi</th>
+                            <th style={{ width: '100px', textAlign: 'center' }}>Jumlah</th>
+                            <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
+                            <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
+                            <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+                            {showActions && <th style={{ width: '220px', textAlign: 'center' }}>Aksi</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(item.items || []).map((subItem, index) => (
+                            <tr key={index}>
+                              <td style={{ textAlign: 'center' }}>{index + 1}.</td>
+                              <td className="font-semibold">{subItem.name}</td>
+                              {showUnit && <td>{subItem.unit || '-'}</td>}
+                              <td>{subItem.location}</td>
+                              <td style={{ textAlign: 'center' }}>{subItem.qty} unit</td>
+                              <td style={{ textAlign: 'right' }}>{formatRupiah(subItem.price)}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#1e293b' }}>
+                                {formatRupiah(subItem.qty * subItem.price)}
+                              </td>
+                              <td style={{ textAlign: 'center' }}>
+                                <span className={`status-badge ${(subItem.status || 'pending').toLowerCase()}`}>
+                                  {getStatusText(subItem.status || 'pending')}
+                                </span>
+                                {subItem.notes && (
+                                  <div className="item-notes-text">
+                                    Catatan: "{subItem.notes}"
+                                  </div>
+                                )}
+                              </td>
+                              {showActions && (
+                                <td style={{ textAlign: 'center' }}>
+                                  {subItem.status === 'pending' ? (
+                                    <div className="action-decision-cell">
+                                      <button
+                                        type="button"
+                                        className="btn-approve-item"
+                                        onClick={() => onApproveItem(item.id, index)}
+                                      >
+                                        <FiCheck size={14} /> Setuju
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn-reject-item"
+                                        onClick={() => onRejectItem(item.id, index)}
+                                      >
+                                        <FiX size={14} /> Tolak
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
+                                      Keputusan Selesai
+                                    </span>
+                                  )}
+                                </td>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Action area: button only, aligned to bottom right */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                      <button 
+                        type="button"
+                        className="btn-view-full-letter"
+                        onClick={() => onPreviewLetter(item)}
+                      >
+                        <FiEye size={16} /> Lihat Surat Lengkap
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
+

@@ -57,6 +57,7 @@ export default function ProcurementDetailModal({ isOpen, onClose, selectedItem }
               <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                 <th style={{ padding: '10px', width: '40px', textAlign: 'center' }}>No</th>
                 <th style={{ padding: '10px' }}>Nama Barang</th>
+                <th style={{ padding: '10px', width: '90px' }}>Unit</th>
                 <th style={{ padding: '10px' }}>Lokasi</th>
                 <th style={{ padding: '10px', width: '70px', textAlign: 'center' }}>Qty</th>
                 <th style={{ padding: '10px', textAlign: 'right' }}>Harga</th>
@@ -68,6 +69,7 @@ export default function ProcurementDetailModal({ isOpen, onClose, selectedItem }
                 <tr key={index} style={{ borderBottom: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '10px', textAlign: 'center' }}>{index + 1}</td>
                   <td style={{ padding: '10px', fontWeight: '600' }}>{it.name}</td>
+                  <td style={{ padding: '10px' }}>{it.unit || '-'}</td>
                   <td style={{ padding: '10px' }}>{it.location}</td>
                   <td style={{ padding: '10px', textAlign: 'center' }}>{it.qty}</td>
                   <td style={{ padding: '10px', textAlign: 'right' }}>{formatRupiah(it.price)}</td>

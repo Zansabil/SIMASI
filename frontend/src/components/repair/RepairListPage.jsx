@@ -3,12 +3,14 @@ import axios from 'axios';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
+import StatusFilter from '../ui/StatusFilter';
 import StatusModal from '../ui/StatusModal';
 import RepairTable from './RepairTable';
 import RepairFormModal from './RepairFormModal';
 import RepairDetailModal from './RepairDetailModal';
 import RepairEditModal from './RepairEditModal';
 import { FiPlus } from 'react-icons/fi';
+import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
 
 // Mock data matching the mockup images exactly (default fallback)
@@ -79,6 +81,13 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // all, pending, in_progress, completed
   const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab]);
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -272,34 +281,6 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         >
           {/* Filter and Search Row */}
           <div className="repair-filter-row">
-            {/* Status Tabs */}
-            <div className="status-tabs-group">
-              <button 
-                className={`status-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-                onClick={() => setActiveTab('all')}
-              >
-                Semua
-              </button>
-              <button 
-                className={`status-tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-                onClick={() => setActiveTab('pending')}
-              >
-                Menunggu
-              </button>
-              <button 
-                className={`status-tab-btn ${activeTab === 'in_progress' ? 'active' : ''}`}
-                onClick={() => setActiveTab('in_progress')}
-              >
-                Sedang di Kerjakan
-              </button>
-              <button 
-                className={`status-tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-                onClick={() => setActiveTab('completed')}
-              >
-                Selesai
-              </button>
-            </div>
-
             {/* Search bar input */}
             <div className="repair-search-container">
               <SearchBar
@@ -308,17 +289,42 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
                 placeholder="Cari berdasarkan nama aset atau pelapor"
               />
             </div>
+
+            <StatusFilter
+              value={activeTab}
+              onChange={setActiveTab}
+              options={[
+                { value: 'all', label: 'Semua' },
+                { value: 'pending', label: 'Menunggu' },
+                { value: 'in_progress', label: 'Sedang di Kerjakan' },
+                { value: 'completed', label: 'Selesai' }
+              ]}
+            />
           </div>
         </PageHeader>
 
         {/* Reusable Repair Table */}
         <RepairTable
-          repairs={repairs}
+          repairs={repairs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
           isLoading={isLoading}
           hasStaffAccess={hasStaffAccess}
           onOpenView={handleOpenView}
           onOpenEdit={handleOpenEdit}
         />
+
+        {/* Pagination Controls */}
+        <Pagination
+          currentPage={currentPage}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          onItemsPerPageChange={setItemsPerPage}
+          hasMore={(currentPage * itemsPerPage) < repairs.length}
+        />
+
+        {/* Footer copyright */}
+        <footer className="footer-copyright-text">
+          © 2025 SIMAS - Sistem Informasi Manajemen Aset
+        </footer>
 
         {/* Form Modal for Admin / Guru */}
         {hasWriteAccess && (
