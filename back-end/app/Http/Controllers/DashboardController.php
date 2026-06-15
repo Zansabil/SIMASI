@@ -6,31 +6,89 @@ use Illuminate\Http\Request;
 use App\Models\aset;
 use App\Models\laporan_kerusakan;
 use App\Models\pengguna;
+use App\Models\pengadaan_aset;
+use App\Models\perbaikan_aset;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Menghitung statistik untuk ditampilkan di Dashboard ReactJS
-        $total_aset = aset::count(); // Menghitung total seluruh jenis aset
-        $aset_rusak = aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->count();
-        
-        $total_laporan = laporan_kerusakan::count();
-        $laporan_menunggu = laporan_kerusakan::where('status_kerusakan', 'Menunggu')->count();
-        
-        $total_pengguna = pengguna::count();
+        // 1. Total Seluruh Aset (jumlah dari kolom jumlah_aset)
+        $total_aset = aset::sum('jumlah_aset');
 
-        // Mengirim data hitungan tersebut dalam bentuk JSON
+        // 2. Aset Aktif (kondisi Baik)
+        $aset_aktif = aset::where('kondisi_aset', 'Baik')->sum('jumlah_aset');
+
+        // 3. Aset dalam Perbaikan (kondisi Rusak Ringan atau Rusak Berat)
+        $perbaikan = aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->sum('jumlah_aset');
+
+        // 4. Kategori Spesifik: Komputer
+        $komputer = aset::where('jenis_aset', 'like', '%komputer%')->sum('jumlah_aset');
+
+        // 5. Kategori Spesifik: Meja dan Kursi
+        $meja_kursi = aset::where(function($q) {
+            $q->where('jenis_aset', 'like', '%meja%')
+              ->orWhere('jenis_aset', 'like', '%kursi%');
+        })->sum('jumlah_aset');
+
+        // 6. Mengambil Aktivitas Terbaru dari Pengadaan Aset dan Perbaikan Aset
+        $activities = [];
+
+        // Ambil pengadaan terbaru
+        $pengadaans = pengadaan_aset::orderBy('tgl_pengajuan', 'desc')->take(5)->get();
+        foreach ($pengadaans as $p) {
+            $status_mapped = 'pending';
+            if ($p->status_pengajuan === 'Disetujui') $status_mapped = 'approved';
+            if ($p->status_pengajuan === 'Ditolak') $status_mapped = 'rejected';
+
+            $activities[] = [
+                'id'       => 'pengadaan-' . $p->idpengadaan_aset,
+                'type'     => 'Pengadaan',
+                'title'    => 'Pengadaan - ' . $p->nama_barang,
+                'date'     => $p->tgl_pengajuan ? date('d-m-Y', strtotime($p->tgl_pengajuan)) : '',
+                'status'   => $status_mapped,
+                'raw_date' => $p->tgl_pengajuan
+            ];
+        }
+
+        // Ambil perbaikan terbaru
+        $perbaikans = perbaikan_aset::with('laporan.aset')->orderBy('tgl_dibuat', 'desc')->take(5)->get();
+        foreach ($perbaikans as $pb) {
+            $status_mapped = 'in_progress';
+            if ($pb->status_perbaikan === 'Selesai') $status_mapped = 'completed';
+
+            $nama_aset = $pb->laporan->aset->nama_aset ?? 'Aset';
+
+            $activities[] = [
+                'id'       => 'perbaikan-' . $pb->id,
+                'type'     => 'Perbaikan',
+                'title'    => 'Perbaikan - ' . $nama_aset,
+                'date'     => $pb->tanggal_mulai ? date('d-m-Y', strtotime($pb->tanggal_mulai)) : '',
+                'status'   => $status_mapped,
+                'raw_date' => $pb->tanggal_mulai
+            ];
+        }
+
+        // Urutkan semua aktivitas gabungan berdasarkan tanggal terbaru (raw_date desc)
+        usort($activities, function($a, $b) {
+            return strcmp($b['raw_date'], $a['raw_date']);
+        });
+
+        // Ambil 5 aktivitas teratas
+        $activities = array_slice($activities, 0, 5);
+
+        // Mengirim data hitungan tersebut dalam bentuk JSON sesuai format frontend
         return response()->json([
-            'success' => true,
-            'message' => 'Data statistik dashboard berhasil diambil.',
-            'data'    => [
-                'total_aset'       => $total_aset,
-                'aset_rusak'       => $aset_rusak,
-                'total_laporan'    => $total_laporan,
-                'laporan_menunggu' => $laporan_menunggu,
-                'total_pengguna'   => $total_pengguna
-            ]
+            'success'    => true,
+            'message'    => 'Data statistik dashboard berhasil diambil.',
+            'stats'      => [
+                'total_aset' => (int)$total_aset,
+                'aset_aktif' => (int)$aset_aktif,
+                'perbaikan'  => (int)$perbaikan,
+                'komputer'   => (int)$komputer,
+                'meja_kursi' => (int)$meja_kursi,
+            ],
+            'activities' => $activities
         ], 200);
     }
 }

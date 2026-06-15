@@ -42,7 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Rute Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard/stats', [DashboardController::class, 'index']);
     
     // Route khusus Kelola Pengguna (Super Admin)
     Route::get('/pengguna', [PenggunaController::class, 'index']);
