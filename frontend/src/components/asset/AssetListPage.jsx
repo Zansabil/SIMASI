@@ -289,34 +289,34 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     <DashboardLayout role={role} currentPath={currentPath}>
       <main className="dashboard-body">
         {/* Top Header Section */}
-        <PageHeader title="Daftar Aset">
-          {hasWriteAccess && (
-            <button className="btn-tambah-aset" onClick={handleTambahAsetClick}>
-              <PlusIcon />
-              Tambah Aset
-            </button>
-          )}
+        <PageHeader
+          title="Daftar Aset"
+          subtitle="Kelola dan pantau seluruh data aset sekolah"
+          actionLabel={hasWriteAccess ? "Tambah Aset" : null}
+          onActionClick={handleTambahAsetClick}
+          actionIcon={PlusIcon}
+          actionClassName="btn-tambah-aset"
+        >
+          {/* Filter Row: Search & Dropdown Filter Fields */}
+          <div className="filter-row">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Cari Barang..."
+            />
+
+            <FilterSelect
+              value={selectedFilterField}
+              onChange={setSelectedFilterField}
+              options={[
+                { value: 'all', label: 'Semua Kategori' },
+                { value: 'name', label: 'Nama Barang' },
+                { value: 'code', label: 'Kode Barang' },
+                { value: 'location', label: 'Lokasi Barang' }
+              ]}
+            />
+          </div>
         </PageHeader>
-
-        {/* Filter Row: Search & Dropdown Filter Fields */}
-        <div className="filter-row">
-          <SearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Cari Barang..."
-          />
-
-          <FilterSelect
-            value={selectedFilterField}
-            onChange={setSelectedFilterField}
-            options={[
-              { value: 'all', label: 'Semua Kategori' },
-              { value: 'name', label: 'Nama Barang' },
-              { value: 'code', label: 'Kode Barang' },
-              { value: 'location', label: 'Lokasi Barang' }
-            ]}
-          />
-        </div>
 
         {/* Reusable Asset Table Component */}
         <AssetTable

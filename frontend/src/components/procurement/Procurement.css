@@ -1,0 +1,631 @@
+/* Styles for Pengadaan Aset (Procurement) Pages and Components */
+
+.procurement-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.procurement-page-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.procurement-page-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Button Tambah Pengajuan (Orange style) */
+.btn-create-procurement {
+  align-items: center;
+  background-color: #f59e0b;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+}
+
+.btn-create-procurement:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+}
+
+.btn-create-procurement:active {
+  transform: translateY(0);
+}
+
+/* Filter / Search Row */
+.procurement-filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.procurement-search-container {
+  display: flex;
+  position: relative;
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.procurement-search-input {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  outline: none;
+  padding: 11px 16px 11px 42px;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.procurement-search-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.procurement-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.procurement-table-wrapper {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015);
+  overflow-x: auto;
+  width: 100%;
+}
+
+.procurement-table-el {
+  border-collapse: collapse;
+  font-family: 'Inter', system-ui, sans-serif;
+  text-align: left;
+  width: 100%;
+}
+
+.procurement-table-el th {
+  background-color: #ffffff;
+  border-bottom: 1.5px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 16px 20px;
+  white-space: nowrap;
+}
+
+.procurement-table-el td {
+  border-bottom: 1px solid #f1f5f9;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 20px;
+  vertical-align: middle;
+}
+
+.procurement-table-el tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Status Badges */
+.status-badge {
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.status-badge.pending {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.status-badge.approved {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Form Panel */
+.form-panel {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015);
+  padding: 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-panel-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  text-align: left;
+}
+
+.form-panel-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  text-align: left;
+}
+
+.form-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px 24px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.form-field-input {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #1e293b;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  padding: 10px 14px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.form-field-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-field-input[readonly] {
+  background-color: #f8fafc;
+  color: #64748b;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+}
+
+/* Dynamic Item Input Table */
+.items-input-table-container {
+  margin-bottom: 24px;
+}
+
+.items-input-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.items-input-table th {
+  background-color: #f8fafc;
+  border-bottom: 1.5px solid #cbd5e1;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 12px 16px;
+  text-align: left;
+}
+
+.items-input-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px 16px;
+  vertical-align: middle;
+}
+
+.btn-add-item-row {
+  align-items: center;
+  background-color: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+}
+
+.btn-add-item-row:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.btn-delete-row {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.btn-delete-row:hover {
+  background-color: #fee2e2;
+}
+
+/* Grand Total Display */
+.grand-total-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1.5px solid #cbd5e1;
+}
+
+.grand-total-label {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #475569;
+}
+
+.grand-total-val {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+/* Form Actions Layout */
+.form-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 24px;
+}
+
+.form-actions-left {
+  display: flex;
+  gap: 12px;
+}
+
+.form-actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-preview {
+  background-color: #6366f1;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-preview:hover {
+  background-color: #4f46e5;
+}
+
+.btn-submit-proc {
+  background-color: #22c55e;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-submit-proc:hover {
+  background-color: #16a34a;
+}
+
+/* ======================================================== */
+/* OFFICIAL LETTER PAPER DESIGN (A4 LAYOUT ON SCREEN)       */
+/* ======================================================== */
+
+.letter-preview-screen {
+  background-color: #f1f5f9;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.letter-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 20px;
+}
+
+.official-letter-paper {
+  background-color: #ffffff;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 800px; /* Standard A4 width proportion on screen */
+  min-height: 1130px; /* Standard A4 height proportion */
+  padding: 50px 70px; /* Large print margins */
+  box-sizing: border-box;
+  font-family: 'Times New Roman', Times, serif; /* Formal serif typography */
+  color: #000000;
+  text-align: justify;
+  line-height: 1.5;
+}
+
+/* Kop Surat (Letterhead) Styles */
+.letterhead-container {
+  display: flex;
+  align-items: center;
+  border-bottom: 3px double #000000;
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+.letterhead-logo {
+  height: 80px;
+  width: auto;
+  margin-right: 20px;
+}
+
+.letterhead-text {
+  text-align: center;
+  flex-grow: 1;
+}
+
+.letterhead-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 2px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.letterhead-school {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+}
+
+.letterhead-address {
+  font-size: 11px;
+  margin: 0;
+  font-weight: normal;
+  font-style: italic;
+  line-height: 1.4;
+  color: #1e293b;
+}
+
+/* Meta Info Row (Number & Date) */
+.letter-meta-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  font-size: 13.5px;
+}
+
+.letter-meta-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.letter-meta-right {
+  text-align: right;
+}
+
+/* Recipient Block */
+.letter-recipient-block {
+  margin-bottom: 24px;
+  font-size: 13.5px;
+}
+
+.recipient-title {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* Body / Paragraphs */
+.letter-body-paragraph {
+  margin-bottom: 16px;
+  text-indent: 40px; /* Indent paragraph */
+  font-size: 13.5px;
+}
+
+/* Table of items in Letter */
+.letter-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13px;
+}
+
+.letter-items-table th {
+  border: 1px solid #000000;
+  background-color: #f1f5f9;
+  padding: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.letter-items-table td {
+  border: 1px solid #000000;
+  padding: 8px;
+  vertical-align: middle;
+}
+
+.letter-items-table td.text-center {
+  text-align: center;
+}
+
+.letter-items-table td.text-right {
+  text-align: right;
+}
+
+/* Signature block */
+.letter-signatures-block {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  font-size: 13.5px;
+}
+
+.sig-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sig-spacer {
+  height: 80px; /* Space for physical signature */
+}
+
+.sig-name {
+  font-weight: bold;
+  text-decoration: underline;
+  margin: 0;
+}
+
+.sig-role {
+  margin: 2px 0 0 0;
+}
+
+/* Approval signature (Centered below) */
+.letter-approval-row {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  font-size: 13.5px;
+}
+
+/* ======================================================== */
+/* PRINT CSS - TRICKY WINDOW.PRINT STYLINGS                 */
+/* ======================================================== */
+
+@media print {
+  /* Hide all elements that are NOT part of the letter */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only the letter paper and its children */
+  .letter-preview-screen,
+  .official-letter-paper,
+  .official-letter-paper * {
+    visibility: visible;
+  }
+  
+  /* Reset document flow for print output */
+  .letter-preview-screen {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+  }
+  
+  .official-letter-paper {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+  }
+
+  /* Make sure background colors are printed correctly */
+  .letter-items-table th {
+    background-color: #f1f5f9 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  @page {
+    size: A4;
+    margin: 2cm 2cm 2cm 2cm; /* Standard print margin */
+  }
+}

@@ -5,6 +5,7 @@ import { FiHome, FiList, FiShoppingCart, FiTool, FiBell, FiUser, FiChevronDown, 
 import './PersetujuanPengadaan.css';
 import '../super-admin/PengadaanAset.css';
 import NotificationBell from '../../components/layout/NotificationBell';
+import PageHeader from '../../components/ui/PageHeader';
 
 const defaultProcurements = [
   {
@@ -267,12 +268,10 @@ export default function PersetujuanPengadaan() {
         <main className="dashboard-body">
           {view === 'list' ? (
             <>
-              <div className="approval-header-row">
-                <div>
-                  <h2 className="approval-page-title">Persetujuan Pengadaan Aset</h2>
-                  <p className="approval-page-subtitle">Tinjau, setujui, atau tolak berkas usulan pengadaan barang dari unit kerja</p>
-                </div>
-              </div>
+              <PageHeader
+                title="Persetujuan Pengadaan Aset"
+                subtitle="Tinjau, setujui, atau tolak berkas usulan pengadaan barang dari unit kerja"
+              />
 
               {/* List of Collapsible Cards */}
               <div style={{ marginTop: '24px' }}>

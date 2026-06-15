@@ -262,54 +262,54 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
     <DashboardLayout role={role} currentPath={currentPath}>
       <main className="dashboard-body">
         {/* Top Header Section */}
-        <PageHeader title={hasStaffAccess ? "Perbaikan Aset" : "Pelaporan Kerusakan Aset"}>
-          {hasWriteAccess && (
-            <button className="btn-laporkan-kerusakan" onClick={handleTambahLaporanClick}>
-              <FiPlus />
-              Laporkan Kerusakan
-            </button>
-          )}
+        <PageHeader
+          title={hasStaffAccess ? "Perbaikan Aset" : "Pelaporan Kerusakan Aset"}
+          subtitle={hasStaffAccess ? "Tinjau dan kelola seluruh antrean laporan perbaikan kerusakan aset" : "Laporkan kerusakan aset sekolah untuk segera ditindaklanjuti"}
+          actionLabel={hasWriteAccess ? "Laporkan Kerusakan" : null}
+          onActionClick={handleTambahLaporanClick}
+          actionIcon={FiPlus}
+          actionClassName="btn-laporkan-kerusakan"
+        >
+          {/* Filter and Search Row */}
+          <div className="repair-filter-row">
+            {/* Status Tabs */}
+            <div className="status-tabs-group">
+              <button 
+                className={`status-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+                onClick={() => setActiveTab('all')}
+              >
+                Semua
+              </button>
+              <button 
+                className={`status-tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+                onClick={() => setActiveTab('pending')}
+              >
+                Menunggu
+              </button>
+              <button 
+                className={`status-tab-btn ${activeTab === 'in_progress' ? 'active' : ''}`}
+                onClick={() => setActiveTab('in_progress')}
+              >
+                Sedang di Kerjakan
+              </button>
+              <button 
+                className={`status-tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+                onClick={() => setActiveTab('completed')}
+              >
+                Selesai
+              </button>
+            </div>
+
+            {/* Search bar input */}
+            <div className="repair-search-container">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Cari berdasarkan nama aset atau pelapor"
+              />
+            </div>
+          </div>
         </PageHeader>
-
-        {/* Filter and Search Row */}
-        <div className="repair-filter-row">
-          {/* Status Tabs */}
-          <div className="status-tabs-group">
-            <button 
-              className={`status-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveTab('all')}
-            >
-              Semua
-            </button>
-            <button 
-              className={`status-tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-              onClick={() => setActiveTab('pending')}
-            >
-              Menunggu
-            </button>
-            <button 
-              className={`status-tab-btn ${activeTab === 'in_progress' ? 'active' : ''}`}
-              onClick={() => setActiveTab('in_progress')}
-            >
-              Sedang di Kerjakan
-            </button>
-            <button 
-              className={`status-tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
-              onClick={() => setActiveTab('completed')}
-            >
-              Selesai
-            </button>
-          </div>
-
-          {/* Search bar input */}
-          <div className="repair-search-container">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Cari berdasarkan nama aset atau pelapor"
-            />
-          </div>
-        </div>
 
         {/* Reusable Repair Table */}
         <RepairTable

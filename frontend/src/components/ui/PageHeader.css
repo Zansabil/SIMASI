@@ -1,11 +1,73 @@
+/* Page Header Component Styles */
+
+.page-header-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .page-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
   margin-bottom: 24px;
+}
+
+.page-header-title-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.page-header-subtitle {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Default Action Button Style (Orange Accent matching SIMASI theme) */
+.page-header-action-btn {
+  align-items: center;
+  background-color: #f59e0b;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 8px;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.page-header-action-btn:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+}
+
+.page-header-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Filter / Search Row Wrapper */
+.page-header-filter-row {
   width: 100%;
 }
 
+/* Keep welcome-title style for backwards compatibility */
 .welcome-title {
   color: #0f172a;
   font-size: 28px;
@@ -15,12 +77,18 @@
 
 @media (max-width: 768px) {
   .page-header-row {
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
     margin-bottom: 20px;
   }
 
-  .welcome-title {
-    font-size: 22px;
+  .page-header-title {
+    font-size: 20px;
+  }
+
+  .page-header-action-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
