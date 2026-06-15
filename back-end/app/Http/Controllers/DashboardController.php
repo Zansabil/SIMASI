@@ -22,12 +22,17 @@ class DashboardController extends Controller
         // 3. Aset dalam Perbaikan (kondisi Rusak Ringan atau Rusak Berat)
         $perbaikan = aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->sum('jumlah_aset');
 
-        // 4. Kategori Spesifik: Komputer
-        $komputer = aset::where('jenis_aset', 'like', '%komputer%')->sum('jumlah_aset');
+        // 4. Kategori Spesifik: Elektronik
+        $elektronik = aset::where(function($q) {
+            $q->where('jenis_aset', 'like', '%elektronik%')
+              ->orWhere('jenis_aset', 'like', '%komputer%');
+        })->sum('jumlah_aset');
 
-        // 5. Kategori Spesifik: Meja dan Kursi
-        $meja_kursi = aset::where(function($q) {
-            $q->where('jenis_aset', 'like', '%meja%')
+        // 5. Kategori Spesifik: Furnitur
+        $furnitur = aset::where(function($q) {
+            $q->where('jenis_aset', 'like', '%furnitur%')
+              ->orWhere('jenis_aset', 'like', '%furniture%')
+              ->orWhere('jenis_aset', 'like', '%meja%')
               ->orWhere('jenis_aset', 'like', '%kursi%');
         })->sum('jumlah_aset');
 
@@ -85,8 +90,8 @@ class DashboardController extends Controller
                 'total_aset' => (int)$total_aset,
                 'aset_aktif' => (int)$aset_aktif,
                 'perbaikan'  => (int)$perbaikan,
-                'komputer'   => (int)$komputer,
-                'meja_kursi' => (int)$meja_kursi,
+                'elektronik' => (int)$elektronik,
+                'furnitur'   => (int)$furnitur,
             ],
             'activities' => $activities
         ], 200);

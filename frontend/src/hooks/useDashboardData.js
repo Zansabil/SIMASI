@@ -6,8 +6,8 @@ const DEFAULT_STATS = {
   total_aset: 1270,
   aset_aktif: 1200,
   perbaikan: 70,
-  komputer: 300,
-  meja_kursi: 650,
+  elektronik: 300,
+  furnitur: 650,
 };
 
 const DEFAULT_ACTIVITIES = [
@@ -49,8 +49,8 @@ export default function useDashboardData() {
             total_aset:  response.data.stats?.total_aset  || 0,
             aset_aktif:  response.data.stats?.aset_aktif  || 0,
             perbaikan:   response.data.stats?.perbaikan   || 0,
-            komputer:    response.data.stats?.komputer    || 0,
-            meja_kursi:  response.data.stats?.meja_kursi  || 0,
+            elektronik:  response.data.stats?.elektronik  || 0,
+            furnitur:    response.data.stats?.furnitur    || 0,
           });
 
           // Update aktivitas hanya jika API mengembalikan data

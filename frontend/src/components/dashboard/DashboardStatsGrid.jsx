@@ -12,8 +12,8 @@ const STAT_CARD_CONFIG = [
   { key: 'total_aset',  label: 'Total Aset',    icon: FiDatabase,    colorClass: 'stat-total'     },
   { key: 'aset_aktif',  label: 'Aset Aktif',    icon: FiCheckCircle, colorClass: 'stat-active'    },
   { key: 'perbaikan',   label: 'Perbaikan',      icon: FiTool,        colorClass: 'stat-repair'    },
-  { key: 'komputer',    label: 'Komputer',       icon: FiMonitor,     colorClass: 'stat-computer'  },
-  { key: 'meja_kursi',  label: 'Meja dan Kursi', icon: FiTable,       colorClass: 'stat-furniture' },
+  { key: 'elektronik',  label: 'Elektronik',     icon: FiMonitor,     colorClass: 'stat-computer'  },
+  { key: 'furnitur',    label: 'Furnitur',       icon: FiTable,       colorClass: 'stat-furniture' },
 ];
 
 /**
