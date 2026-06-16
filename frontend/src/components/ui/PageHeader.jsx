@@ -13,7 +13,7 @@ export default function PageHeader({
   return (
     <div className="page-header-container">
       {/* Upper Row: Title & Subtitle vs Action Button */}
-      <div className="page-header-row" style={{ marginBottom: subtitle ? '4px' : '24px' }}>
+      <div className="page-header-row">
         <div className="page-header-title-area">
           <h2 className="page-header-title">{title}</h2>
           {subtitle && <p className="page-header-subtitle">{subtitle}</p>}

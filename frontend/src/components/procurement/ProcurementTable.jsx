@@ -69,7 +69,7 @@ export default function ProcurementTable({
     });
 
     return (
-      <div className="approval-table-wrapper" style={{ marginTop: '24px' }}>
+      <div className="approval-table-wrapper">
         <table className="approval-table-el">
           <thead>
             <tr>
@@ -150,7 +150,7 @@ export default function ProcurementTable({
 
   // Otherwise render the Collapsible Cards layout (for 'all' filter)
   return (
-    <div style={{ marginTop: '24px' }}>
+    <div className="procurement-cards-container">
       {procurements.length === 0 ? (
         <div className="stat-card" style={{ padding: '48px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#475569' }}>Tidak Ada Pengajuan</h3>

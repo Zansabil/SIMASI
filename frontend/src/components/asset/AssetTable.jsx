@@ -44,7 +44,8 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
             <th className="col-no">No.</th>
             <th className="col-name">Nama Barang</th>
             <th className="col-code hide-on-mobile">Kode Barang</th>
-            <th className="col-location hide-on-mobile">Lokasi Barang</th>
+            <th className="col-unit hide-on-mobile">Unit</th>
+            <th className="col-location hide-on-mobile">Lokasi Penempatan</th>
             <th className="col-qty">Jumlah<span className="hide-on-mobile"> Barang</span></th>
             <th className="col-condition hide-on-mobile">Kondisi Barang</th>
             <th className="col-source hide-on-mobile">Sumber Dana</th>
@@ -56,11 +57,11 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={showActions ? 10 : 9} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Memuat data aset...</td>
+              <td colSpan={showActions ? 11 : 10} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Memuat data aset...</td>
             </tr>
           ) : assets.length === 0 ? (
             <tr>
-              <td colSpan={showActions ? 10 : 9} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Tidak ada data aset yang ditemukan.</td>
+              <td colSpan={showActions ? 11 : 10} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Tidak ada data aset yang ditemukan.</td>
             </tr>
           ) : (
             assets.map((asset, index) => (
@@ -71,7 +72,22 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                   <div className="asset-code-sub show-on-mobile">{asset.asset_code}</div>
                 </td>
                 <td className="col-code hide-on-mobile">{asset.asset_code}</td>
-                <td className="col-location hide-on-mobile">{asset.location}</td>
+                {(() => {
+                  const locStr = asset.location || '';
+                  let unit = locStr;
+                  let room = '-';
+                  if (locStr.includes(' - ')) {
+                    const parts = locStr.split(' - ');
+                    unit = parts[0] || '';
+                    room = parts.slice(1).join(' - ') || '';
+                  }
+                  return (
+                    <>
+                      <td className="col-unit hide-on-mobile text-center">{unit}</td>
+                      <td className="col-location hide-on-mobile">{room}</td>
+                    </>
+                  );
+                })()}
                 <td className="col-qty text-center">{asset.quantity}</td>
                 <td className="col-condition hide-on-mobile">
                   {asset.condition.charAt(0).toUpperCase() + asset.condition.slice(1)}

@@ -389,3 +389,30 @@
   color: #d97706; /* gold/orange hover color */
 }
 
+@media (max-width: 768px) {
+  .card-header-clickable {
+    padding: 16px 12px;
+  }
+
+  .card-meta-right {
+    gap: 12px;
+  }
+
+  .card-counters-wrapper {
+    gap: 12px;
+  }
+
+  .card-letter-number {
+    font-size: 13px;
+  }
+
+  .counter-number {
+    font-size: 18px;
+  }
+
+  .counter-label {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+}
+

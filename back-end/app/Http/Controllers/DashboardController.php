@@ -39,8 +39,12 @@ class DashboardController extends Controller
         // 6. Mengambil Aktivitas Terbaru dari Pengadaan Aset dan Perbaikan Aset
         $activities = [];
 
-        // Ambil pengadaan terbaru
-        $pengadaans = pengadaan_aset::orderBy('tgl_pengajuan', 'desc')->take(5)->get();
+        $today = date('Y-m-d');
+
+        // Ambil pengadaan hari ini
+        $pengadaans = pengadaan_aset::whereDate('tgl_pengajuan', $today)
+            ->orderBy('tgl_pengajuan', 'desc')
+            ->get();
         foreach ($pengadaans as $p) {
             $status_mapped = 'pending';
             if ($p->status_pengajuan === 'Disetujui') $status_mapped = 'approved';
@@ -56,8 +60,11 @@ class DashboardController extends Controller
             ];
         }
 
-        // Ambil perbaikan terbaru
-        $perbaikans = perbaikan_aset::with('laporan.aset')->orderBy('tgl_dibuat', 'desc')->take(5)->get();
+        // Ambil perbaikan hari ini
+        $perbaikans = perbaikan_aset::with('laporan.aset')
+            ->whereDate('tgl_dibuat', $today)
+            ->orderBy('tgl_dibuat', 'desc')
+            ->get();
         foreach ($perbaikans as $pb) {
             $status_mapped = 'in_progress';
             if ($pb->status_perbaikan === 'Selesai') $status_mapped = 'completed';
@@ -78,9 +85,6 @@ class DashboardController extends Controller
         usort($activities, function($a, $b) {
             return strcmp($b['raw_date'], $a['raw_date']);
         });
-
-        // Ambil 5 aktivitas teratas
-        $activities = array_slice($activities, 0, 5);
 
         // Mengirim data hitungan tersebut dalam bentuk JSON sesuai format frontend
         return response()->json([

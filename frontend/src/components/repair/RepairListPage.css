@@ -54,7 +54,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 14px;
   width: 100%;
 }
 
@@ -654,14 +654,39 @@
 /* Responsive Styles overrides */
 @media (max-width: 768px) {
   .pagination-footer-row {
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .page-nav-btn,
+  .page-num-btn {
+    height: 28px;
+    width: 28px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+
+  .page-nav-btn svg {
+    width: 12px;
+    height: 12px;
   }
 
   .items-per-page-select-container {
-    width: 100%;
-    max-width: 200px;
+    width: 115px;
+  }
+
+  .items-per-page-select-container .dropdown-arrow-wrapper {
+    right: 8px;
+  }
+
+  .items-per-page-select {
+    font-size: 11px;
+    padding: 4px 20px 4px 8px;
+    height: 28px;
+    border-radius: 4px;
   }
 
   .footer-copyright-text {

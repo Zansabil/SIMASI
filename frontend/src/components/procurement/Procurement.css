@@ -56,7 +56,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 2px;
   width: 100%;
 }
 
@@ -779,8 +779,13 @@
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
+  margin-top: 70px;   /* Jarak atas untuk tampilan tabel */
   overflow-x: auto;
   width: 100%;
+}
+
+.procurement-cards-container {
+  margin-top: 10px;  /* Jarak atas untuk tampilan kartu usulan (semua) */
 }
 
 .approval-table-el {
@@ -896,6 +901,31 @@
 }
 
 @media (max-width: 768px) {
+  .card-header-clickable {
+    padding: 16px 12px;
+  }
+
+  .card-meta-right {
+    gap: 12px;
+  }
+
+  .card-counters-wrapper {
+    gap: 12px;
+  }
+
+  .card-letter-number {
+    font-size: 13px;
+  }
+
+  .counter-number {
+    font-size: 18px;
+  }
+
+  .counter-label {
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
   .footer-copyright-text {
     margin-top: 32px;
   }

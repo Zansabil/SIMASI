@@ -23,7 +23,8 @@ export default function AssetFormModal({
   allAssets = []
 }) {
   const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
+  const [unit, setUnit] = useState('');
+  const [room, setRoom] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [code, setCode] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -37,7 +38,19 @@ export default function AssetFormModal({
     if (isOpen) {
       if (assetToEdit) {
         setName(assetToEdit.name || '');
-        setLocation(assetToEdit.location || '');
+        
+        // Parse combined unit and room from location
+        const locStr = assetToEdit.location || '';
+        if (locStr.includes(' - ')) {
+          const parts = locStr.split(' - ');
+          setUnit(parts[0] || '');
+          setRoom(parts.slice(1).join(' - ') || '');
+        } else {
+          // Backward compatibility for old records
+          setUnit(locStr);
+          setRoom('');
+        }
+        
         setPurchaseDate(assetToEdit.purchase_date || '');
         setCode(assetToEdit.asset_code || '');
         setQuantity(assetToEdit.quantity || '');
@@ -47,7 +60,8 @@ export default function AssetFormModal({
         setImage(assetToEdit.image_path || '');
       } else {
         setName('');
-        setLocation('');
+        setUnit('');
+        setRoom('');
         setPurchaseDate('');
         setCode('');
         setQuantity('');
@@ -62,12 +76,12 @@ export default function AssetFormModal({
   // Auto-generate code for new assets
   useEffect(() => {
     if (assetToEdit) return; // Skip if editing
-    if (!location || !purchaseDate) {
+    if (!unit || !purchaseDate) {
       setCode('');
       return;
     }
 
-    const cleanLoc = location.trim().toUpperCase();
+    const cleanLoc = unit.trim().toUpperCase();
     const parts = purchaseDate.split('-'); // [YYYY, MM, DD]
     if (parts.length !== 3) return;
     const yyyy = parts[0];
@@ -90,7 +104,7 @@ export default function AssetFormModal({
 
     const nextSeq = String(maxSeq + 1).padStart(4, '0');
     setCode(`${prefix}${nextSeq}`);
-  }, [location, purchaseDate, allAssets, assetToEdit]);
+  }, [unit, purchaseDate, allAssets, assetToEdit]);
 
   if (!isOpen) return null;
 
@@ -107,9 +121,10 @@ export default function AssetFormModal({
 
   const handleSubmitForm = (e) => {
     e.preventDefault();
+    const combinedLocation = unit && room ? `${unit} - ${room}` : (unit || room);
     onSubmit({
       name,
-      location,
+      location: combinedLocation,
       purchaseDate,
       code,
       quantity,
@@ -149,13 +164,31 @@ export default function AssetFormModal({
           </div>
 
           <div className="modal-form-group">
+            <label className="modal-form-label">Unit <span className="req-star">*</span></label>
+            <select
+              className="modal-form-select"
+              required
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+            >
+              <option value="" disabled hidden>Unit</option>
+              <option value="SD">SD</option>
+              <option value="SMP">SMP</option>
+              <option value="SMA">SMA</option>
+              <option value="MA">MA</option>
+              <option value="TK">TK</option>
+            </select>
+          </div>
+
+          <div className="modal-form-group">
             <label className="modal-form-label">Lokasi Penempatan Barang <span className="req-star">*</span></label>
             <input
               type="text"
               className="modal-form-input"
               required
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              value={room}
+              onChange={(e) => setRoom(e.target.value)}
+              placeholder="Contoh: Ruang Tata Usaha"
             />
           </div>
 

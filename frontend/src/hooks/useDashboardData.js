@@ -11,10 +11,36 @@ const DEFAULT_STATS = {
   furnitur: 650,
 };
 
+const getTodayDateString = () => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const getYesterdayDateString = () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const day = String(yesterday.getDate()).padStart(2, '0');
+  const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+  const year = yesterday.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
+const todayStr = getTodayDateString();
+const yesterdayStr = getYesterdayDateString();
+
 const DEFAULT_ACTIVITIES = [
-  { id: 'mock-1', type: 'Pengadaan', title: 'Pengadaan - Kipas Angin',   date: '18-10-2025', status: 'pending'     },
-  { id: 'mock-2', type: 'Perbaikan', title: 'Perbaikan - Meja Guru',      date: '25-10-2025', status: 'in_progress' },
-  { id: 'mock-3', type: 'Perbaikan', title: 'Perbaikan - Stop Kontak Mati', date: '10-10-2025', status: 'completed'   },
+  { id: 'mock-1', type: 'Pengadaan', title: 'Pengadaan - Kipas Angin',   date: todayStr, status: 'pending'     },
+  { id: 'mock-2', type: 'Perbaikan', title: 'Perbaikan - Meja Guru',      date: todayStr, status: 'in_progress' },
+  { id: 'mock-3', type: 'Perbaikan', title: 'Perbaikan - Stop Kontak Mati', date: todayStr, status: 'completed'   },
+  { id: 'mock-4', type: 'Pengadaan', title: 'Pengadaan - Proyektor Kelas',  date: todayStr, status: 'approved'    },
+  { id: 'mock-5', type: 'Perbaikan', title: 'Perbaikan - AC Kelas 10',      date: todayStr, status: 'in_progress' },
+  { id: 'mock-6', type: 'Pengadaan', title: 'Pengadaan - Papan Tulis',     date: todayStr, status: 'pending'     },
+  { id: 'mock-7', type: 'Perbaikan', title: 'Perbaikan - Pintu Toilet',     date: todayStr, status: 'completed'   },
+  { id: 'mock-8', type: 'Pengadaan', title: 'Pengadaan - Kursi Guru',      date: yesterdayStr, status: 'rejected'  },
+  { id: 'mock-9', type: 'Perbaikan', title: 'Perbaikan - Lampu Koridor',    date: yesterdayStr, status: 'completed' },
 ];
 
 /**
