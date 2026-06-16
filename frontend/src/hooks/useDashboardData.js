@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 // Default mock data untuk mode demo / fallback ketika backend tidak aktif
 const DEFAULT_STATS = {
@@ -39,7 +40,7 @@ export default function useDashboardData() {
         };
 
         const response = await axios.get(
-          'http://localhost:8000/api/dashboard/stats',
+          `${API_BASE_URL}/api/dashboard/stats`,
           config
         );
 

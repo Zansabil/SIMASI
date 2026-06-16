@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
@@ -53,7 +54,7 @@ export default function Login() {
 
     try {
       // Connect to Laravel endpoint serve URL
-      const response = await axios.post('http://localhost:8000/api/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
         email: email,
         password: password,
       });

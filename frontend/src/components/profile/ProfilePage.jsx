@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import { FiUser, FiSave, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
 import './Profile.css';
@@ -60,7 +61,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.put('http://localhost:8000/api/profile', {
+      await axios.put(`${API_BASE_URL}/api/profile`, {
         name: profileName,
         email: profileEmail,
       }, { headers: { Authorization: `Bearer ${token}` } });
@@ -89,7 +90,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     setIsSavingPw(true);
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.put('http://localhost:8000/api/profile/password', {
+      await axios.put(`${API_BASE_URL}/api/profile/password`, {
         current_password: currentPassword,
         new_password: newPassword,
         new_password_confirmation: confirmPassword,

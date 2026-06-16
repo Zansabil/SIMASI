@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import { FiPlus } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
@@ -163,7 +164,7 @@ export default function UserListPage({ role, currentPath }) {
         };
 
         const response = await axios.get(
-          `http://localhost:8000/api/users?search=${searchQuery}`,
+          `${API_BASE_URL}/api/users?search=${searchQuery}`,
           config
         );
 
@@ -226,7 +227,7 @@ export default function UserListPage({ role, currentPath }) {
     if (!userToDelete) return;
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.delete(`http://localhost:8000/api/users/${userToDelete.id}`, {
+      await axios.delete(`${API_BASE_URL}/api/users/${userToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
@@ -266,7 +267,7 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.put(`http://localhost:8000/api/users/${editingUser.id}`, {
+        const response = await axios.put(`${API_BASE_URL}/api/users/${editingUser.id}`, {
           name: formData.name,
           email: formData.email,
           username: formData.username,
@@ -319,7 +320,7 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.post('http://localhost:8000/api/users', {
+        const response = await axios.post(`${API_BASE_URL}/api/users`, {
           name: formData.name,
           email: formData.email,
           username: formData.username,

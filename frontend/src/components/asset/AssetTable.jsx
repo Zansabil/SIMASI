@@ -1,4 +1,5 @@
 import React from 'react';
+import { API_BASE_URL } from '../../config';
 import './AssetTable.css';
 
 export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete, showActions = true }) {
@@ -80,7 +81,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                 <td className="col-photo">
                   <div className="asset-thumbnail-container">
                     <img 
-                      src={asset.image_path ? (asset.image_path.startsWith('http') ? asset.image_path : `http://localhost:8000/storage/${asset.image_path}`) : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'} 
+                      src={asset.image_path ? (asset.image_path.startsWith('http') ? asset.image_path : `${API_BASE_URL}/storage/${asset.image_path}`) : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'} 
                       alt={asset.name} 
                       className="asset-thumbnail-img"
                     />

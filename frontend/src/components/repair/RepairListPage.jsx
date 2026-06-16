@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
@@ -146,7 +147,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
 
         const statusParam = activeTab !== 'all' ? `&status=${activeTab}` : '';
         const response = await axios.get(
-          `http://localhost:8000/api/repairs?search=${searchQuery}${statusParam}`,
+          `${API_BASE_URL}/api/repairs?search=${searchQuery}${statusParam}`,
           config
         );
 
@@ -161,7 +162,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
             description: item.description,
             status: item.status,
             priority: item.priority || 'medium',
-            image_path: item.asset && item.asset.image_path ? `http://localhost:8000/storage/${item.asset.image_path}` : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
+            image_path: item.asset && item.asset.image_path ? `${API_BASE_URL}/storage/${item.asset.image_path}` : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
           }));
           setRepairs(mapped);
         } else {
@@ -248,7 +249,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       };
 
       // Real backend API call
-      await axios.post('http://localhost:8000/api/repairs', {
+      await axios.post(`${API_BASE_URL}/api/repairs`, {
         asset_id: 1, // Default mockup asset
         description: `${formData.asset_name} (${formData.location}): ${formData.description}`,
       }, config);

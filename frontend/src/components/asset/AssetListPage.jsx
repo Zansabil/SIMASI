@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import AssetTable from './AssetTable';
 import Pagination from './Pagination';
 import DashboardLayout from '../layout/DashboardLayout';
@@ -122,7 +123,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
 
         const field = selectedFilterField === 'all' ? 'all' : (selectedFilterField === 'name' ? 'name' : (selectedFilterField === 'code' ? 'asset_code' : 'location'));
         const response = await axios.get(
-          `http://localhost:8000/api/assets?search=${searchQuery}&search_field=${field}&page=${currentPage}&per_page=${itemsPerPage}`,
+          `${API_BASE_URL}/api/assets?search=${searchQuery}&search_field=${field}&page=${currentPage}&per_page=${itemsPerPage}`,
           config
         );
 
@@ -188,7 +189,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        await axios.put(`http://localhost:8000/api/assets/${assetToEdit.id}`, {
+        await axios.put(`${API_BASE_URL}/api/assets/${assetToEdit.id}`, {
           name: formData.name,
           quantity: Number(formData.quantity),
           condition: formData.condition,
@@ -223,7 +224,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        const response = await axios.post('http://localhost:8000/api/assets', {
+        const response = await axios.post(`${API_BASE_URL}/api/assets`, {
           name: formData.name,
           category: 'Umum',
           quantity: Number(formData.quantity),

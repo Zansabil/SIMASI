@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 import { useNavigate, Link } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import './Register.css';
@@ -44,7 +45,7 @@ export default function Register() {
 
     try {
       // Connect to Laravel backend register API
-      const response = await axios.post('http://localhost:8000/api/register', {
+      const response = await axios.post(`${API_BASE_URL}/api/register`, {
         nama: namaLengkap,
         nama_pengguna: username,
         email: email,
