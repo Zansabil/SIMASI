@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API_BASE_URL } from '../../config';
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -19,28 +21,65 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
   const [formReporter, setFormReporter] = useState('');
   const [formUnit, setFormUnit] = useState('');
   const [formDate, setFormDate] = useState('');
-  const [formAssetName, setFormAssetName] = useState('');
+  
+  // Data aset dari database
+  const [assets, setAssets] = useState([]);
+  const [selectedAssetId, setSelectedAssetId] = useState('');
+  
   const [formLocation, setFormLocation] = useState('');
   const [formDesc, setFormDesc] = useState('');
   const [formImage, setFormImage] = useState('');
+  const [formImageFile, setFormImageFile] = useState(null); 
 
-  // Reset or initialize form states when modal opens
+  // Load daftar aset saat komponen di-mount atau dibuka
   useEffect(() => {
     if (isOpen) {
+      const fetchAssets = async () => {
+        try {
+          const token = localStorage.getItem('auth_token');
+          const response = await axios.get(`${API_BASE_URL}/api/aset`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (response.data && response.data.data) {
+            setAssets(response.data.data);
+          }
+        } catch (error) {
+          console.error("Gagal mengambil daftar aset:", error);
+        }
+      };
+      fetchAssets();
+
+      // Reset form
       setFormReporter('');
       setFormUnit('');
       const today = new Date().toISOString().split('T')[0];
       setFormDate(today);
-      setFormAssetName('');
+      setSelectedAssetId('');
       setFormLocation('');
       setFormDesc('');
       setFormImage('');
+      setFormImageFile(null);
     }
   }, [isOpen]);
+
+  // Handle ketika aset dipilih
+  const handleAssetSelect = (e) => {
+    const id = e.target.value;
+    setSelectedAssetId(id);
+    
+    // Auto fill lokasi berdasarkan aset yang dipilih
+    const selectedAsset = assets.find(a => a.id.toString() === id.toString());
+    if (selectedAsset) {
+      setFormLocation(selectedAsset.lokasi_aset || '');
+    } else {
+      setFormLocation('');
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setFormImageFile(file); // Simpan file aslinya
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormImage(reader.result);
@@ -51,14 +90,21 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Cari nama aset untuk dikirim sebagai text (opsional untuk display fallback)
+    const selectedAsset = assets.find(a => a.id.toString() === selectedAssetId.toString());
+    const assetName = selectedAsset ? selectedAsset.nama_aset : 'Aset Tidak Diketahui';
+
     onSubmit({
       reporter_name: formReporter,
       unit: formUnit,
       date: formDate,
-      asset_name: formAssetName,
+      asset_id: selectedAssetId,
+      asset_name: assetName,
       location: formLocation,
       description: formDesc,
-      image_path: formImage
+      image_file: formImageFile, 
+      image_path: formImage 
     });
   };
 
@@ -95,7 +141,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
               value={formUnit}
               onChange={(e) => setFormUnit(e.target.value)}
             >
-              <option value="">Pilih Unit Usaha</option>
+              <option value="" disabled hidden>Pilih Unit Usaha</option>
               <option value="SMA">SMA</option>
               <option value="MA">MA</option>
               <option value="SMP">SMP</option>
@@ -117,15 +163,20 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
           </div>
 
           <div className="modal-form-group">
-            <label className="modal-form-label">Nama Aset <span className="req-star">*</span></label>
-            <input 
-              type="text" 
-              className="modal-form-input" 
+            <label className="modal-form-label">Pilih Aset <span className="req-star">*</span></label>
+            <select 
+              className="modal-form-select"
               required
-              value={formAssetName}
-              onChange={(e) => setFormAssetName(e.target.value)}
-              placeholder="Masukkan nama aset yang rusak"
-            />
+              value={selectedAssetId}
+              onChange={handleAssetSelect}
+            >
+              <option value="" disabled hidden>-- Pilih Aset yang Rusak --</option>
+              {assets.map(aset => (
+                <option key={aset.id} value={aset.id}>
+                  {aset.kode_inventaris} - {aset.nama_aset}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="modal-form-group">

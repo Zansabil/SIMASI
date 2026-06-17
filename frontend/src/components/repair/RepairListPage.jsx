@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from '../../config';
+import React, { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
@@ -10,12 +8,23 @@ import RepairTable from './RepairTable';
 import RepairFormModal from './RepairFormModal';
 import RepairDetailModal from './RepairDetailModal';
 import RepairEditModal from './RepairEditModal';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiLoader } from 'react-icons/fi';
 import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
+import { API_BASE_URL } from '../../config';
 
-// Mock data matching the mockup images exactly (default fallback)
-const initialMockRepairs = [
+// Import service API
+import { 
+  fetchRepairs, 
+  createRepair, 
+  validateRepair, 
+  rejectRepair, 
+  completeRepair,
+  deleteRepair
+} from '../../services/repairService';
+
+// Default mock fallbacks jika backend mati
+const defaultMockRepairs = [
   {
     id: 'mock-1',
     reporter_name: 'Ahmad Rizki',
@@ -24,57 +33,9 @@ const initialMockRepairs = [
     asset_name: 'Proyektor Ruang Kelas',
     location: 'Ruang 4A',
     description: 'Proyektor tidak bisa menyala ...',
-    status: 'pending', // Menunggu
-    priority: 'high',  // Mendesak
+    status: 'pending',
+    priority: 'high',
     image_path: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?w=120&fit=crop'
-  },
-  {
-    id: 'mock-2',
-    reporter_name: 'Siti Maesaroh',
-    unit: 'SMA',
-    date: '12-10-2025',
-    asset_name: 'AC Ruang Guru',
-    location: 'Ruang Guru Lantai 2',
-    description: 'AC mengeluarkan bau tidak sedap ...',
-    status: 'in_progress', // Sedang di Kerjakan
-    priority: 'low',  // Tidak Mendesak
-    image_path: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=120&fit=crop'
-  },
-  {
-    id: 'mock-3',
-    reporter_name: 'M. Fahri Saputra',
-    unit: 'MA',
-    date: '14-10-2025',
-    asset_name: 'Kursi Belajar',
-    location: 'Kelas XI IPA 1',
-    description: 'Salah satu kaki kursi patah ...',
-    status: 'in_progress', // Sedang di Kerjakan
-    priority: 'high',  // Mendesak
-    image_path: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=120&fit=crop'
-  },
-  {
-    id: 'mock-4',
-    reporter_name: 'Dewi Anggraini',
-    unit: 'TK',
-    date: '18-10-2025',
-    asset_name: 'Speaker Aktif',
-    location: 'Ruang Kegiatan Anak',
-    description: 'Speaker mengeluarkan suara pecah ...',
-    status: 'completed', // Selesai
-    priority: 'medium',  // Sedang
-    image_path: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=120&fit=crop'
-  },
-  {
-    id: 'mock-5',
-    reporter_name: 'Lestari',
-    unit: 'SD',
-    date: '16-10-2025',
-    asset_name: 'Meja Guru',
-    location: 'Ruang 1A',
-    description: 'Meja berlubang di bagian atas ...',
-    status: 'completed', // Selesai
-    priority: 'medium',  // Sedang
-    image_path: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=120&fit=crop'
   }
 ];
 
@@ -84,6 +45,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isUsingBackend, setIsUsingBackend] = useState(false);
 
   // Reset page when filters change
   useEffect(() => {
@@ -95,94 +57,72 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const [allRepairs, setAllRepairs] = useState([]);
   const [repairs, setRepairs] = useState([]);
 
-  // Load repairs from localStorage or initial mock data (shared across roles for prototype consistency)
-  useEffect(() => {
-    const stored = localStorage.getItem('simas_repairs');
-    if (stored) {
-      setAllRepairs(JSON.parse(stored));
-    } else {
-      localStorage.setItem('simas_repairs', JSON.stringify(initialMockRepairs));
-      setAllRepairs(initialMockRepairs);
-    }
-  }, []);
+  // Fetch data dari API Backend
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchRepairs(searchQuery, activeTab);
+      
+      // Mapping respons backend ke format Frontend
+      const mapped = data.map(item => {
+        let status = 'pending';
+        if (item.status_kerusakan === 'Diproses') status = 'in_progress';
+        if (item.status_kerusakan === 'Selesai') status = 'completed';
+        if (item.status_kerusakan === 'Ditolak') status = 'rejected';
 
-  // Local filtering helper for offline demo
-  const filterMockData = () => {
-    let filtered = [...allRepairs];
-
-    // 1. Filter by Active Tab Status
-    if (activeTab !== 'all') {
-      filtered = filtered.filter(item => item.status === activeTab);
-    }
-
-    // 2. Filter by Search Query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        item =>
-          item.asset_name.toLowerCase().includes(query) ||
-          item.reporter_name.toLowerCase().includes(query)
-      );
-    }
-
-    setRepairs(filtered);
-  };
-
-  // Fetch repair reports from Laravel API / fallback to filtered mock data
-  useEffect(() => {
-    const fetchRepairs = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('auth_token');
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        return {
+          id: item.id,
+          reporter_name: item.pelapor ? item.pelapor.nama : 'Unknown',
+          unit: item.aset ? item.aset.lokasi_penempatan : 'Unit', // Menggunakan lokasi karena tidak ada unit di model lama
+          date: item.tgl_dibuat ? new Date(item.tgl_dibuat).toLocaleDateString('id-ID') : '-',
+          asset_name: item.aset ? item.aset.nama_barang : 'Aset',
+          location: item.aset ? item.aset.lokasi_penempatan : '-',
+          description: item.deskripsi,
+          status: status,
+          priority: 'medium', // Prototype (tidak ada field priority di DB)
+          image_path: item.lampiran 
+            ? `${API_BASE_URL}/storage/${item.lampiran}` 
+            : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
         };
+      });
 
-        const statusParam = activeTab !== 'all' ? `&status=${activeTab}` : '';
-        const response = await axios.get(
-          `${API_BASE_URL}/api/repairs?search=${searchQuery}${statusParam}`,
-          config
-        );
-
-        if (response.data && response.data.data && response.data.data.length > 0) {
-          const mapped = response.data.data.map(item => ({
-            id: item.id,
-            reporter_name: item.reporter ? item.reporter.name : 'Unknown',
-            unit: item.asset ? item.asset.location : 'Yayasan',
-            date: item.created_at ? new Date(item.created_at).toLocaleDateString('id-ID') : '-',
-            asset_name: item.asset ? item.asset.name : 'Aset',
-            location: item.asset ? item.asset.location : '-',
-            description: item.description,
-            status: item.status,
-            priority: item.priority || 'medium',
-            image_path: item.asset && item.asset.image_path ? `${API_BASE_URL}/storage/${item.asset.image_path}` : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
-          }));
-          setRepairs(mapped);
-        } else {
-          filterMockData();
+      setRepairs(mapped);
+      setIsUsingBackend(true);
+    } catch (err) {
+      console.warn("Backend API not reachable. Using local dummy data.", err);
+      // Fallback lokal
+      const stored = localStorage.getItem('simas_repairs');
+      if (stored) {
+        let filtered = JSON.parse(stored);
+        if (activeTab !== 'all') {
+          filtered = filtered.filter(item => item.status === activeTab);
         }
-      } catch (err) {
-        // Backend API offline, fallback to locally filtered data
-        filterMockData();
-      } finally {
-        setIsLoading(false);
+        if (searchQuery) {
+          const query = searchQuery.toLowerCase();
+          filtered = filtered.filter(item => 
+            item.asset_name.toLowerCase().includes(query) || 
+            item.reporter_name.toLowerCase().includes(query)
+          );
+        }
+        setRepairs(filtered);
+      } else {
+        localStorage.setItem('simas_repairs', JSON.stringify(defaultMockRepairs));
+        setRepairs(defaultMockRepairs);
       }
-    };
-
-    if (allRepairs.length > 0) {
-      fetchRepairs();
-    } else {
-      setRepairs([]);
+      setIsUsingBackend(false);
+    } finally {
       setIsLoading(false);
     }
-  }, [searchQuery, activeTab, allRepairs]);
+  }, [searchQuery, activeTab]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Handlers for Staff (Petugas Perbaikan)
   const handleOpenView = (item) => {
@@ -195,25 +135,71 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
     setIsEditOpen(true);
   };
 
-  const handleEditSubmit = (editData) => {
-    const updatedRepairs = allRepairs.map(item => {
-      if (item.id === selectedItem.id) {
-        return {
-          ...item,
-          status: editData.status,
-          priority: editData.priority
-        };
+  const handleEditSubmit = async (editData) => {
+    // editData contains { status, priority }
+    if (!selectedItem) return;
+
+    if (isUsingBackend) {
+      try {
+        if (editData.status === 'in_progress') {
+          // Tandai sedang dikerjakan (Diproses) via validasi
+          await validateRepair(selectedItem.id);
+        } else if (editData.status === 'rejected') {
+          await rejectRepair(selectedItem.id, editData.alasanTolak || 'Ditolak oleh petugas.');
+        } else if (editData.status === 'completed') {
+          // Tandai selesai dan buat history di perbaikan_aset
+          // Ambil ID Petugas asli dari localStorage (disimpan saat login)
+          const idPetugas = localStorage.getItem('user_id') || 4; 
+          await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya);
+        }
+
+        // Refresh list
+        await loadData();
+        setIsEditOpen(false);
+        setSuccessMessage('Status laporan perbaikan berhasil diperbarui di sistem.');
+        setIsSuccessOpen(true);
+      } catch (err) {
+        console.error("Gagal update status", err);
+        alert("Gagal mengupdate status: " + (err.response?.data?.message || err.message));
       }
-      return item;
-    });
+    } else {
+      // Offline fallback
+      const stored = JSON.parse(localStorage.getItem('simas_repairs') || '[]');
+      const updatedRepairs = stored.map(item => {
+        if (item.id === selectedItem.id) {
+          return { ...item, status: editData.status, priority: editData.priority };
+        }
+        return item;
+      });
+      localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
+      await loadData();
+      setIsEditOpen(false);
+      setSuccessMessage('Status laporan perbaikan berhasil diperbarui (Offline).');
+      setIsSuccessOpen(true);
+    }
+  };
 
-    localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
-    setAllRepairs(updatedRepairs);
-    setIsEditOpen(false);
-    setIsSuccessOpen(true);
-
-    // Dispatch update event for potential dashboard updates
-    window.dispatchEvent(new Event('repairs-updated'));
+  const handleDelete = async (item) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus laporan kerusakan untuk aset "${item.asset_name}" secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
+      if (isUsingBackend) {
+        try {
+          await deleteRepair(item.id);
+          await loadData();
+          setSuccessMessage('Data laporan kerusakan berhasil dihapus dari database.');
+          setIsSuccessOpen(true);
+        } catch (err) {
+          console.error("Gagal menghapus data", err);
+          alert("Gagal menghapus data: " + (err.response?.data?.message || err.message));
+        }
+      } else {
+        const stored = JSON.parse(localStorage.getItem('simas_repairs') || '[]');
+        const updatedRepairs = stored.filter(r => r.id !== item.id);
+        localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
+        await loadData();
+        setSuccessMessage('Data berhasil dihapus (Offline).');
+        setIsSuccessOpen(true);
+      }
+    }
   };
 
   // Handlers for Writing (Admin / Guru)
@@ -223,49 +209,54 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   };
 
   const handleFormSubmit = async (formData) => {
-    // Format date YYYY-MM-DD -> DD-MM-YYYY
-    const parts = formData.date.split('-');
-    const formattedDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : formData.date;
-
-    const newRepair = {
-      id: 'local-' + Date.now(),
-      reporter_name: formData.reporter_name,
-      unit: formData.unit,
-      date: formattedDate,
-      asset_name: formData.asset_name,
-      location: formData.location,
-      description: formData.description,
-      status: 'pending', // Menunggu
-      priority: 'medium', // Default priority
-      image_path: formData.image_path || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
-    };
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`
+    if (isUsingBackend) {
+      try {
+        const formDataObj = new FormData();
+        // Menggunakan id_aset yang dipilih dari dropdown
+        formDataObj.append('id_aset', formData.asset_id); 
+        formDataObj.append('kategori_aset', 'Lainnya');
+        // Gabungkan nama & lokasi aset ke dalam deskripsi agar info tidak hilang
+        const fullDesc = `Nama Aset: ${formData.asset_name}\nLokasi: ${formData.location}\nDeskripsi: ${formData.description}`;
+        formDataObj.append('deskripsi', fullDesc);
+        
+        if (formData.image_file) {
+          formDataObj.append('lampiran', formData.image_file);
         }
+
+        await createRepair(formDataObj);
+        await loadData();
+        
+        setIsFormOpen(false);
+        setSuccessMessage('Laporan kerusakan berhasil dikirim ke sistem.');
+        setIsSuccessOpen(true);
+      } catch (err) {
+        console.error("Gagal buat laporan", err);
+        alert("Gagal membuat laporan: " + (err.response?.data?.message || err.message));
+      }
+    } else {
+      // Offline fallback
+      const stored = JSON.parse(localStorage.getItem('simas_repairs') || '[]');
+      const newRepair = {
+        id: 'local-' + Date.now(),
+        reporter_name: formData.reporter_name,
+        unit: formData.unit,
+        date: formData.date,
+        asset_name: formData.asset_name,
+        location: formData.location,
+        description: formData.description,
+        status: 'pending',
+        priority: 'medium',
+        image_path: formData.image_path || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
       };
-
-      // Real backend API call
-      await axios.post(`${API_BASE_URL}/api/repairs`, {
-        asset_id: 1, // Default mockup asset
-        description: `${formData.asset_name} (${formData.location}): ${formData.description}`,
-      }, config);
-
-      const updatedRepairs = [newRepair, ...allRepairs];
-      localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
-      setAllRepairs(updatedRepairs);
-    } catch (err) {
-      console.warn("Backend API error, adding repair report locally.", err);
-      const updatedRepairs = [newRepair, ...allRepairs];
-      localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
-      setAllRepairs(updatedRepairs);
+      
+      const updated = [newRepair, ...stored];
+      localStorage.setItem('simas_repairs', JSON.stringify(updated));
+      await loadData();
+      
+      setIsFormOpen(false);
+      setSuccessMessage('Laporan kerusakan berhasil disimpan (Offline).');
+      setIsSuccessOpen(true);
     }
-
-    setIsFormOpen(false);
-    setIsSuccessOpen(true);
   };
 
   return (
@@ -304,23 +295,31 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           </div>
         </PageHeader>
 
-        {/* Reusable Repair Table */}
-        <RepairTable
-          repairs={repairs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
-          isLoading={isLoading}
-          hasStaffAccess={hasStaffAccess}
-          onOpenView={handleOpenView}
-          onOpenEdit={handleOpenEdit}
-        />
+        {isLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: '16px' }}>
+            <FiLoader size={32} className="spin-animation" style={{ color: '#6366f1' }} />
+            <p style={{ color: '#64748b', fontSize: '14px' }}>Memuat data perbaikan aset...</p>
+          </div>
+        ) : (
+          <>
+            <RepairTable
+              repairs={repairs.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
+              isLoading={isLoading}
+              hasStaffAccess={hasStaffAccess}
+              onOpenView={handleOpenView}
+              onOpenEdit={handleOpenEdit}
+              onDelete={handleDelete}
+            />
 
-        {/* Pagination Controls */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          hasMore={(currentPage * itemsPerPage) < repairs.length}
-        />
+            <Pagination
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+              hasMore={(currentPage * itemsPerPage) < repairs.length}
+            />
+          </>
+        )}
 
         {/* Footer copyright */}
         <footer className="footer-copyright-text">
@@ -360,7 +359,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           isOpen={isSuccessOpen}
           type="success"
           title="Berhasil"
-          message={hasStaffAccess ? "Status laporan perbaikan berhasil diperbarui" : "Laporan kerusakan berhasil dikirim"}
+          message={successMessage}
           onConfirm={() => setIsSuccessOpen(false)}
         />
       </main>

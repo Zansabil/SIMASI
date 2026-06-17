@@ -142,6 +142,18 @@ class LaporanKerusakanController extends Controller
     {
         $laporan = laporan_kerusakan::findOrFail($id);
         
+        // Catat ke riwayat_aset sebelum dihapus
+        \App\Models\riwayat_aset::create([
+            'id_aset'     => $laporan->id_aset,
+            'aksi'        => 'Hapus',
+            'id_pengguna' => auth()->id() ?? 1,
+            'keterangan'  => 'Menghapus laporan kerusakan dan riwayat perbaikan terkait secara permanen.',
+            'waktu'       => now()
+        ]);
+
+        // Hapus child records di tabel perbaikan_aset untuk mencegah foreign key constraint violation
+        \App\Models\perbaikan_aset::where('id_laporan', $id)->delete();
+
         // Hapus lampiran dari storage agar tidak jadi sampah di server
         if ($laporan->lampiran) {
             Storage::disk('public')->delete($laporan->lampiran);

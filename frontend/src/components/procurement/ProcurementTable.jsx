@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiChevronDown, FiEye, FiCheck, FiX } from 'react-icons/fi';
+import { FiChevronDown, FiEye, FiCheck, FiX, FiEdit2 } from 'react-icons/fi';
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -18,9 +18,13 @@ export default function ProcurementTable({
   showActions = false,
   showUnit = true,
   onApproveItem,
-  onRejectItem
+  onRejectItem,
+  onUpdateRejectNotes
 }) {
   const [expandedCards, setExpandedCards] = useState({});
+  const [revisingItems, setRevisingItems] = useState({});
+  const [editingNotesId, setEditingNotesId] = useState(null);
+  const [editingNotesText, setEditingNotesText] = useState('');
 
   const toggleCardExpand = (id) => {
     setExpandedCards(prev => ({
@@ -108,14 +112,58 @@ export default function ProcurementTable({
                       {getStatusText(subItem.status || 'pending')}
                     </span>
                     {subItem.notes && (
-                      <div className="item-notes-text">
-                        Catatan: "{subItem.notes}"
+                      <div className="item-notes-text" style={{ marginTop: '4px' }}>
+                        {editingNotesId === `${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}` ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                            <textarea 
+                              className="decision-textarea" 
+                              style={{ minHeight: '60px', marginBottom: 0, padding: '6px 8px', fontSize: '12px' }}
+                              value={editingNotesText}
+                              onChange={(e) => setEditingNotesText(e.target.value)}
+                            />
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                              <button 
+                                className="edit-btn-cancel" 
+                                style={{ padding: '4px 8px', fontSize: '11px', background: '#e2e8f0' }}
+                                onClick={() => setEditingNotesId(null)}
+                              >
+                                Batal
+                              </button>
+                              <button 
+                                className="decision-btn-submit approve" 
+                                style={{ padding: '4px 8px', fontSize: '11px' }}
+                                onClick={() => {
+                                  onUpdateRejectNotes(subItem.parent.id, subItem.parent.items.indexOf(subItem), editingNotesText);
+                                  setEditingNotesId(null);
+                                }}
+                              >
+                                Simpan
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            Catatan: "{subItem.notes}"
+                            {subItem.status === 'rejected' && showActions && (
+                              <button 
+                                onClick={() => {
+                                  setEditingNotesId(`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`);
+                                  setEditingNotesText(subItem.notes);
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0 4px', marginLeft: '4px' }}
+                                title="Edit catatan penolakan"
+                              >
+                                <FiEdit2 size={12} />
+                              </button>
+                            )}
+                          </>
+                        )}
                       </div>
                     )}
                   </td>
                   {showActions && (
                     <td style={{ textAlign: 'center' }}>
-                      {subItem.status === 'pending' ? (
+                      {subItem.status === 'pending' || revisingItems[`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`] ? (
                         <div className="action-decision-cell">
                           <button
                             type="button"
@@ -133,9 +181,13 @@ export default function ProcurementTable({
                           </button>
                         </div>
                       ) : (
-                        <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-                          Keputusan Selesai
-                        </span>
+                        <button
+                          type="button"
+                          className="btn-revise-item"
+                          onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`]: true}))}
+                        >
+                          <FiEdit2 size={14} /> Revisi
+                        </button>
                       )}
                     </td>
                   )}
@@ -235,14 +287,58 @@ export default function ProcurementTable({
                                   {getStatusText(subItem.status || 'pending')}
                                 </span>
                                 {subItem.notes && (
-                                  <div className="item-notes-text">
-                                    Catatan: "{subItem.notes}"
+                                  <div className="item-notes-text" style={{ marginTop: '4px' }}>
+                                    {editingNotesId === `${item.id}-${index}` ? (
+                                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                                        <textarea 
+                                          className="decision-textarea" 
+                                          style={{ minHeight: '60px', marginBottom: 0, padding: '6px 8px', fontSize: '12px' }}
+                                          value={editingNotesText}
+                                          onChange={(e) => setEditingNotesText(e.target.value)}
+                                        />
+                                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                          <button 
+                                            className="edit-btn-cancel" 
+                                            style={{ padding: '4px 8px', fontSize: '11px', background: '#e2e8f0' }}
+                                            onClick={() => setEditingNotesId(null)}
+                                          >
+                                            Batal
+                                          </button>
+                                          <button 
+                                            className="decision-btn-submit approve" 
+                                            style={{ padding: '4px 8px', fontSize: '11px' }}
+                                            onClick={() => {
+                                              onUpdateRejectNotes(item.id, index, editingNotesText);
+                                              setEditingNotesId(null);
+                                            }}
+                                          >
+                                            Simpan
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        Catatan: "{subItem.notes}"
+                                        {subItem.status === 'rejected' && showActions && (
+                                          <button 
+                                            onClick={() => {
+                                              setEditingNotesId(`${item.id}-${index}`);
+                                              setEditingNotesText(subItem.notes);
+                                            }}
+                                            style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0 4px', marginLeft: '4px' }}
+                                            title="Edit catatan penolakan"
+                                          >
+                                            <FiEdit2 size={12} />
+                                          </button>
+                                        )}
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               </td>
                               {showActions && (
                                 <td style={{ textAlign: 'center' }}>
-                                  {subItem.status === 'pending' ? (
+                                  {subItem.status === 'pending' || revisingItems[`${item.id}-${index}`] ? (
                                     <div className="action-decision-cell">
                                       <button
                                         type="button"
@@ -260,9 +356,13 @@ export default function ProcurementTable({
                                       </button>
                                     </div>
                                   ) : (
-                                    <span style={{ fontSize: '13px', color: '#94a3b8', fontStyle: 'italic' }}>
-                                      Keputusan Selesai
-                                    </span>
+                                    <button
+                                      type="button"
+                                      className="btn-revise-item"
+                                      onClick={() => setRevisingItems(prev => ({...prev, [`${item.id}-${index}`]: true}))}
+                                    >
+                                      <FiEdit2 size={14} /> Revisi
+                                    </button>
                                   )}
                                 </td>
                               )}

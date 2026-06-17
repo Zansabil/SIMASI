@@ -28,6 +28,7 @@ class PengadaanAsetController extends Controller
     {
         $request->validate([
             'nama_barang'       => 'required|string',
+            'unit'              => 'nullable|string',
             'tgl_pengajuan'     => 'required|date',
             'lokasi_penempatan' => 'required|string',
             'jumlah_barang'     => 'required|integer|min:1',
@@ -39,6 +40,7 @@ class PengadaanAsetController extends Controller
             // Otomatis mengambil ID pengguna yang sedang login dari token Sanctum!
             'idpengguna'        => auth()->user()->id, 
             'nama_barang'       => $request->nama_barang,
+            'unit'              => $request->unit,
             'tgl_pengajuan'     => $request->tgl_pengajuan,
             'lokasi_penempatan' => $request->lokasi_penempatan,
             'jumlah_barang'     => $request->jumlah_barang,

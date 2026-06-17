@@ -71,6 +71,7 @@ export default function Login() {
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_name', name);
+        localStorage.setItem('user_id', user.id);
         
         // Redirect based on role immediately
         if (role === 'super-admin') navigate('/super-admin/dashboard');

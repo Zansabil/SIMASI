@@ -14,7 +14,8 @@ export default function ProcurementLetterPreview({
   previewItem, 
   onBack, 
   onSave, 
-  showConfirm 
+  showConfirm,
+  isSubmitting = false
 }) {
   return (
     <div className="letter-preview-screen">
@@ -22,7 +23,13 @@ export default function ProcurementLetterPreview({
         <button className="btn-cancel" onClick={onBack}>Kembali</button>
         <div style={{ display: 'flex', gap: '12px' }}>
           {showConfirm && (
-            <button className="btn-submit-proc" onClick={onSave}>Kirim & Simpan Pengajuan</button>
+            <button 
+              className="btn-submit-proc" 
+              onClick={onSave}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Mengirim...' : 'Kirim & Simpan Pengajuan'}
+            </button>
           )}
           <button className="btn-preview" onClick={() => window.print()}>
             <FiPrinter size={16} /> Cetak / Simpan PDF

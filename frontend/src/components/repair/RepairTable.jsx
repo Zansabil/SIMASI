@@ -1,9 +1,9 @@
 import React from 'react';
-import { FiEye, FiEdit2 } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import RepairStatusBadge from './RepairStatusBadge';
 import PriorityBadge from './PriorityBadge';
 
-export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit }) {
+export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit, onDelete }) {
   return (
     <div className="repair-table-wrapper">
       <table className="repair-table-el">
@@ -81,6 +81,15 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                         aria-label="Edit Perbaikan"
                       >
                         <FiEdit2 size={18} />
+                      </button>
+                      <button
+                        className="action-icon-btn delete-btn"
+                        title="Hapus"
+                        onClick={() => onDelete(item)}
+                        aria-label="Hapus Perbaikan"
+                        style={{ color: '#ef4444' }}
+                      >
+                        <FiTrash2 size={18} />
                       </button>
                     </div>
                   </td>

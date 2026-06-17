@@ -22,13 +22,14 @@ class pengadaan_aset extends Model
     protected $fillable = [
         'idpengguna',         
         'nama_barang',
+        'unit',               // Unit penempatan (TK/SD/SMP/SMA/MA/Yayasan)
         'tgl_pengajuan',
         'lokasi_penempatan',
         'jumlah_barang',
         'harga_barang',
         'alasan',             
         'status_pengajuan',
-        'catatan_penolakan'   // <--- Tambahkan baris ini
+        'catatan_penolakan'
     ];
 
     // 5. Relasi: Panggil data pemohon (pengguna)

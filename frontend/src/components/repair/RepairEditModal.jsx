@@ -4,11 +4,17 @@ import { FiX, FiAlertCircle } from 'react-icons/fi';
 export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedItem }) {
   const [editStatus, setEditStatus] = useState('');
   const [editPriority, setEditPriority] = useState('');
+  const [editHasil, setEditHasil] = useState('');
+  const [editBiaya, setEditBiaya] = useState('');
+  const [editAlasanTolak, setEditAlasanTolak] = useState('');
 
   useEffect(() => {
     if (isOpen && selectedItem) {
       setEditStatus(selectedItem.status || '');
       setEditPriority(selectedItem.priority || '');
+      setEditHasil('');
+      setEditBiaya('');
+      setEditAlasanTolak('');
     }
   }, [isOpen, selectedItem]);
 
@@ -16,7 +22,10 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
     e.preventDefault();
     onSubmit({
       status: editStatus,
-      priority: editPriority
+      priority: editPriority,
+      hasil: editStatus === 'completed' ? editHasil : '',
+      biaya: editStatus === 'completed' ? editBiaya : 0,
+      alasanTolak: editStatus === 'rejected' ? editAlasanTolak : ''
     });
   };
 
@@ -128,6 +137,41 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
               </select>
             </div>
           </div>
+
+          {editStatus === 'completed' && (
+            <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div className="detail-field-label" style={{ marginBottom: '8px', color: '#0f172a' }}>Hasil Perbaikan (Wajib)</div>
+              <textarea 
+                required
+                style={{ width: '100%', minHeight: '60px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', fontFamily: 'Inter' }}
+                placeholder="Jelaskan tindakan perbaikan yang telah dilakukan..."
+                value={editHasil}
+                onChange={(e) => setEditHasil(e.target.value)}
+              />
+
+              <div className="detail-field-label" style={{ marginBottom: '8px', marginTop: '12px', color: '#0f172a' }}>Total Biaya (Opsional)</div>
+              <input 
+                type="number"
+                style={{ width: '100%', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', fontFamily: 'Inter' }}
+                placeholder="Contoh: 150000"
+                value={editBiaya}
+                onChange={(e) => setEditBiaya(e.target.value)}
+              />
+            </div>
+          )}
+
+          {editStatus === 'rejected' && (
+            <div style={{ marginTop: '16px', background: '#fef2f2', padding: '12px', borderRadius: '8px', border: '1px solid #fecaca' }}>
+              <div className="detail-field-label" style={{ marginBottom: '8px', color: '#991b1b' }}>Deskripsi Penolakan (Wajib)</div>
+              <textarea 
+                required
+                style={{ width: '100%', minHeight: '60px', padding: '8px', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '14px', fontFamily: 'Inter' }}
+                placeholder="Berikan alasan mengapa perbaikan ini ditolak..."
+                value={editAlasanTolak}
+                onChange={(e) => setEditAlasanTolak(e.target.value)}
+              />
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="edit-modal-action-row">
