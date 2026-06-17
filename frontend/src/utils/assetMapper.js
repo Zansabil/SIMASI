@@ -17,7 +17,9 @@ export const mapLaravelToReact = (item) => {
     price: item.harga_aset || item.price || 0,
     image_path: item.foto || item.image_path || null,
     unit: item.unit || '',
-    room: item.ruangan || ''
+    room: item.ruangan || '',
+    category: item.jenis_aset || 'Umum',
+    purchase_date: item.tgl_diperoleh || ''
   };
 };
 
@@ -42,7 +44,7 @@ export const mapReactToLaravel = (formData, existingAssetCode = null) => {
   return {
     kode_inventaris: formData.code || existingAssetCode,
     nama_aset: formData.name,
-    jenis_aset: 'Umum',
+    jenis_aset: formData.category || 'Umum',
     unit: formData.unit,
     ruangan: formData.room,
     jumlah_aset: Number(formData.quantity) || 1,

@@ -96,6 +96,9 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
 
   const [allAssets, setAllAssets] = useState(initialMockAssets);
   const [assets, setAssets] = useState(initialMockAssets);
+  const [availableUnits, setAvailableUnits] = useState(['SD', 'SMP', 'SMA', 'MA', 'TK']); // Fallback
+  const [availableCategories, setAvailableCategories] = useState(['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum']); // Fallback
+
   // Local filtering helper for offline demo
   const filterMockData = () => {
     let filtered = [...allAssets];
@@ -155,7 +158,42 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
       }
     };
 
+    const fetchUnits = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const response = await axios.get(`${API_BASE_URL}/api/lokasi_unit`, config);
+        if (response.data && response.data.success && response.data.data) {
+          // Extract only the names for the dropdown
+          const unitsList = response.data.data.map(u => u.nama_unit);
+          if (unitsList.length > 0) {
+            setAvailableUnits(unitsList);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch units from API, using fallback.");
+      }
+    };
+
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const response = await axios.get(`${API_BASE_URL}/api/kategori_aset`, config);
+        if (response.data && response.data.success && response.data.data) {
+          const catList = response.data.data.map(c => c.nama_kategori);
+          if (catList.length > 0) {
+            setAvailableCategories(catList);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch categories from API, using fallback.");
+      }
+    };
+
     fetchAssets();
+    fetchUnits();
+    fetchCategories();
   }, [searchQuery, selectedFilterField, currentPage, itemsPerPage, refreshTrigger]);
 
   // Actions handlers
@@ -352,6 +390,8 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onSubmit={handleFormSubmit}
             assetToEdit={assetToEdit}
             allAssets={allAssets}
+            availableUnits={availableUnits}
+            availableCategories={availableCategories}
           />
         )}
 

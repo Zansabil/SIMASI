@@ -72,22 +72,8 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                   <div className="asset-code-sub show-on-mobile">{asset.asset_code}</div>
                 </td>
                 <td className="col-code hide-on-mobile">{asset.asset_code}</td>
-                {(() => {
-                  const locStr = asset.location || '';
-                  let unit = locStr;
-                  let room = '-';
-                  if (locStr.includes(' - ')) {
-                    const parts = locStr.split(' - ');
-                    unit = parts[0] || '';
-                    room = parts.slice(1).join(' - ') || '';
-                  }
-                  return (
-                    <>
-                      <td className="col-unit hide-on-mobile text-center">{unit}</td>
-                      <td className="col-location hide-on-mobile">{room}</td>
-                    </>
-                  );
-                })()}
+                <td className="col-unit hide-on-mobile text-center">{asset.unit || '-'}</td>
+                <td className="col-location hide-on-mobile">{asset.room || '-'}</td>
                 <td className="col-qty text-center">{asset.quantity}</td>
                 <td className="col-condition hide-on-mobile">
                   {asset.condition.charAt(0).toUpperCase() + asset.condition.slice(1)}

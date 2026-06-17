@@ -13,9 +13,12 @@ export default function AssetFormModal({
   onClose,
   onSubmit,
   assetToEdit = null,
-  allAssets = []
+  allAssets = [],
+  availableUnits = ['TK', 'SD', 'SMP', 'SMA', 'MA'], // Default fallback
+  availableCategories = ['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum'] // Default fallback
 }) {
   const [name, setName] = useState('');
+  const [category, setCategory] = useState('');
   const [unit, setUnit] = useState('');
   const [room, setRoom] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
@@ -32,7 +35,6 @@ export default function AssetFormModal({
       if (assetToEdit) {
         setName(assetToEdit.name || '');
         
-        // Use unit and room directly if available, fallback to parsing location
         if (assetToEdit.unit || assetToEdit.room) {
           setUnit(assetToEdit.unit || '');
           setRoom(assetToEdit.room || '');
@@ -49,6 +51,7 @@ export default function AssetFormModal({
           }
         }
         
+        setCategory(assetToEdit.category || 'Umum');
         setPurchaseDate(assetToEdit.purchase_date || '');
         setCode(assetToEdit.asset_code || '');
         setQuantity(assetToEdit.quantity || '');
@@ -60,6 +63,7 @@ export default function AssetFormModal({
         setName('');
         setUnit('');
         setRoom('');
+        setCategory('');
         setPurchaseDate('');
         setCode('');
         setQuantity('');
@@ -71,38 +75,7 @@ export default function AssetFormModal({
     }
   }, [isOpen, assetToEdit]);
 
-  // Auto-generate code for new assets
-  useEffect(() => {
-    if (assetToEdit) return; // Skip if editing
-    if (!unit || !purchaseDate) {
-      setCode('');
-      return;
-    }
-
-    const cleanLoc = unit.trim().toUpperCase();
-    const parts = purchaseDate.split('-'); // [YYYY, MM, DD]
-    if (parts.length !== 3) return;
-    const yyyy = parts[0];
-    const mm = parts[1];
-    const dd = parts[2];
-    const dateStr = `${dd}${mm}${yyyy}`;
-
-    const prefix = `${cleanLoc}-${dateStr}-`;
-
-    let maxSeq = 0;
-    (allAssets || []).forEach(asset => {
-      if (asset.asset_code && asset.asset_code.startsWith(prefix)) {
-        const seqPart = asset.asset_code.substring(prefix.length);
-        const seqNum = parseInt(seqPart, 10);
-        if (!isNaN(seqNum) && seqNum > maxSeq) {
-          maxSeq = seqNum;
-        }
-      }
-    });
-
-    const nextSeq = String(maxSeq + 1).padStart(4, '0');
-    setCode(`${prefix}${nextSeq}`);
-  }, [unit, purchaseDate, allAssets, assetToEdit]);
+  // Auto-generate code for new assets was moved to backend to prevent race conditions.
 
   if (!isOpen) return null;
 
@@ -124,6 +97,7 @@ export default function AssetFormModal({
       name,
       unit,
       room,
+      category,
       location: combinedLocation,
       purchaseDate,
       code,
@@ -172,11 +146,24 @@ export default function AssetFormModal({
               onChange={(e) => setUnit(e.target.value)}
             >
               <option value="" disabled hidden>Unit</option>
-              <option value="SD">SD</option>
-              <option value="SMP">SMP</option>
-              <option value="SMA">SMA</option>
-              <option value="MA">MA</option>
-              <option value="TK">TK</option>
+              {availableUnits.map((u, i) => (
+                <option key={i} value={u}>{u}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="modal-form-group">
+            <label className="modal-form-label">Kategori Barang <span className="req-star">*</span></label>
+            <select
+              className="modal-form-select"
+              required
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="" disabled hidden>Pilih Kategori</option>
+              {availableCategories.map((cat, i) => (
+                <option key={i} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
 
@@ -208,10 +195,9 @@ export default function AssetFormModal({
             <input
               type="text"
               className="modal-form-input"
-              required
               readOnly
-              value={code}
-              placeholder="Otomatis dibuat setelah mengisi lokasi & tanggal"
+              value={isEditing ? code : ''}
+              placeholder={isEditing ? '' : 'Dibuat otomatis oleh server setelah disimpan'}
             />
           </div>
 
@@ -221,6 +207,7 @@ export default function AssetFormModal({
               type="number"
               className="modal-form-input"
               required
+              min="1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
             />

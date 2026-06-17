@@ -59,12 +59,11 @@ class AsetController extends Controller
         Gate::authorize('kelola-aset'); 
         
         $request->validate([
-            'kode_inventaris' => 'required|unique:aset,kode_inventaris',
             'nama_aset'       => 'required',
             'jenis_aset'      => 'required',
             'unit'            => 'required',
             'ruangan'         => 'required',
-            'jumlah_aset'     => 'required|numeric',
+            'jumlah_aset'     => 'required|numeric|min:1',
             'kondisi_aset'    => 'required',
             'tgl_diperoleh'   => 'required|date'
         ]);
@@ -72,7 +71,31 @@ class AsetController extends Controller
         $dataAset = $request->all();
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
-        $aset = Aset::create($dataAset);
+        $aset = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $dataAset) {
+            $unit = strtoupper(trim($request->unit));
+            $tanggal = \Carbon\Carbon::parse($request->tgl_diperoleh)->format('dmY');
+            $prefix = "{$unit}-{$tanggal}-";
+
+            // Find the highest sequence number for this prefix with a lock
+            $latestAset = Aset::where('kode_inventaris', 'like', "{$prefix}%")
+                ->orderBy('kode_inventaris', 'desc')
+                ->lockForUpdate()
+                ->first();
+
+            $nextSeq = 1;
+            if ($latestAset) {
+                // Extract sequence from the latest code
+                $lastCode = $latestAset->kode_inventaris;
+                $seqString = substr($lastCode, strlen($prefix));
+                $lastSeq = (int) $seqString;
+                $nextSeq = $lastSeq + 1;
+            }
+
+            $kodeInventaris = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $dataAset['kode_inventaris'] = $kodeInventaris;
+
+            return Aset::create($dataAset);
+        });
 
         RiwayatAset::create([
             'id_aset'     => $aset->id, 
@@ -105,6 +128,10 @@ class AsetController extends Controller
     public function update(Request $request, $id)
     {
         Gate::authorize('kelola-aset'); 
+
+        $request->validate([
+            'jumlah_aset' => 'nullable|numeric|min:1',
+        ]);
 
         $aset = Aset::findOrFail($id);
         $aset->fill($request->except(['_token', '_method']));

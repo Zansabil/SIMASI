@@ -19,8 +19,8 @@ class DashboardController extends Controller
         // 2. Aset Aktif (kondisi Baik)
         $aset_aktif = Aset::where('kondisi_aset', 'Baik')->sum('jumlah_aset');
 
-        // 3. Aset dalam Perbaikan (kondisi Rusak Ringan atau Rusak Berat)
-        $perbaikan = Aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->sum('jumlah_aset');
+        // 3. Aset dalam Perbaikan (Sedang dikerjakan / status Diproses di Laporan Kerusakan)
+        $perbaikan = LaporanKerusakan::where('status_kerusakan', 'Diproses')->count();
 
         // 4. Kategori Spesifik: Elektronik
         $elektronik = Aset::where(function($q) {

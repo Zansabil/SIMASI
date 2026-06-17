@@ -14,6 +14,7 @@ use App\Http\Controllers\RiwayatAsetController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\KategoriAsetController;
 use App\Http\Controllers\RuanganController;
+use App\Http\Controllers\LokasiUnitController;
 
 // Rute awal (Opsional: Biasanya di API hanya digunakan untuk mengecek apakah server hidup)
 Route::get('/', function () {
@@ -92,4 +93,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route Data Master
     Route::apiResource('kategori_aset', KategoriAsetController::class);
     Route::apiResource('ruangan', RuanganController::class);
+    
+    // Route Lokasi Unit
+    Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
 });
