@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\perizinan;
+use App\Models\Perizinan;
 
 class PerizinanController extends Controller
 {
     // 1. READ: Menampilkan semua data perizinan (Format JSON)
     public function index()
     {
-        $perizinans = perizinan::orderBy('tgl_dibuat', 'desc')->get();
+        $perizinans = Perizinan::orderBy('tgl_dibuat', 'desc')->get();
         
         return response()->json([
             'success' => true,
@@ -27,7 +27,7 @@ class PerizinanController extends Controller
             'deskripsi' => 'required',
         ]);
 
-        $perizinan = perizinan::create([
+        $perizinan = Perizinan::create([
             'nama'      => $request->nama,
             'aksi'      => 'Menunggu', // Default saat pertama kali diajukan
             'deskripsi' => $request->deskripsi,
@@ -43,7 +43,7 @@ class PerizinanController extends Controller
     // 3. (Opsional) DETAIL: Menampilkan satu data perizinan spesifik
     public function show($id)
     {
-        $perizinan = perizinan::findOrFail($id);
+        $perizinan = Perizinan::findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -59,7 +59,7 @@ class PerizinanController extends Controller
     // 4. UPDATE: Setujui Pengajuan
     public function setuju($id)
     {
-        $izin = perizinan::findOrFail($id);
+        $izin = Perizinan::findOrFail($id);
         $izin->update(['aksi' => 'Disetujui']);
 
         return response()->json([
@@ -72,7 +72,7 @@ class PerizinanController extends Controller
     // 5. UPDATE: Tolak Pengajuan
     public function tolak($id)
     {
-        $izin = perizinan::findOrFail($id);
+        $izin = Perizinan::findOrFail($id);
         $izin->update(['aksi' => 'Ditolak']);
 
         return response()->json([

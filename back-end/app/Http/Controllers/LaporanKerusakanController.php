@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\laporan_kerusakan;
-use App\Models\aset;
-use App\Models\pengguna;
+use App\Models\LaporanKerusakan;
+use App\Models\Aset;
+use App\Models\Pengguna;
 use Illuminate\Support\Facades\Storage;
 
 class LaporanKerusakanController extends Controller
@@ -14,7 +14,7 @@ class LaporanKerusakanController extends Controller
     public function index()
     {
         // Eager Loading untuk efisiensi query saat dikirim ke Frontend
-        $laporans = laporan_kerusakan::with(['aset', 'pelapor', 'validator'])->get();
+        $laporans = LaporanKerusakan::with(['aset', 'pelapor', 'validator'])->get();
         
         return response()->json([
             'success' => true,
@@ -26,7 +26,7 @@ class LaporanKerusakanController extends Controller
     // 2. Detail Data (READ SINGLE) - Berguna jika React ingin melihat detail 1 laporan
     public function show($id)
     {
-        $laporan = laporan_kerusakan::with(['aset', 'pelapor', 'validator'])->findOrFail($id);
+        $laporan = LaporanKerusakan::with(['aset', 'pelapor', 'validator'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -38,7 +38,7 @@ class LaporanKerusakanController extends Controller
     // 3. Fungsi untuk menyetujui laporan kerusakan
     public function validasi($id)
     {
-        $laporan = laporan_kerusakan::findOrFail($id);
+        $laporan = LaporanKerusakan::findOrFail($id);
 
         $laporan->update([
             'id_validasi'      => auth()->user()->id, // Mencatat ID Super Admin/Admin dari token Sanctum
@@ -62,7 +62,7 @@ class LaporanKerusakanController extends Controller
             'alasan_penolakan.required' => 'Alasan penolakan wajib diisi!'
         ]);
 
-        $laporan = laporan_kerusakan::findOrFail($id);
+        $laporan = LaporanKerusakan::findOrFail($id);
 
         $laporan->update([
             'id_validasi'      => auth()->user()->id, 
@@ -99,7 +99,7 @@ class LaporanKerusakanController extends Controller
             $data['lampiran'] = $request->file('lampiran')->store('lampiran', 'public');
         }
 
-        $laporan = laporan_kerusakan::create($data);
+        $laporan = LaporanKerusakan::create($data);
 
         return response()->json([
             'success' => true,
@@ -117,7 +117,7 @@ class LaporanKerusakanController extends Controller
             'lampiran'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $laporan = laporan_kerusakan::findOrFail($id);
+        $laporan = LaporanKerusakan::findOrFail($id);
         $data = $request->all();
 
         if ($request->hasFile('lampiran')) {
@@ -140,10 +140,10 @@ class LaporanKerusakanController extends Controller
     // 7. Hapus Data (DELETE)
     public function destroy($id)
     {
-        $laporan = laporan_kerusakan::findOrFail($id);
+        $laporan = LaporanKerusakan::findOrFail($id);
         
         // Catat ke riwayat_aset sebelum dihapus
-        \App\Models\riwayat_aset::create([
+        \App\Models\RiwayatAset::create([
             'id_aset'     => $laporan->id_aset,
             'aksi'        => 'Hapus',
             'id_pengguna' => auth()->id() ?? 1,
@@ -152,7 +152,7 @@ class LaporanKerusakanController extends Controller
         ]);
 
         // Hapus child records di tabel perbaikan_aset untuk mencegah foreign key constraint violation
-        \App\Models\perbaikan_aset::where('id_laporan', $id)->delete();
+        \App\Models\PerbaikanAset::where('id_laporan', $id)->delete();
 
         // Hapus lampiran dari storage agar tidak jadi sampah di server
         if ($laporan->lampiran) {

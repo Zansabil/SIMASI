@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { FiList, FiShoppingCart, FiTool, FiBell, FiCheck, FiTrash2, FiHelpCircle, FiLoader, FiCheckCircle } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
+import StatusModal from '../ui/StatusModal';
 import './Notification.css';
 
 // Helper: Format waktu relatif dari timestamp backend
@@ -48,6 +49,7 @@ export default function NotificationPage({ role, currentPath }) {
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'unread'
   const [isLoading, setIsLoading] = useState(true);
   const [isUsingBackend, setIsUsingBackend] = useState(false);
+  const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
 
   // Fetch data dari API backend
   const loadData = useCallback(async () => {
@@ -266,9 +268,19 @@ export default function NotificationPage({ role, currentPath }) {
         </div>
 
         {/* User Guide Footer */}
-        <a href="#guide" className="user-guide-footer" onClick={(e) => { e.preventDefault(); alert('Panduan Pengguna akan segera tersedia.'); }}>
+        <a href="#guide" className="user-guide-footer" onClick={(e) => { e.preventDefault(); setStatusModal({ isOpen: true, type: 'warning', title: 'Segera Hadir', message: 'Panduan Pengguna akan segera tersedia.' }); }}>
           <FiHelpCircle size={16} /> Panduan Pengguna
         </a>
+
+        {/* Status Modal */}
+        <StatusModal
+          isOpen={statusModal.isOpen}
+          type={statusModal.type}
+          title={statusModal.title}
+          message={statusModal.message}
+          onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+          confirmText="OK"
+        />
       </main>
     </DashboardLayout>
   );

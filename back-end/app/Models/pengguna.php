@@ -7,7 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens; // <-- 1. Tambahkan pemanggil Sanctum API Token di sini
 
-class pengguna extends Authenticatable
+class Pengguna extends Authenticatable
 {
     // 2. Tambahkan HasApiTokens ke dalam trait yang digunakan oleh class ini
     use HasApiTokens, HasFactory, Notifiable; 
@@ -48,24 +48,24 @@ class pengguna extends Authenticatable
     // Relasi ke tabel Laporan (1 Pengguna bisa membuat banyak Laporan)
     public function laporan_dibuat()
     {
-        return $this->hasMany(laporan_kerusakan::class, 'id_pelapor');
+        return $this->hasMany(LaporanKerusakan::class, 'id_pelapor');
     }
 
     // Relasi ke tabel Laporan (1 Admin bisa memvalidasi banyak Laporan)
     public function laporan_divalidasi()
     {
-        return $this->hasMany(laporan_kerusakan::class, 'id_validasi');
+        return $this->hasMany(LaporanKerusakan::class, 'id_validasi');
     }
 
     public function pemindahan_aset()
     {
         // Hubungannya: 1 Pengguna "Memiliki Banyak" (hasMany) catatan pemindahan
-        return $this->hasMany(pemindahan_aset::class, 'id_pengguna', 'id');
+        return $this->hasMany(PemindahanAset::class, 'id_pengguna', 'id');
     }
 
     public function aset()
     {
         // 1 Pengguna bisa memegang "Banyak" (hasMany) Aset
-        return $this->hasMany(aset::class, 'id_pengguna', 'id');
+        return $this->hasMany(Aset::class, 'id_pengguna', 'id');
     }
 }

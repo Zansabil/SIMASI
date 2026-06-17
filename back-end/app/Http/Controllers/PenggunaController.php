@@ -3,19 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\pengguna;
+use App\Models\Pengguna;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash; 
 
 class PenggunaController extends Controller
 {
-    // 1. Menampilkan daftar semua pengguna (Format JSON)
     public function index()
     {
         Gate::authorize('kelola-user'); 
         
         // Mengambil semua pengguna kecuali pengguna yang sedang login saat ini
-        $penggunas = pengguna::where('id', '!=', auth()->user()->id)->get();
+        $penggunas = Pengguna::with('peran')->where('id', '!=', auth()->user()->id)->get();
         
         return response()->json([
             'success' => true,
@@ -35,16 +34,18 @@ class PenggunaController extends Controller
             'email'         => 'required|string|email|unique:pengguna,email|max:255',
             'password'      => 'required|string|min:8',
             'id_peran'      => 'required|integer',
-            'status_aktif'  => 'required|boolean'
+            'status_aktif'  => 'required|boolean',
+            'area'          => 'nullable|string|max:50'
         ]);
 
-        $pengguna = pengguna::create([
+        $pengguna = Pengguna::create([
             'nama'          => $request->nama,
             'nama_pengguna' => $request->nama_pengguna,
             'email'         => $request->email,
             'password'      => Hash::make($request->password), // Enkripsi password baru
             'id_peran'      => $request->id_peran,
-            'status_aktif'  => $request->status_aktif
+            'status_aktif'  => $request->status_aktif,
+            'area'          => $request->area
         ]);
 
         return response()->json([
@@ -54,23 +55,43 @@ class PenggunaController extends Controller
         ], 201); // 201 Created
     }
 
-    // 3. Memproses perubahan peran/akses pengguna dari ReactJS
+    // 3. Memproses perubahan pengguna dari ReactJS
     public function update(Request $request, $id)
     {
         Gate::authorize('kelola-user');
         
         $request->validate([
-            'id_peran' => 'required|integer'
+            'nama'          => 'required|string|max:255',
+            'nama_pengguna' => 'required|string|max:255|unique:pengguna,nama_pengguna,'.$id,
+            'email'         => 'required|string|email|max:255|unique:pengguna,email,'.$id,
+            'id_peran'      => 'required|integer',
+            'status_aktif'  => 'required|boolean',
+            'area'          => 'nullable|string|max:50'
         ]);
 
-        $pengguna = pengguna::findOrFail($id);
-        $pengguna->update([
-            'id_peran' => $request->id_peran
-        ]);
+        $pengguna = Pengguna::findOrFail($id);
+        
+        $data = [
+            'nama'          => $request->nama,
+            'nama_pengguna' => $request->nama_pengguna,
+            'email'         => $request->email,
+            'id_peran'      => $request->id_peran,
+            'status_aktif'  => $request->status_aktif,
+            'area'          => $request->area
+        ];
+
+        if ($request->filled('password')) {
+            $request->validate([
+                'password' => 'string|min:8'
+            ]);
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $pengguna->update($data);
 
         return response()->json([
             'success' => true,
-            'message' => 'Hak akses untuk ' . $pengguna->nama . ' berhasil diperbarui!',
+            'message' => 'Data pengguna ' . $pengguna->nama . ' berhasil diperbarui!',
             'data'    => $pengguna
         ], 200);
     }
@@ -80,7 +101,7 @@ class PenggunaController extends Controller
     {
         Gate::authorize('kelola-user');
         
-        $pengguna = pengguna::findOrFail($id);
+        $pengguna = Pengguna::findOrFail($id);
         $pengguna->delete();
 
         return response()->json([
@@ -94,7 +115,7 @@ class PenggunaController extends Controller
     {
         Gate::authorize('kelola-user');
 
-        $pengguna = pengguna::findOrFail($id);
+        $pengguna = Pengguna::findOrFail($id);
         
         // Ubah password menjadi 12345678 dan langsung dienkripsi (Hash)
         $pengguna->update([

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { FiUser, FiSave, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
+import StatusModal from '../ui/StatusModal';
 import './Profile.css';
 
 export default function ProfilePage({ role, defaultRoleName, currentPath }) {
@@ -16,6 +17,8 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
   const [isSaving, setIsSaving]               = useState(false);
   const [showToast, setShowToast]             = useState(false);
   const [toastMsg, setToastMsg]               = useState('');
+  
+  const [statusModal, setStatusModal]         = useState({ isOpen: false, type: 'error', title: '', message: '' });
 
   // Password states
   const [currentPassword, setCurrentPassword]   = useState('');
@@ -47,7 +50,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      alert('Ukuran foto maksimal 2 MB.');
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal Mengunggah', message: 'Ukuran foto maksimal 2 MB.' });
       return;
     }
     const reader = new FileReader();
@@ -264,6 +267,15 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
           <FiCheck size={18} /> {toastMsg}
         </div>
       )}
+
+      {/* Status Modal */}
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        type={statusModal.type}
+        title={statusModal.title}
+        message={statusModal.message}
+        onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+      />
     </DashboardLayout>
   );
 }

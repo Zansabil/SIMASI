@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class notifikasi extends Model
+class Notifikasi extends Model
 {
     use HasFactory;
 
@@ -43,6 +43,6 @@ class notifikasi extends Model
      */
     public function pengguna()
     {
-        return $this->belongsTo(pengguna::class, 'id_pengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
     }
 }

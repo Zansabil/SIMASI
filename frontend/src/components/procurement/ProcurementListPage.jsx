@@ -174,8 +174,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   const [procurements, setProcurements] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [selectedItem, setSelectedItem] = useState(null); // for detail modal
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -333,7 +332,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     e.preventDefault();
     const invalid = formItems.some(item => !item.name || !item.unit || !item.location || item.qty <= 0 || item.price === '');
     if (invalid) {
-      alert('Mohon lengkapi semua kolom barang dengan benar.');
+      setStatusModal({ isOpen: true, type: 'warning', title: 'Data Belum Lengkap', message: 'Mohon lengkapi semua kolom barang dengan benar.' });
       return;
     }
     const tempItem = {
@@ -388,14 +387,13 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
         await loadProcurements();
 
         setView('list');
-        setSuccessMessage('Surat pengajuan pengadaan aset berhasil dikirim ke sistem!');
-        setIsSuccessOpen(true);
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dikirim ke sistem!' });
       } catch (err) {
         console.error("Error submitting procurement:", err);
         
         // Tampilkan pesan error yang spesifik
         const errorMsg = err.response?.data?.message || 'Gagal mengirim pengajuan. Silakan coba lagi.';
-        alert(`Error: ${errorMsg}`);
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
       } finally {
         setIsSubmitting(false);
       }
@@ -417,8 +415,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       localStorage.setItem('simas_procurements', JSON.stringify(updated));
       setProcurements(updated);
       setView('list');
-      setSuccessMessage('Surat pengajuan pengadaan aset berhasil dibuat dan disimpan (offline).');
-      setIsSuccessOpen(true);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dibuat dan disimpan (offline).' });
       setIsSubmitting(false);
     }
   };
@@ -482,16 +479,18 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
         await loadProcurements();
 
         setIsDecisionOpen(false);
-        setSuccessMessage(
-          decisionType === 'approve' 
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil',
+          message: decisionType === 'approve' 
             ? 'Aset berhasil disetujui untuk pengadaan.' 
             : 'Pengadaan aset berhasil ditolak.'
-        );
-        setIsSuccessOpen(true);
+        });
       } catch (err) {
         console.error("Error processing decision:", err);
         const errorMsg = err.response?.data?.message || 'Gagal memproses keputusan. Silakan coba lagi.';
-        alert(`Error: ${errorMsg}`);
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
       } finally {
         setIsSubmitting(false);
       }
@@ -529,12 +528,14 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       setProcurements(updatedProcurements);
       setIsDecisionOpen(false);
 
-      setSuccessMessage(
-        decisionType === 'approve' 
+      setStatusModal({
+        isOpen: true,
+        type: 'success',
+        title: 'Berhasil',
+        message: decisionType === 'approve' 
           ? 'Aset berhasil disetujui untuk pengadaan.' 
           : 'Pengadaan aset berhasil ditolak.'
-      );
-      setIsSuccessOpen(true);
+      });
     }
   };
 
@@ -552,11 +553,10 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
           { headers: { Authorization: `Bearer ${token}` } }
         );
         await loadProcurements();
-        setSuccessMessage('Catatan penolakan berhasil diperbarui.');
-        setIsSuccessOpen(true);
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Catatan penolakan berhasil diperbarui.' });
       } catch (error) {
         console.error('Error updating reject notes:', error);
-        alert('Gagal memperbarui catatan penolakan.');
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: 'Gagal memperbarui catatan penolakan.' });
       }
     } else {
       // Mock local update
@@ -573,8 +573,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
           }
         }
       }
-      setSuccessMessage('Catatan penolakan berhasil diperbarui (Lokal).');
-      setIsSuccessOpen(true);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Catatan penolakan berhasil diperbarui (Lokal).' });
       setProcurements([...procurements]);
     }
   };
@@ -846,13 +845,14 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
           </div>
         )}
 
-        {/* Success Modal */}
+        {/* Status Modal */}
         <StatusModal
-          isOpen={isSuccessOpen}
-          type="success"
-          title="Berhasil"
-          message={successMessage}
-          onConfirm={() => setIsSuccessOpen(false)}
+          isOpen={statusModal.isOpen}
+          type={statusModal.type}
+          title={statusModal.title}
+          message={statusModal.message}
+          onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+          confirmText={statusModal.type === 'error' || statusModal.type === 'warning' ? 'Tutup' : 'OK'}
         />
       </main>
     </DashboardLayout>

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\riwayat_aset;
+use App\Models\RiwayatAset;
 
 class RiwayatAsetController extends Controller
 {
@@ -20,7 +20,7 @@ class RiwayatAsetController extends Controller
         }
 
         // Jika dia Admin, silakan masuk dan muat datanya (Menggunakan pagination 50 data per halaman)
-        $riwayats = riwayat_aset::with(['pengguna', 'aset'])->orderBy('waktu', 'desc')->paginate(50);
+        $riwayats = RiwayatAset::with(['pengguna', 'aset'])->orderBy('waktu', 'desc')->paginate(50);
         
         return response()->json([
             'success' => true,
@@ -40,7 +40,7 @@ class RiwayatAsetController extends Controller
             ], 403);
         }
 
-        $riwayat = riwayat_aset::findOrFail($id);
+        $riwayat = RiwayatAset::findOrFail($id);
         $riwayat->delete();
 
         return response()->json([

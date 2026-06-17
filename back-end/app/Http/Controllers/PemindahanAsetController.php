@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\pemindahan_aset;
-use App\Models\aset;
+use App\Models\PemindahanAset;
+use App\Models\Aset;
 
 class PemindahanAsetController extends Controller
 {
@@ -14,7 +14,7 @@ class PemindahanAsetController extends Controller
         // Mengambil semua data pemindahan, beserta data aset yang terkait (relasi)
         // Diurutkan dari yang terbaru dipindah
         // Memanggil relasi 'pengguna' agar nama admin yang mencatat bisa ditampilkan di ReactJS
-        $pemindahans = pemindahan_aset::with(['aset', 'pengguna'])->orderBy('tgl_dibuat', 'desc')->get();
+        $pemindahans = PemindahanAset::with(['aset', 'pengguna'])->orderBy('tgl_dibuat', 'desc')->get();
         
         return response()->json([
             'success' => true,
@@ -40,7 +40,7 @@ class PemindahanAsetController extends Controller
         $kode_mutasi = 'MUT-' . date('YmdHis');
 
         // 3. Simpan riwayat ke tabel pemindahan_aset
-        $pemindahan = pemindahan_aset::create([
+        $pemindahan = PemindahanAset::create([
             'id_aset'           => $request->id_aset,
             'lokasi_sebelumnya' => $request->lokasi_sebelumnya,
             'lokasi_baru'       => $request->lokasi_baru,
@@ -52,7 +52,7 @@ class PemindahanAsetController extends Controller
         ]);
 
         // 4. SIHIR BACK-END: Update lokasi di tabel aset utama!
-        $aset = aset::findOrFail($request->id_aset);
+        $aset = Aset::findOrFail($request->id_aset);
         $aset->update([
             'lokasi_aset' => $request->lokasi_baru
         ]);
@@ -67,7 +67,7 @@ class PemindahanAsetController extends Controller
     // 3. (Opsional) DETAIL: Menampilkan satu data pemindahan spesifik
     public function show($id)
     {
-        $pemindahan = pemindahan_aset::with(['aset', 'pengguna'])->findOrFail($id);
+        $pemindahan = PemindahanAset::with(['aset', 'pengguna'])->findOrFail($id);
 
         return response()->json([
             'success' => true,

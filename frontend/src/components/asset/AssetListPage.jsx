@@ -6,6 +6,7 @@ import Pagination from './Pagination';
 import DashboardLayout from '../layout/DashboardLayout';
 import StatusModal from '../ui/StatusModal';
 import AssetFormModal from './AssetFormModal';
+import AssetDetailModal from './AssetDetailModal';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
 import FilterSelect from '../ui/FilterSelect';
@@ -77,11 +78,19 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [totalItems, setTotalItems] = useState(5);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Modal display states (only used if hasWriteAccess is true)
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [assetToEdit, setAssetToEdit] = useState(null);
+  
+  // Detail Modal state
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [assetToView, setAssetToView] = useState(null);
+  
+  // Status & Confirm Modals
+  const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, asset: null });
 
   const [allAssets, setAllAssets] = useState(initialMockAssets);
   const [assets, setAssets] = useState(initialMockAssets);
@@ -121,15 +130,29 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           }
         };
 
-        const field = selectedFilterField === 'all' ? 'all' : (selectedFilterField === 'name' ? 'name' : (selectedFilterField === 'code' ? 'asset_code' : 'location'));
+        const field = selectedFilterField === 'all' ? 'all' : (selectedFilterField === 'name' ? 'nama_aset' : (selectedFilterField === 'code' ? 'kode_inventaris' : 'lokasi_aset'));
         const response = await axios.get(
-          `${API_BASE_URL}/api/assets?search=${searchQuery}&search_field=${field}&page=${currentPage}&per_page=${itemsPerPage}`,
+          `${API_BASE_URL}/api/aset?search=${searchQuery}&search_field=${field}&page=${currentPage}&per_page=${itemsPerPage}`,
           config
         );
 
-        if (response.data && response.data.data && response.data.data.length > 0) {
-          setAssets(response.data.data);
-          setTotalItems(response.data.total);
+        if (response.data && Array.isArray(response.data.data)) {
+          // Map backend format to frontend format for consistency
+          const mappedAssets = response.data.data.map(item => ({
+            id: item.id,
+            name: item.nama_aset,
+            asset_code: item.kode_inventaris,
+            location: item.lokasi_aset,
+            quantity: item.jumlah_aset,
+            condition: item.kondisi_aset,
+            purchase_date: item.tgl_diperoleh,
+            source_of_funds: item.sumber_dana || 'Dana Yayasan',
+            price: item.harga_aset || 0,
+            image_path: item.foto || null
+          }));
+          setAllAssets(mappedAssets);
+          setAssets(mappedAssets);
+          setTotalItems(mappedAssets.length); // Fallback to array length since pagination wasn't fully supported in API index
         } else {
           filterMockData();
         }
@@ -142,11 +165,12 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     };
 
     fetchAssets();
-  }, [searchQuery, selectedFilterField, currentPage, itemsPerPage, allAssets]);
+  }, [searchQuery, selectedFilterField, currentPage, itemsPerPage, refreshTrigger]);
 
   // Actions handlers
   const handleView = (asset) => {
-    alert(`Melihat detail aset:\nNama: ${asset.name}\nKode: ${asset.asset_code}\nLokasi: ${asset.location}`);
+    setAssetToView(asset);
+    setIsDetailOpen(true);
   };
 
   const handleEdit = (asset) => {
@@ -154,10 +178,29 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     setIsFormOpen(true);
   };
 
-  const handleDelete = (asset) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus aset: ${asset.name} (${asset.asset_code})?`)) {
+  const handleDeleteClick = (asset) => {
+    setConfirmModal({ isOpen: true, asset });
+  };
+
+  const processDelete = async () => {
+    const asset = confirmModal.asset;
+    setConfirmModal({ isOpen: false, asset: null });
+    if (!asset) return;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const config = {
+        headers: { Authorization: `Bearer ${token}` }
+      };
+      await axios.delete(`${API_BASE_URL}/api/aset/${asset.id}`, config);
       setAllAssets(prev => prev.filter(item => item.id !== asset.id));
-      alert('Aset berhasil dihapus');
+      setRefreshTrigger(prev => prev + 1);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Aset berhasil dihapus.' });
+    } catch (err) {
+      console.warn("Backend API error, deleting asset locally.", err);
+      setAllAssets(prev => prev.filter(item => item.id !== asset.id));
+      setRefreshTrigger(prev => prev + 1);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil (Offline)', message: 'Aset berhasil dihapus.' });
     }
   };
 
@@ -189,20 +232,39 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        await axios.put(`${API_BASE_URL}/api/assets/${assetToEdit.id}`, {
-          name: formData.name,
-          quantity: Number(formData.quantity),
-          condition: formData.condition,
-          location: formData.location,
-          purchase_date: resolvedDate,
-          price: parsedPrice,
-          source_of_funds: formData.source,
+        const response = await axios.put(`${API_BASE_URL}/api/aset/${assetToEdit.id}`, {
+          nama_aset: formData.name,
+          kode_inventaris: formData.code,
+          jenis_aset: 'Umum',
+          jumlah_aset: Number(formData.quantity),
+          kondisi_aset: formData.condition,
+          lokasi_aset: formData.location,
+          tgl_diperoleh: resolvedDate,
+          harga_aset: parsedPrice,
+          sumber_dana: formData.source,
+          foto: formData.image
         }, config);
 
-        setAllAssets(prev => prev.map(item => item.id === assetToEdit.id ? updatedAsset : item));
+        // Map backend response to frontend format
+        const updatedFromBackend = {
+          ...updatedAsset,
+          id: response.data.data.id,
+          name: response.data.data.nama_aset,
+          asset_code: response.data.data.kode_inventaris,
+          location: response.data.data.lokasi_aset,
+          quantity: response.data.data.jumlah_aset,
+          condition: response.data.data.kondisi_aset,
+          purchase_date: response.data.data.tgl_diperoleh
+        };
+        
+        setAllAssets(prev => prev.map(item => item.id === assetToEdit.id ? updatedFromBackend : item));
+        setRefreshTrigger(prev => prev + 1);
       } catch (err) {
-        console.warn("Backend API error, updating asset locally.", err);
-        setAllAssets(prev => prev.map(item => item.id === assetToEdit.id ? updatedAsset : item));
+        console.error("Backend API error, updating asset failed.", err);
+        const errorMsg = err.response?.data?.message || err.message || 'Gagal memperbarui aset.';
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+        setIsFormOpen(false);
+        return;
       }
     } else {
       // Mode Tambah
@@ -224,30 +286,51 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        const response = await axios.post(`${API_BASE_URL}/api/assets`, {
-          name: formData.name,
-          category: 'Umum',
-          quantity: Number(formData.quantity),
-          condition: formData.condition,
-          location: formData.location,
-          purchase_date: resolvedDate,
-          price: parsedPrice,
-          source_of_funds: formData.source,
+        const response = await axios.post(`${API_BASE_URL}/api/aset`, {
+          nama_aset: formData.name,
+          kode_inventaris: formData.code,
+          jenis_aset: 'Umum',
+          jumlah_aset: Number(formData.quantity),
+          kondisi_aset: formData.condition,
+          lokasi_aset: formData.location,
+          tgl_diperoleh: resolvedDate,
+          harga_aset: parsedPrice,
+          sumber_dana: formData.source,
+          foto: formData.image
         }, config);
 
-        if (response.data && response.data.asset) {
-          setAllAssets(prev => [response.data.asset, ...prev]);
+        if (response.data && response.data.data) {
+          const createdBackendAsset = {
+            ...newAsset,
+            id: response.data.data.id,
+            name: response.data.data.nama_aset,
+            asset_code: response.data.data.kode_inventaris,
+            location: response.data.data.lokasi_aset,
+            quantity: response.data.data.jumlah_aset,
+            condition: response.data.data.kondisi_aset,
+            purchase_date: response.data.data.tgl_diperoleh
+          };
+          setAllAssets(prev => [createdBackendAsset, ...prev]);
         } else {
           setAllAssets(prev => [newAsset, ...prev]);
         }
+        setRefreshTrigger(prev => prev + 1);
       } catch (err) {
-        console.warn("Backend API error, adding asset locally.", err);
-        setAllAssets(prev => [newAsset, ...prev]);
+        console.error("Backend API error, adding asset failed.", err);
+        const errorMsg = err.response?.data?.message || err.message || 'Gagal menambahkan aset.';
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+        setIsFormOpen(false);
+        return;
       }
     }
 
     setIsFormOpen(false);
-    setIsSuccessOpen(true);
+    setStatusModal({ 
+      isOpen: true, 
+      type: 'success', 
+      title: 'Terima Kasih', 
+      message: assetToEdit ? "Aset berhasil diperbarui" : "Aset berhasil ditambahkan" 
+    });
   };
 
   // SVGs for icons
@@ -326,7 +409,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           showActions={hasWriteAccess}
           onView={handleView}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={handleDeleteClick}
         />
 
         {/* Pagination Controls Footer */}
@@ -354,12 +437,29 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           />
         )}
 
+        <AssetDetailModal 
+          isOpen={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          asset={assetToView}
+        />
+
         <StatusModal
-          isOpen={isSuccessOpen}
-          type="success"
-          title="Terima kasih"
-          message={assetToEdit ? "Aset berhasil diperbarui" : "Aset berhasil ditambahkan"}
-          onConfirm={() => setIsSuccessOpen(false)}
+          isOpen={statusModal.isOpen}
+          type={statusModal.type}
+          title={statusModal.title}
+          message={statusModal.message}
+          onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+        />
+
+        <StatusModal
+          isOpen={confirmModal.isOpen}
+          type="confirm"
+          title="Konfirmasi Hapus"
+          message={`Apakah Anda yakin ingin menghapus aset "${confirmModal.asset?.name}" secara permanen? Data yang dihapus tidak dapat dikembalikan.`}
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          onConfirm={processDelete}
+          onCancel={() => setConfirmModal({ isOpen: false, asset: null })}
         />
       </main>
     </DashboardLayout>

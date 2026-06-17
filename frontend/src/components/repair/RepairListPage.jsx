@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
@@ -56,9 +57,10 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
+  
+  const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, item: null });
 
   const [repairs, setRepairs] = useState([]);
 
@@ -75,19 +77,51 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         if (item.status_kerusakan === 'Selesai') status = 'completed';
         if (item.status_kerusakan === 'Ditolak') status = 'rejected';
 
+        let parsedAssetName = item.aset ? item.aset.nama_aset : 'Aset';
+        let parsedLocation = item.aset ? item.aset.lokasi_aset : '-';
+        let parsedDesc = item.deskripsi;
+        let parsedUnit = 'Unit';
+
+        // Extract information from description if it follows the pattern (useful when asset is deleted or properties are missing)
+        if (item.deskripsi && item.deskripsi.includes('Nama Aset:')) {
+          const match = item.deskripsi.match(/Nama Aset:\s*(.*?)\s*Lokasi:\s*(.*?)\s*Deskripsi:\s*(.*)/is);
+          if (match) {
+            parsedAssetName = item.aset ? item.aset.nama_aset : match[1].trim();
+            parsedLocation = item.aset ? item.aset.lokasi_aset : match[2].trim();
+            parsedDesc = match[3].trim();
+          }
+        }
+
+        if (parsedLocation && parsedLocation !== '-') {
+          const parts = parsedLocation.split(' - ');
+          parsedUnit = parts[0] || 'Unit';
+        }
+
+        let imagePath = 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop';
+        
+        // Prioritaskan foto dari data aset master jika ada
+        if (item.aset && item.aset.foto) {
+          if (item.aset.foto.startsWith('http') || item.aset.foto.startsWith('data:')) {
+            imagePath = item.aset.foto;
+          } else {
+            imagePath = `${API_BASE_URL}/storage/${item.aset.foto}`;
+          }
+        } else if (item.lampiran) {
+          // Fallback ke lampiran laporan kerusakan jika foto master tidak ada
+          imagePath = `${API_BASE_URL}/storage/${item.lampiran}`;
+        }
+
         return {
           id: item.id,
           reporter_name: item.pelapor ? item.pelapor.nama : 'Unknown',
-          unit: item.aset ? item.aset.lokasi_penempatan : 'Unit', // Menggunakan lokasi karena tidak ada unit di model lama
+          unit: parsedUnit,
           date: item.tgl_dibuat ? new Date(item.tgl_dibuat).toLocaleDateString('id-ID') : '-',
-          asset_name: item.aset ? item.aset.nama_barang : 'Aset',
-          location: item.aset ? item.aset.lokasi_penempatan : '-',
-          description: item.deskripsi,
+          asset_name: parsedAssetName,
+          location: parsedLocation,
+          description: parsedDesc,
           status: status,
           priority: 'medium', // Prototype (tidak ada field priority di DB)
-          image_path: item.lampiran 
-            ? `${API_BASE_URL}/storage/${item.lampiran}` 
-            : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
+          image_path: imagePath
         };
       });
 
@@ -149,18 +183,18 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         } else if (editData.status === 'completed') {
           // Tandai selesai dan buat history di perbaikan_aset
           // Ambil ID Petugas asli dari localStorage (disimpan saat login)
-          const idPetugas = localStorage.getItem('user_id') || 4; 
+          const idPetugas = localStorage.getItem('user_id'); 
+          if (!idPetugas) throw new Error("Sesi tidak valid. Harap login kembali.");
           await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya);
         }
 
         // Refresh list
         await loadData();
         setIsEditOpen(false);
-        setSuccessMessage('Status laporan perbaikan berhasil diperbarui di sistem.');
-        setIsSuccessOpen(true);
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Status laporan perbaikan berhasil diperbarui di sistem.' });
       } catch (err) {
         console.error("Gagal update status", err);
-        alert("Gagal mengupdate status: " + (err.response?.data?.message || err.message));
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal mengupdate status: " + (err.response?.data?.message || err.message) });
       }
     } else {
       // Offline fallback
@@ -174,36 +208,60 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
       await loadData();
       setIsEditOpen(false);
-      setSuccessMessage('Status laporan perbaikan berhasil diperbarui (Offline).');
-      setIsSuccessOpen(true);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Status laporan perbaikan berhasil diperbarui (Offline).' });
     }
   };
 
-  const handleDelete = async (item) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus laporan kerusakan untuk aset "${item.asset_name}" secara permanen? Data yang dihapus tidak dapat dikembalikan.`)) {
-      if (isUsingBackend) {
-        try {
-          await deleteRepair(item.id);
-          await loadData();
-          setSuccessMessage('Data laporan kerusakan berhasil dihapus dari database.');
-          setIsSuccessOpen(true);
-        } catch (err) {
-          console.error("Gagal menghapus data", err);
-          alert("Gagal menghapus data: " + (err.response?.data?.message || err.message));
-        }
-      } else {
-        const stored = JSON.parse(localStorage.getItem('simas_repairs') || '[]');
-        const updatedRepairs = stored.filter(r => r.id !== item.id);
-        localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
+  const handleDeleteClick = (item) => {
+    setConfirmModal({ isOpen: true, item });
+  };
+
+  const processDelete = async () => {
+    const item = confirmModal.item;
+    setConfirmModal({ isOpen: false, item: null });
+    if (!item) return;
+
+    if (isUsingBackend) {
+      try {
+        await deleteRepair(item.id);
         await loadData();
-        setSuccessMessage('Data berhasil dihapus (Offline).');
-        setIsSuccessOpen(true);
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Data laporan kerusakan berhasil dihapus dari database.' });
+      } catch (err) {
+        console.error("Gagal menghapus data", err);
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal menghapus data: " + (err.response?.data?.message || err.message) });
       }
+    } else {
+      const stored = JSON.parse(localStorage.getItem('simas_repairs') || '[]');
+      const updatedRepairs = stored.filter(r => r.id !== item.id);
+      localStorage.setItem('simas_repairs', JSON.stringify(updatedRepairs));
+      await loadData();
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Data berhasil dihapus (Offline).' });
     }
   };
 
   // Handlers for Writing (Admin / Guru)
-  const handleTambahLaporanClick = () => {
+  const handleTambahLaporanClick = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.get(`${API_BASE_URL}/api/aset`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Jika respons sukses tapi data aset kosong
+      if (response.data && Array.isArray(response.data.data) && response.data.data.length === 0) {
+        setStatusModal({ 
+          isOpen: true, 
+          type: 'warning', 
+          title: 'Data Aset Kosong', 
+          message: "Saat ini tidak ada aset yang dapat dipilih. Silakan daftarkan aset terlebih dahulu di menu Daftar Aset sebelum melaporkan kerusakan." 
+        });
+        return;
+      }
+    } catch (error) {
+      console.warn("Gagal mengecek data aset:", error);
+      // Lanjutkan buka form jika offline/error agar fallback offline di form tetap jalan jika diperlukan
+    }
+
     setSelectedItem(null);
     setIsFormOpen(true);
   };
@@ -227,11 +285,10 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         await loadData();
         
         setIsFormOpen(false);
-        setSuccessMessage('Laporan kerusakan berhasil dikirim ke sistem.');
-        setIsSuccessOpen(true);
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Laporan kerusakan berhasil dikirim ke sistem.' });
       } catch (err) {
         console.error("Gagal buat laporan", err);
-        alert("Gagal membuat laporan: " + (err.response?.data?.message || err.message));
+        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal membuat laporan: " + (err.response?.data?.message || err.message) });
       }
     } else {
       // Offline fallback
@@ -254,8 +311,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       await loadData();
       
       setIsFormOpen(false);
-      setSuccessMessage('Laporan kerusakan berhasil disimpan (Offline).');
-      setIsSuccessOpen(true);
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Laporan kerusakan berhasil disimpan (Offline).' });
     }
   };
 
@@ -289,7 +345,8 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
                 { value: 'all', label: 'Semua' },
                 { value: 'pending', label: 'Menunggu' },
                 { value: 'in_progress', label: 'Sedang di Kerjakan' },
-                { value: 'completed', label: 'Selesai' }
+                { value: 'completed', label: 'Selesai' },
+                { value: 'rejected', label: 'Ditolak' }
               ]}
             />
           </div>
@@ -308,7 +365,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
               hasStaffAccess={hasStaffAccess}
               onOpenView={handleOpenView}
               onOpenEdit={handleOpenEdit}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
             />
 
             <Pagination
@@ -354,13 +411,25 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           />
         )}
 
-        {/* Status Alert Modal */}
+        {/* Status & Confirm Modals */}
         <StatusModal
-          isOpen={isSuccessOpen}
-          type="success"
-          title="Berhasil"
-          message={successMessage}
-          onConfirm={() => setIsSuccessOpen(false)}
+          isOpen={statusModal.isOpen}
+          type={statusModal.type}
+          title={statusModal.title}
+          message={statusModal.message}
+          onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+          confirmText={statusModal.type === 'error' || statusModal.type === 'warning' ? 'Tutup' : 'OK'}
+        />
+
+        <StatusModal
+          isOpen={confirmModal.isOpen}
+          type="confirm"
+          title="Konfirmasi Hapus"
+          message={`Apakah Anda yakin ingin menghapus laporan kerusakan untuk aset "${confirmModal.item?.asset_name}" secara permanen? Data yang dihapus tidak dapat dikembalikan.`}
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          onConfirm={processDelete}
+          onCancel={() => setConfirmModal({ isOpen: false, item: null })}
         />
       </main>
     </DashboardLayout>

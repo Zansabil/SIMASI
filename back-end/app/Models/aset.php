@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes; // <--- 1. TAMBAHKAN BARIS INI DI ATAS
 
-class aset extends Model
+class Aset extends Model
 {
     use HasFactory, SoftDeletes; // <--- 2. TAMBAHKAN 'SoftDeletes' DI SINI
 
@@ -25,12 +25,15 @@ class aset extends Model
         'lokasi_aset',
         'jumlah_aset',
         'kondisi_aset',
-        'tgl_diperoleh'
+        'tgl_diperoleh',
+        'harga_aset',
+        'sumber_dana',
+        'foto'
     ]; 
     //
     public function pengguna()
 {
     // Aset ini "Milik" (belongsTo) seorang Pengguna
-    return $this->belongsTo(pengguna::class, 'id_pengguna', 'id');
+    return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
 }
 }

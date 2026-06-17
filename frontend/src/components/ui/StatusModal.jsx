@@ -25,13 +25,23 @@ const WarningIcon = () => (
   </svg>
 );
 
+const ConfirmIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
+
 export default function StatusModal({
   isOpen,
-  type = 'success', // 'success' | 'error' | 'warning'
+  type = 'success', // 'success' | 'error' | 'warning' | 'confirm'
   title,
   message,
   confirmText,
-  onConfirm
+  cancelText = 'Batal',
+  onConfirm,
+  onCancel
 }) {
   if (!isOpen) return null;
 
@@ -44,6 +54,8 @@ export default function StatusModal({
         return <ErrorIcon />;
       case 'warning':
         return <WarningIcon />;
+      case 'confirm':
+        return <ConfirmIcon />;
       case 'success':
       default:
         return <SuccessIcon />;
@@ -60,12 +72,23 @@ export default function StatusModal({
         <h3 className="status-modal-title">{title}</h3>
         <p className="status-modal-message">{message}</p>
 
-        <button 
-          className={`status-modal-btn ${type}`} 
-          onClick={onConfirm}
-        >
-          {resolvedConfirmText}
-        </button>
+        {onCancel ? (
+          <div className="status-modal-btn-group">
+            <button className="status-modal-btn cancel" onClick={onCancel}>
+              {cancelText}
+            </button>
+            <button className={`status-modal-btn ${type}`} onClick={onConfirm}>
+              {resolvedConfirmText}
+            </button>
+          </div>
+        ) : (
+          <button 
+            className={`status-modal-btn ${type}`} 
+            onClick={onConfirm}
+          >
+            {resolvedConfirmText}
+          </button>
+        )}
       </div>
     </div>
   );

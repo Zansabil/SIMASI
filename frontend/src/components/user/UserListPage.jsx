@@ -8,7 +8,6 @@ import SearchBar from '../ui/SearchBar';
 import StatusModal from '../ui/StatusModal';
 import UserTable from './UserTable';
 import UserFormModal from './UserFormModal';
-import UserDeleteModal from './UserDeleteModal';
 import './UserListPage.css';
 
 const getRoleDefaultAccess = (role) => {
@@ -119,7 +118,7 @@ export default function UserListPage({ role, currentPath }) {
 
   // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSuccessOpen, setIsSuccessOpen] = useState(false);
+  const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
@@ -164,32 +163,41 @@ export default function UserListPage({ role, currentPath }) {
         };
 
         const response = await axios.get(
-          `${API_BASE_URL}/api/users?search=${searchQuery}`,
+          `${API_BASE_URL}/api/pengguna`,
           config
         );
 
-        if (response.data && response.data.data && response.data.data.length > 0) {
-          const mapped = response.data.data.map(u => {
-            const mappedRole = u.role === 'super-admin' ? 'Administrator' : (u.role === 'kepala-yayasan' ? 'Kepala Yayasan' : (u.role === 'petugas-perbaikan' ? 'Petugas Perbaikan' : (u.role === 'guru' ? 'Guru' : (['SD', 'SMP', 'SMA', 'MA'].includes(u.unit_kerja) ? `Admin ${u.unit_kerja}` : 'Admin SD'))));
+        if (response.data && Array.isArray(response.data.data)) {
+          // Filter out locally if search query exists (or we can pass ?search=...)
+          let rawData = response.data.data;
+          if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            rawData = rawData.filter(u => 
+              (u.nama_pengguna && u.nama_pengguna.toLowerCase().includes(q)) || 
+              (u.email && u.email.toLowerCase().includes(q)) || 
+              (u.nama && u.nama.toLowerCase().includes(q))
+            );
+          }
+
+          const mapped = rawData.map(u => {
+            let mappedRole = 'Administrator';
+            if (u.id_peran === 1) mappedRole = 'Administrator';
+            else if (u.id_peran === 2) mappedRole = 'Kepala Yayasan';
+            else if (u.id_peran === 3) mappedRole = u.area ? `Admin ${u.area}` : 'Admin SD';
+            else if (u.id_peran === 4) mappedRole = 'Guru';
+            else if (u.id_peran === 5) mappedRole = 'Petugas Perbaikan';
             
-            let mappedAccess = null;
-            if (u.access) {
-              mappedAccess = typeof u.access === 'string' ? JSON.parse(u.access) : u.access;
-            } else if (u.permissions) {
-              mappedAccess = typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions;
-            } else {
-              mappedAccess = getRoleDefaultAccess(mappedRole);
-            }
+            let mappedAccess = getRoleDefaultAccess(mappedRole);
 
             return {
               id: u.id,
-              username: u.username || u.email.split('@')[0],
-              name: u.name,
+              username: u.nama_pengguna || u.email.split('@')[0],
+              name: u.nama,
               email: u.email,
               role: mappedRole,
-              unit: u.unit_kerja || '-',
-              status: u.status || 'Aktif',
-              is_current: u.name === userName,
+              unit: u.area || '-',
+              status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
+              is_current: u.nama === userName,
               access: mappedAccess
             };
           });
@@ -216,7 +224,7 @@ export default function UserListPage({ role, currentPath }) {
 
   const handleDelete = (user) => {
     if (user.is_current) {
-      alert("Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif digunakan.");
+      setStatusModal({ isOpen: true, type: 'error', title: 'Tidak Diizinkan', message: 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif digunakan.' });
       return;
     }
     setUserToDelete(user);
@@ -227,7 +235,7 @@ export default function UserListPage({ role, currentPath }) {
     if (!userToDelete) return;
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.delete(`${API_BASE_URL}/api/users/${userToDelete.id}`, {
+      await axios.delete(`${API_BASE_URL}/api/pengguna/${userToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
@@ -236,6 +244,7 @@ export default function UserListPage({ role, currentPath }) {
     setAllUsers(prev => prev.filter(item => item.id !== userToDelete.id));
     setIsDeleteConfirmOpen(false);
     setUserToDelete(null);
+    setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Pengguna berhasil dihapus.' });
   };
 
   const handleTambahPenggunaClick = () => {
@@ -244,7 +253,24 @@ export default function UserListPage({ role, currentPath }) {
   };
 
   const handleFormSubmit = async (formData) => {
-    const roleValue = formData.role === 'Administrator' ? 'super-admin' : (formData.role === 'Kepala Yayasan' ? 'kepala-yayasan' : (formData.role === 'Petugas Perbaikan' ? 'petugas-perbaikan' : (formData.role === 'Guru' ? 'guru' : 'admin')));
+    let id_peran = 1;
+    if (formData.role === 'Administrator') id_peran = 1;
+    else if (formData.role === 'Kepala Yayasan') id_peran = 2;
+    else if (formData.role === 'Petugas Perbaikan') id_peran = 5;
+    else if (formData.role === 'Guru') id_peran = 4;
+    else if (formData.role && formData.role.startsWith('Admin')) id_peran = 3;
+
+    const payload = {
+      nama: formData.name,
+      email: formData.email,
+      nama_pengguna: formData.username,
+      id_peran: id_peran,
+      area: formData.unit && formData.unit !== '-' ? formData.unit : null,
+      status_aktif: formData.status === 'Aktif' ? 1 : 0
+    };
+    if (formData.password) {
+      payload.password = formData.password;
+    }
 
     if (editingUser) {
       // Edit Mode
@@ -267,26 +293,19 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.put(`${API_BASE_URL}/api/users/${editingUser.id}`, {
-          name: formData.name,
-          email: formData.email,
-          username: formData.username,
-          password: formData.password || undefined,
-          role: roleValue,
-          unit_kerja: formData.unit,
-          permissions: JSON.stringify(formData.access)
-        }, config);
+        const response = await axios.put(`${API_BASE_URL}/api/pengguna/${editingUser.id}`, payload, config);
 
-        if (response.data && response.data.user) {
-          const u = response.data.user;
+        if (response.data && response.data.data) {
+          const u = response.data.data;
+          const mappedRole = u.id_peran === 1 ? 'Administrator' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : (u.area ? `Admin ${u.area}` : 'Admin SD'))));
           const mappedUser = {
             id: u.id,
-            username: u.username,
-            name: u.name,
+            username: u.nama_pengguna,
+            name: u.nama,
             email: u.email,
-            role: formData.role,
-            unit: u.unit_kerja || '-',
-            status: formData.status,
+            role: mappedRole,
+            unit: u.area || '-',
+            status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: editingUser.is_current,
             access: { ...formData.access }
           };
@@ -320,26 +339,19 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.post(`${API_BASE_URL}/api/users`, {
-          name: formData.name,
-          email: formData.email,
-          username: formData.username,
-          password: formData.password,
-          role: roleValue,
-          unit_kerja: formData.unit,
-          permissions: JSON.stringify(formData.access)
-        }, config);
+        const response = await axios.post(`${API_BASE_URL}/api/pengguna`, payload, config);
 
-        if (response.data && response.data.user) {
-          const u = response.data.user;
+        if (response.data && response.data.data) {
+          const u = response.data.data;
+          const mappedRole = u.id_peran === 1 ? 'Administrator' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : (u.area ? `Admin ${u.area}` : 'Admin SD'))));
           const mappedUser = {
             id: u.id,
-            username: u.username,
-            name: u.name,
+            username: u.nama_pengguna,
+            name: u.nama,
             email: u.email,
-            role: formData.role,
-            unit: u.unit_kerja || '-',
-            status: 'Aktif',
+            role: mappedRole,
+            unit: u.area || '-',
+            status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: false,
             access: { ...formData.access }
           };
@@ -354,7 +366,7 @@ export default function UserListPage({ role, currentPath }) {
     }
 
     setIsFormOpen(false);
-    setIsSuccessOpen(true);
+    setStatusModal({ isOpen: true, type: 'success', title: 'Terima kasih', message: editingUser ? "Pengguna berhasil diperbarui" : "Pengguna baru berhasil ditambahkan" });
   };
 
   const PlusIcon = () => (
@@ -407,20 +419,25 @@ export default function UserListPage({ role, currentPath }) {
         />
 
         {/* Delete Confirmation Modal */}
-        <UserDeleteModal
+        <StatusModal
           isOpen={isDeleteConfirmOpen}
-          onClose={() => setIsDeleteConfirmOpen(false)}
+          type="confirm"
+          title="Konfirmasi Hapus"
+          message={`Apakah Anda yakin ingin menghapus pengguna "${userToDelete?.name}" secara permanen?`}
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
           onConfirm={handleConfirmDelete}
-          user={userToDelete}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
         />
 
-        {/* Success Alert Modal */}
+        {/* Status Alert Modal */}
         <StatusModal
-          isOpen={isSuccessOpen}
-          type="success"
-          title="Terima kasih"
-          message={editingUser ? "Pengguna berhasil diperbarui" : "Pengguna baru berhasil ditambahkan"}
-          onConfirm={() => setIsSuccessOpen(false)}
+          isOpen={statusModal.isOpen}
+          type={statusModal.type}
+          title={statusModal.title}
+          message={statusModal.message}
+          onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
+          confirmText={statusModal.type === 'error' ? 'Tutup' : 'OK'}
         />
       </main>
     </DashboardLayout>

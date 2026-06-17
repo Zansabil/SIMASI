@@ -50,6 +50,10 @@
   color: #f59e0b;
 }
 
+.status-icon-wrapper.confirm {
+  color: #3b82f6;
+}
+
 .status-modal-title {
   color: #0f172a;
   font-family: 'Inter', system-ui, sans-serif;
@@ -129,6 +133,47 @@
 }
 
 .status-modal-btn.warning:active {
+  transform: translateY(0);
+}
+
+/* Confirm Button */
+.status-modal-btn.confirm {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.status-modal-btn.confirm:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+}
+
+.status-modal-btn.confirm:active {
+  transform: translateY(0);
+}
+
+/* Button Group */
+.status-modal-btn-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Cancel Button */
+.status-modal-btn.cancel {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  box-shadow: none;
+}
+
+.status-modal-btn.cancel:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.status-modal-btn.cancel:active {
   transform: translateY(0);
 }
 

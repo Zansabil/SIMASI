@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash; 
-use App\Models\pengguna;            
+use App\Models\Pengguna;            
 
 class AuthController extends Controller
 {
@@ -17,7 +17,7 @@ class AuthController extends Controller
         ]);
 
         // Cari pengguna berdasarkan email
-        $user = pengguna::where('email', $request->email)->first();
+        $user = Pengguna::where('email', $request->email)->first();
 
         // Cek apakah email ada di database DAN passwordnya cocok
         if (!$user || !Hash::check($request->password, $user->password)) {
@@ -54,7 +54,7 @@ class AuthController extends Controller
             'password.min'         => 'Password minimal harus 8 karakter.'
         ]);
 
-        $user = pengguna::create([
+        $user = Pengguna::create([
             'nama'          => $request->nama,
             'nama_pengguna' => $request->nama_pengguna,
             'email'         => $request->email,

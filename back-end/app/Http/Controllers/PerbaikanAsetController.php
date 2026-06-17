@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\perbaikan_aset;
-use App\Models\laporan_kerusakan;
-use App\Models\pengguna;
-use App\Models\aset;
+use App\Models\PerbaikanAset;
+use App\Models\LaporanKerusakan;
+use App\Models\Pengguna;
+use App\Models\Aset;
 
 class PerbaikanAsetController extends Controller
 {
@@ -14,7 +14,7 @@ class PerbaikanAsetController extends Controller
     public function index()
     {
         // Mengambil data perbaikan beserta relasi laporan, aset terkait, dan petugas teknisi
-        $perbaikans = perbaikan_aset::with(['laporan.aset', 'petugas'])->orderBy('tgl_dibuat', 'desc')->get();
+        $perbaikans = PerbaikanAset::with(['laporan.aset', 'petugas'])->orderBy('tgl_dibuat', 'desc')->get();
         
         return response()->json([
             'success' => true,
@@ -36,7 +36,7 @@ class PerbaikanAsetController extends Controller
         ]);
 
         // 2. Simpan ke tabel perbaikan_aset
-        $perbaikan = perbaikan_aset::create([
+        $perbaikan = PerbaikanAset::create([
             'id_laporan'       => $request->id_laporan,
             'id_petugas'       => $request->id_petugas,
             'tanggal_mulai'    => $request->tanggal_mulai,
@@ -50,13 +50,13 @@ class PerbaikanAsetController extends Controller
         if ($request->status_perbaikan == 'Selesai') {
             
             // Cari data laporan kerusakan terkait
-            $laporan = laporan_kerusakan::findOrFail($request->id_laporan);
+            $laporan = LaporanKerusakan::findOrFail($request->id_laporan);
             
             // A. Ubah status laporan jadi Selesai
             $laporan->update(['status_kerusakan' => 'Selesai']);
             
             // B. Kembalikan status kondisi aset utama menjadi "Baik"
-            $aset = aset::findOrFail($laporan->id_aset);
+            $aset = Aset::findOrFail($laporan->id_aset);
             $aset->update(['kondisi_aset' => 'Baik']);
         }
 
@@ -70,7 +70,7 @@ class PerbaikanAsetController extends Controller
     // 3. (Opsional) DETAIL: Menampilkan satu data perbaikan berdasarkan ID
     public function show($id)
     {
-        $perbaikan = perbaikan_aset::with(['laporan.aset', 'petugas'])->findOrFail($id);
+        $perbaikan = PerbaikanAset::with(['laporan.aset', 'petugas'])->findOrFail($id);
 
         return response()->json([
             'success' => true,

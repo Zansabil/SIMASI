@@ -14,6 +14,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Berikan akses penuh (bypass semua gate) untuk Super Admin
+        Gate::before(function ($user, $ability) {
+            if ($user->id_peran == 1) {
+                return true;
+            }
+        });
+
         // 1. Gerbang khusus Super Admin (Kelola User)
         Gate::define('kelola-user', function ($user) {
             return $user->id_peran == 1; 

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\notifikasi;
+use App\Models\Notifikasi;
 
 class NotifikasiController extends Controller
 {
@@ -11,7 +11,7 @@ class NotifikasiController extends Controller
     public function index()
     {
         // Menarik notifikasi milik user yang login, diurutkan dari yang terbaru
-        $notifikasi = notifikasi::where('id_pengguna', auth()->user()->id)
+        $notifikasi = Notifikasi::where('id_pengguna', auth()->user()->id)
                                 ->orderBy('id', 'desc') 
                                 ->get();
 
@@ -25,7 +25,7 @@ class NotifikasiController extends Controller
     // UPDATE: Fungsi untuk menandai 1 notifikasi sudah dibaca
     public function tandaiDibaca($id)
     {
-        $notif = notifikasi::where('id', $id)
+        $notif = Notifikasi::where('id', $id)
                            ->where('id_pengguna', auth()->user()->id)
                            ->first();
         
@@ -50,7 +50,7 @@ class NotifikasiController extends Controller
     public function tandaiSemuaDibaca()
     {
         // Mengubah semua notifikasi yang belum terbaca (0) menjadi terbaca (1)
-        $jumlahDiupdate = notifikasi::where('id_pengguna', auth()->user()->id)
+        $jumlahDiupdate = Notifikasi::where('id_pengguna', auth()->user()->id)
                                     ->where('terbaca', 0)
                                     ->update(['terbaca' => 1]);
 

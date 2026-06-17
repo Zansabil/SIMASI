@@ -3,33 +3,33 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\aset;
-use App\Models\laporan_kerusakan;
-use App\Models\pengguna;
-use App\Models\pengadaan_aset;
-use App\Models\perbaikan_aset;
+use App\Models\Aset;
+use App\Models\LaporanKerusakan;
+use App\Models\Pengguna;
+use App\Models\PengadaanAset;
+use App\Models\PerbaikanAset;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         // 1. Total Seluruh Aset (jumlah dari kolom jumlah_aset)
-        $total_aset = aset::sum('jumlah_aset');
+        $total_aset = Aset::sum('jumlah_aset');
 
         // 2. Aset Aktif (kondisi Baik)
-        $aset_aktif = aset::where('kondisi_aset', 'Baik')->sum('jumlah_aset');
+        $aset_aktif = Aset::where('kondisi_aset', 'Baik')->sum('jumlah_aset');
 
         // 3. Aset dalam Perbaikan (kondisi Rusak Ringan atau Rusak Berat)
-        $perbaikan = aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->sum('jumlah_aset');
+        $perbaikan = Aset::whereIn('kondisi_aset', ['Rusak Ringan', 'Rusak Berat'])->sum('jumlah_aset');
 
         // 4. Kategori Spesifik: Elektronik
-        $elektronik = aset::where(function($q) {
+        $elektronik = Aset::where(function($q) {
             $q->where('jenis_aset', 'like', '%elektronik%')
               ->orWhere('jenis_aset', 'like', '%komputer%');
         })->sum('jumlah_aset');
 
         // 5. Kategori Spesifik: Furnitur
-        $furnitur = aset::where(function($q) {
+        $furnitur = Aset::where(function($q) {
             $q->where('jenis_aset', 'like', '%furnitur%')
               ->orWhere('jenis_aset', 'like', '%furniture%')
               ->orWhere('jenis_aset', 'like', '%meja%')
@@ -42,7 +42,7 @@ class DashboardController extends Controller
         $today = date('Y-m-d');
 
         // Ambil pengadaan hari ini
-        $pengadaans = pengadaan_aset::whereDate('tgl_pengajuan', $today)
+        $pengadaans = PengadaanAset::whereDate('tgl_pengajuan', $today)
             ->orderBy('tgl_pengajuan', 'desc')
             ->get();
         foreach ($pengadaans as $p) {
@@ -61,7 +61,7 @@ class DashboardController extends Controller
         }
 
         // Ambil perbaikan hari ini
-        $perbaikans = perbaikan_aset::with('laporan.aset')
+        $perbaikans = PerbaikanAset::with('laporan.aset')
             ->whereDate('tgl_dibuat', $today)
             ->orderBy('tgl_dibuat', 'desc')
             ->get();

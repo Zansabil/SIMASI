@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\aset;
+use App\Models\Aset;
 use App\Exports\AsetExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf; 
-use App\Models\riwayat_aset;
+use App\Models\RiwayatAset;
 use Illuminate\Support\Facades\Gate;
 
 class AsetController extends Controller
@@ -16,7 +16,7 @@ class AsetController extends Controller
     public function index(Request $request)
     {
         $search = $request->search;
-        $query = aset::query();
+        $query = Aset::query();
 
         if ($search) {
             $query->where('nama_aset', 'like', "%{$search}%")
@@ -38,7 +38,7 @@ class AsetController extends Controller
     {
         Gate::authorize('kelola-aset'); 
 
-        $asets = aset::orderBy('tgl_dibuat', 'desc')->get();
+        $asets = Aset::orderBy('tgl_dibuat', 'desc')->get();
         $pdf = Pdf::loadView('aset.cetak', compact('asets'));
         $pdf->setPaper('A4', 'landscape');
         
@@ -71,9 +71,9 @@ class AsetController extends Controller
         $dataAset = $request->all();
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
-        $aset = aset::create($dataAset);
+        $aset = Aset::create($dataAset);
 
-        riwayat_aset::create([
+        RiwayatAset::create([
             'id_aset'     => $aset->id, 
             'aksi'        => 'Penambahan',
             'id_pengguna' => auth()->user()->id,
@@ -91,7 +91,7 @@ class AsetController extends Controller
     // 3. DETAIL: Menampilkan satu data spesifik berdasarkan ID
     public function show($id)
     {
-        $aset = aset::findOrFail($id);
+        $aset = Aset::findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -105,7 +105,7 @@ class AsetController extends Controller
     {
         Gate::authorize('kelola-aset'); 
 
-        $aset = aset::findOrFail($id);
+        $aset = Aset::findOrFail($id);
         $aset->fill($request->except(['_token', '_method']));
         $perubahan = $aset->getDirty();
 
@@ -113,13 +113,17 @@ class AsetController extends Controller
             $teksPerubahan = [];
             foreach ($perubahan as $kolom => $nilaiBaru) {
                 if ($kolom != 'updated_at') {
-                    $teksPerubahan[] = "kolom '$kolom' menjadi '$nilaiBaru'";
+                    if ($kolom == 'foto') {
+                        $teksPerubahan[] = "foto diperbarui";
+                    } else {
+                        $teksPerubahan[] = "kolom '$kolom' menjadi '$nilaiBaru'";
+                    }
                 }
             }
             $keterangan_final = "Aset telah diedit. Detail: " . implode(', ', $teksPerubahan);
             $aset->save();
 
-            riwayat_aset::create([
+            RiwayatAset::create([
                 'id_aset'     => $id,
                 'aksi'        => 'Perubahan',
                 'id_pengguna' => auth()->user()->id,
@@ -135,8 +139,9 @@ class AsetController extends Controller
         }
 
         return response()->json([
-            'success' => false,
-            'message' => 'Tidak ada perubahan data yang dilakukan.'
+            'success' => true,
+            'message' => 'Tidak ada perubahan data yang dilakukan.',
+            'data'    => $aset
         ], 200);
     }
 
@@ -145,9 +150,9 @@ class AsetController extends Controller
     {
         Gate::authorize('kelola-aset'); 
 
-        $aset = aset::findOrFail($id);
+        $aset = Aset::findOrFail($id);
         
-        riwayat_aset::create([
+        RiwayatAset::create([
             'id_aset'     => $id,
             'aksi'        => 'Penghapusan',
             'id_pengguna' => auth()->user()->id,
@@ -155,7 +160,7 @@ class AsetController extends Controller
             'waktu'       => now()
         ]);
         
-        $aset->delete();
+        $aset->forceDelete();
 
         return response()->json([
             'success' => true,

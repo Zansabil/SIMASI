@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\notifikasi;
-use App\Models\pengguna;
+use App\Models\Notifikasi;
+use App\Models\Pengguna;
 use Illuminate\Http\Request;
-use App\Models\pengadaan_aset;
+use App\Models\PengadaanAset;
 use Illuminate\Support\Facades\Gate; // <--- PEMANGGIL SATPAM (WAJIB ADA)
 
 class PengadaanAsetController extends Controller
@@ -14,7 +14,7 @@ class PengadaanAsetController extends Controller
     public function index()
     {
         // Tarik semua data pengadaan beserta relasi ke tabel pengguna (pemohon)
-        $pengadaans = pengadaan_aset::with('pengguna')->orderBy('tgl_pengajuan', 'desc')->get();
+        $pengadaans = PengadaanAset::with('pengguna')->orderBy('tgl_pengajuan', 'desc')->get();
         
         return response()->json([
             'success' => true,
@@ -36,7 +36,7 @@ class PengadaanAsetController extends Controller
             'alasan'            => 'required|string'
         ]);
 
-        $pengadaan = pengadaan_aset::create([
+        $pengadaan = PengadaanAset::create([
             // Otomatis mengambil ID pengguna yang sedang login dari token Sanctum!
             'idpengguna'        => auth()->user()->id, 
             'nama_barang'       => $request->nama_barang,
@@ -50,9 +50,9 @@ class PengadaanAsetController extends Controller
         ]);
 
         // 👇 PEMICU NOTIFIKASI: Kirim ke Kepala Yayasan (id_peran = 2)
-        $kepalaYayasans = pengguna::where('id_peran', 2)->get();
+        $kepalaYayasans = Pengguna::where('id_peran', 2)->get();
         foreach ($kepalaYayasans as $pimpinan) {
-            notifikasi::create([
+            Notifikasi::create([
                 'id_pengguna'    => $pimpinan->id,
                 'tipe'           => 'Pengajuan Baru',
                 'pesan'          => auth()->user()->nama . ' mengajukan pengadaan aset baru: ' . $request->nama_barang . '. Mohon segera ditinjau.',
@@ -80,11 +80,11 @@ class PengadaanAsetController extends Controller
         Gate::authorize('setuju-pengadaan');
 
         // Ingat, Primary Key kamu adalah idpengadaan_aset, bukan id
-        $pengadaan = pengadaan_aset::where('idpengadaan_aset', $id)->firstOrFail();
+        $pengadaan = PengadaanAset::where('idpengadaan_aset', $id)->firstOrFail();
         $pengadaan->update(['status_pengajuan' => 'Disetujui']);
 
         // 👇 PEMICU NOTIFIKASI: Kirim balik ke pemohon
-        notifikasi::create([
+        Notifikasi::create([
             'id_pengguna'    => $pengadaan->idpengguna,
             'tipe'           => 'Status Pengajuan',
             'pesan'          => 'Hore! Pengajuan pengadaan aset [' . $pengadaan->nama_barang . '] Anda telah DISETUJUI oleh Kepala Yayasan.',
@@ -111,7 +111,7 @@ class PengadaanAsetController extends Controller
             'catatan_penolakan' => 'required|string'
         ]);
 
-        $pengadaan = pengadaan_aset::where('idpengadaan_aset', $id)->firstOrFail();
+        $pengadaan = PengadaanAset::where('idpengadaan_aset', $id)->firstOrFail();
         
         // Update status dan simpan alasannya sekaligus
         $pengadaan->update([
@@ -120,7 +120,7 @@ class PengadaanAsetController extends Controller
         ]);
 
         // 👇 PEMICU NOTIFIKASI: Kirim balik ke pemohon
-        notifikasi::create([
+        Notifikasi::create([
             'id_pengguna'    => $pengadaan->idpengguna,
             'tipe'           => 'Status Pengajuan',
             'pesan'          => 'Mohon maaf, pengajuan [' . $pengadaan->nama_barang . '] Anda DITOLAK. Alasan: ' . $request->catatan_penolakan,
