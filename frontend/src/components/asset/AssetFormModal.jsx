@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { FiX, FiUpload } from 'react-icons/fi';
 
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const UploadIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="17 8 12 3 7 8" />
-    <line x1="12" y1="3" x2="12" y2="15" />
-  </svg>
-);
+const formatToRupiah = (value) => {
+  if (value === null || value === undefined || value === '') return '';
+  const cleanNumber = value.toString().replace(/[^0-9]/g, '');
+  if (!cleanNumber) return '';
+  return 'Rp ' + Number(cleanNumber).toLocaleString('id-ID');
+};
 
 export default function AssetFormModal({
   isOpen,
@@ -39,16 +32,21 @@ export default function AssetFormModal({
       if (assetToEdit) {
         setName(assetToEdit.name || '');
         
-        // Parse combined unit and room from location
-        const locStr = assetToEdit.location || '';
-        if (locStr.includes(' - ')) {
-          const parts = locStr.split(' - ');
-          setUnit(parts[0] || '');
-          setRoom(parts.slice(1).join(' - ') || '');
+        // Use unit and room directly if available, fallback to parsing location
+        if (assetToEdit.unit || assetToEdit.room) {
+          setUnit(assetToEdit.unit || '');
+          setRoom(assetToEdit.room || '');
         } else {
-          // Backward compatibility for old records
-          setUnit(locStr);
-          setRoom('');
+          const locStr = assetToEdit.location || '';
+          if (locStr.includes(' - ')) {
+            const parts = locStr.split(' - ');
+            setUnit(parts[0] || '');
+            setRoom(parts.slice(1).join(' - ') || '');
+          } else {
+            // Backward compatibility for old records
+            setUnit(locStr);
+            setRoom('');
+          }
         }
         
         setPurchaseDate(assetToEdit.purchase_date || '');
@@ -56,7 +54,7 @@ export default function AssetFormModal({
         setQuantity(assetToEdit.quantity || '');
         setCondition(assetToEdit.condition || '');
         setSource(assetToEdit.source_of_funds || 'Dana Yayasan');
-        setPrice(assetToEdit.price || '');
+        setPrice(formatToRupiah(assetToEdit.price));
         setImage(assetToEdit.image_path || '');
       } else {
         setName('');
@@ -124,6 +122,8 @@ export default function AssetFormModal({
     const combinedLocation = unit && room ? `${unit} - ${room}` : (unit || room);
     onSubmit({
       name,
+      unit,
+      room,
       location: combinedLocation,
       purchaseDate,
       code,
@@ -146,7 +146,7 @@ export default function AssetFormModal({
             {isEditing ? 'Edit Aset' : 'Tambah Aset'}
           </h3>
           <button className="modal-close-btn" onClick={onClose} aria-label="Tutup">
-            <CloseIcon />
+            <FiX size={20} />
           </button>
         </div>
 
@@ -228,13 +228,17 @@ export default function AssetFormModal({
 
           <div className="modal-form-group">
             <label className="modal-form-label">Kondisi Barang <span className="req-star">*</span></label>
-            <input
-              type="text"
-              className="modal-form-input"
+            <select
+              className="modal-form-select"
               required
-              value={condition}
+              value={condition ? condition.toLowerCase() : ''}
               onChange={(e) => setCondition(e.target.value)}
-            />
+            >
+              <option value="" disabled hidden>Pilih Kondisi</option>
+              <option value="baik">Baik</option>
+              <option value="rusak ringan">Rusak Ringan</option>
+              <option value="rusak berat">Rusak Berat</option>
+            </select>
           </div>
 
           <div className="modal-form-group">
@@ -255,8 +259,8 @@ export default function AssetFormModal({
               className="modal-form-input"
               required
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="Rp.2000000"
+              onChange={(e) => setPrice(formatToRupiah(e.target.value))}
+              placeholder="Rp 2.000.000"
             />
           </div>
 
@@ -275,7 +279,7 @@ export default function AssetFormModal({
                   <img src={image.startsWith('http') ? image : image} alt="Preview" className="upload-preview-thumbnail-img" />
                 ) : (
                   <>
-                    <UploadIcon />
+                    <FiUpload size={36} color="#94a3b8" />
                     <span className="upload-main-prompt">Klik untuk upload foto atau drag and drop</span>
                     <span className="upload-sub-prompt">PNG, JPG, JPEG (Max. 5MB)</span>
                   </>

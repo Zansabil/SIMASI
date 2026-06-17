@@ -51,10 +51,20 @@ class PemindahanAsetController extends Controller
             'id_pengguna'       => auth()->user()->id // <--- KUNCI PENTING: Otomatis dari token Sanctum
         ]);
 
-        // 4. SIHIR BACK-END: Update lokasi di tabel aset utama!
         $aset = Aset::findOrFail($request->id_aset);
+        
+        $locStr = $request->lokasi_baru ?? '';
+        $unit = $locStr;
+        $ruangan = '';
+        if (str_contains($locStr, ' - ')) {
+            $parts = explode(' - ', $locStr, 2);
+            $unit = $parts[0];
+            $ruangan = $parts[1];
+        }
+
         $aset->update([
-            'lokasi_aset' => $request->lokasi_baru
+            'unit' => $unit,
+            'ruangan' => $ruangan
         ]);
 
         return response()->json([

@@ -407,7 +407,7 @@ export default function UserListPage({ role, currentPath }) {
 
         {/* Footer copyright */}
         <footer className="footer-copyright-text" style={{ marginTop: '40px' }}>
-          © 2025 SIMAS - Sistem Informasi Manajemen Aset
+          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
         </footer>
 
         {/* Form Modal */}

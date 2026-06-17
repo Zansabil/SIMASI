@@ -10,6 +10,8 @@ import AssetDetailModal from './AssetDetailModal';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
 import FilterSelect from '../ui/FilterSelect';
+import { FiPlus } from 'react-icons/fi';
+import { mapLaravelListToReact, mapReactToLaravel, mapLaravelToReact } from '../../utils/assetMapper';
 import './AssetListPage.css';
 
 // Mock data matching the mockup images exactly (default fallback)
@@ -137,22 +139,11 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         );
 
         if (response.data && Array.isArray(response.data.data)) {
-          // Map backend format to frontend format for consistency
-          const mappedAssets = response.data.data.map(item => ({
-            id: item.id,
-            name: item.nama_aset,
-            asset_code: item.kode_inventaris,
-            location: item.lokasi_aset,
-            quantity: item.jumlah_aset,
-            condition: item.kondisi_aset,
-            purchase_date: item.tgl_diperoleh,
-            source_of_funds: item.sumber_dana || 'Dana Yayasan',
-            price: item.harga_aset || 0,
-            image_path: item.foto || null
-          }));
-          setAllAssets(mappedAssets);
-          setAssets(mappedAssets);
-          setTotalItems(mappedAssets.length); // Fallback to array length since pagination wasn't fully supported in API index
+          // Map backend fields to frontend model using reusable mapper
+          const mapped = mapLaravelListToReact(response.data.data);
+          setAllAssets(mapped);
+          setAssets(mapped);
+          setTotalItems(response.data.total || mapped.length);
         } else {
           filterMockData();
         }
@@ -232,30 +223,11 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        const response = await axios.put(`${API_BASE_URL}/api/aset/${assetToEdit.id}`, {
-          nama_aset: formData.name,
-          kode_inventaris: formData.code,
-          jenis_aset: 'Umum',
-          jumlah_aset: Number(formData.quantity),
-          kondisi_aset: formData.condition,
-          lokasi_aset: formData.location,
-          tgl_diperoleh: resolvedDate,
-          harga_aset: parsedPrice,
-          sumber_dana: formData.source,
-          foto: formData.image
-        }, config);
+        const payload = mapReactToLaravel(formData, assetToEdit.asset_code);
+        const response = await axios.put(`${API_BASE_URL}/api/aset/${assetToEdit.id}`, payload, config);
 
-        // Map backend response to frontend format
-        const updatedFromBackend = {
-          ...updatedAsset,
-          id: response.data.data.id,
-          name: response.data.data.nama_aset,
-          asset_code: response.data.data.kode_inventaris,
-          location: response.data.data.lokasi_aset,
-          quantity: response.data.data.jumlah_aset,
-          condition: response.data.data.kondisi_aset,
-          purchase_date: response.data.data.tgl_diperoleh
-        };
+        // Map backend response to frontend format using mapLaravelToReact
+        const updatedFromBackend = mapLaravelToReact(response.data.data);
         
         setAllAssets(prev => prev.map(item => item.id === assetToEdit.id ? updatedFromBackend : item));
         setRefreshTrigger(prev => prev + 1);
@@ -286,31 +258,12 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = {
           headers: { Authorization: `Bearer ${token}` }
         };
-        const response = await axios.post(`${API_BASE_URL}/api/aset`, {
-          nama_aset: formData.name,
-          kode_inventaris: formData.code,
-          jenis_aset: 'Umum',
-          jumlah_aset: Number(formData.quantity),
-          kondisi_aset: formData.condition,
-          lokasi_aset: formData.location,
-          tgl_diperoleh: resolvedDate,
-          harga_aset: parsedPrice,
-          sumber_dana: formData.source,
-          foto: formData.image
-        }, config);
+        const payload = mapReactToLaravel(formData);
+        const response = await axios.post(`${API_BASE_URL}/api/aset`, payload, config);
 
         if (response.data && response.data.data) {
-          const createdBackendAsset = {
-            ...newAsset,
-            id: response.data.data.id,
-            name: response.data.data.nama_aset,
-            asset_code: response.data.data.kode_inventaris,
-            location: response.data.data.lokasi_aset,
-            quantity: response.data.data.jumlah_aset,
-            condition: response.data.data.kondisi_aset,
-            purchase_date: response.data.data.tgl_diperoleh
-          };
-          setAllAssets(prev => [createdBackendAsset, ...prev]);
+          const mappedNewAsset = mapLaravelToReact(response.data.data);
+          setAllAssets(prev => [mappedNewAsset, ...prev]);
         } else {
           setAllAssets(prev => [newAsset, ...prev]);
         }
@@ -333,41 +286,6 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     });
   };
 
-  // SVGs for icons
-  const SearchIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  );
-
-  const PlusIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M5 12h14M12 5v14" />
-    </svg>
-  );
-
-  const ChevronDownIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
-
-  const CloseIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-
-  const UploadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <polyline points="17 8 12 3 7 8" />
-      <line x1="12" y1="3" x2="12" y2="15" />
-    </svg>
-  );
-
 
   return (
     <DashboardLayout role={role} currentPath={currentPath}>
@@ -378,7 +296,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           subtitle="Kelola dan pantau seluruh data aset sekolah"
           actionLabel={hasWriteAccess ? "Tambah Aset" : null}
           onActionClick={handleTambahAsetClick}
-          actionIcon={PlusIcon}
+          actionIcon={FiPlus}
           actionClassName="btn-tambah-aset"
         >
           {/* Filter Row: Search & Dropdown Filter Fields */}
@@ -423,7 +341,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
 
         {/* Footer copyright */}
         <footer className="footer-copyright-text">
-          © 2025 SIMAS - Sistem Informasi Manajemen Aset
+          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
         </footer>
 
         {/* MODAL 1: TAMBAH / EDIT ASET FORM (Only for write access roles) */}

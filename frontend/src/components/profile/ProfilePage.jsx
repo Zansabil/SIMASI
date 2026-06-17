@@ -257,7 +257,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
         </div>{/* end cards-center-wrap */}
 
         <footer className="footer-copyright-text" style={{ marginTop: '40px' }}>
-          © 2025 SIMAS - Sistem Informasi Manajemen Aset
+          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
         </footer>
       </main>
 

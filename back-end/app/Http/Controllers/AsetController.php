@@ -62,7 +62,8 @@ class AsetController extends Controller
             'kode_inventaris' => 'required|unique:aset,kode_inventaris',
             'nama_aset'       => 'required',
             'jenis_aset'      => 'required',
-            'lokasi_aset'     => 'required',
+            'unit'            => 'required',
+            'ruangan'         => 'required',
             'jumlah_aset'     => 'required|numeric',
             'kondisi_aset'    => 'required',
             'tgl_diperoleh'   => 'required|date'

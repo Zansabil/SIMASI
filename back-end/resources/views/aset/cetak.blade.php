@@ -68,7 +68,7 @@
                 <td>{{ $item->kode_inventaris }}</td>
                 <td>{{ $item->nama_aset }}</td>
                 <td>{{ $item->jenis_aset }}</td>
-                <td>{{ $item->lokasi_aset }}</td>
+                <td>{{ $item->unit }}{{ $item->ruangan ? ' - ' . $item->ruangan : '' }}</td>
                 <td class="text-center">{{ $item->jumlah_aset }}</td>
                 <td class="text-center">{{ $item->kondisi_aset }}</td>
             </tr>
