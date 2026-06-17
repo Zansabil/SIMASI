@@ -243,19 +243,7 @@ export default function Login() {
               {isLoading ? 'Sedang Masuk...' : 'Masuk'}
             </button>
 
-            <div className="registration-section">
-              <div className="registration-prompt">
-                Belum punya akun?
-              </div>
 
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => navigate('/register')}
-              >
-                Daftar Sekarang
-              </button>
-            </div>
           </form>
         )}
       </div>
