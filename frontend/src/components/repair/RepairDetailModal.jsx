@@ -88,6 +88,17 @@ export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
           {selectedItem.description}
         </div>
 
+        {selectedItem.keterangan && (
+          <>
+            <div className="detail-desc-header" style={{ marginTop: '16px', color: '#0f172a' }}>
+              <FiAlertCircle size={16} /> Keterangan Lapangan (Petugas)
+            </div>
+            <div className="detail-desc-box" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+              {selectedItem.keterangan}
+            </div>
+          </>
+        )}
+
         <div className="detail-photos-label">Foto Kerusakan</div>
         <div className="detail-photos-grid">
           <div className="detail-photo-card">

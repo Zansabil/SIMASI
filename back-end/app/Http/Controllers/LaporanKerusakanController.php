@@ -166,4 +166,26 @@ class LaporanKerusakanController extends Controller
             'message' => 'Laporan kerusakan berhasil dihapus!'
         ], 200);
     }
+
+    // 8. Update Progress Perbaikan (Khusus Petugas)
+    public function updateProgress(Request $request, $id)
+    {
+        $request->validate([
+            'status_kerusakan' => 'required|string',
+            'keterangan_perbaikan' => 'nullable|string'
+        ]);
+
+        $laporan = LaporanKerusakan::findOrFail($id);
+        
+        $laporan->update([
+            'status_kerusakan' => $request->status_kerusakan,
+            'keterangan_perbaikan' => $request->keterangan_perbaikan
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Progress perbaikan berhasil diperbarui.',
+            'data'    => $laporan
+        ], 200);
+    }
 }

@@ -21,7 +21,8 @@ import {
   validateRepair, 
   rejectRepair, 
   completeRepair,
-  deleteRepair
+  deleteRepair,
+  updateRepairProgress
 } from '../../services/repairService';
 
 // Default mock fallbacks jika backend mati
@@ -119,6 +120,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           asset_name: parsedAssetName,
           location: parsedLocation,
           description: parsedDesc,
+          keterangan: item.keterangan_perbaikan || '',
           status: status,
           priority: 'medium', // Prototype (tidak ada field priority di DB)
           image_path: imagePath
@@ -170,19 +172,27 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   };
 
   const handleEditSubmit = async (editData) => {
-    // editData contains { status, priority }
+    // editData contains { status, priority, keterangan, hasil, biaya, alasanTolak }
     if (!selectedItem) return;
 
     if (isUsingBackend) {
       try {
-        if (editData.status === 'in_progress') {
-          // Tandai sedang dikerjakan (Diproses) via validasi
-          await validateRepair(selectedItem.id);
-        } else if (editData.status === 'rejected') {
+        const backendStatusMap = {
+          'pending': 'Menunggu',
+          'in_progress': 'Diproses',
+          'completed': 'Selesai',
+          'rejected': 'Ditolak'
+        };
+        const backendStatus = backendStatusMap[editData.status] || 'Menunggu';
+
+        // 1. Selalu update progress & keterangan lapangan
+        await updateRepairProgress(selectedItem.id, backendStatus, editData.keterangan);
+
+        // 2. Jalankan logika spesifik berdasarkan status
+        if (editData.status === 'rejected') {
           await rejectRepair(selectedItem.id, editData.alasanTolak || 'Ditolak oleh petugas.');
         } else if (editData.status === 'completed') {
           // Tandai selesai dan buat history di perbaikan_aset
-          // Ambil ID Petugas asli dari localStorage (disimpan saat login)
           const idPetugas = localStorage.getItem('user_id'); 
           if (!idPetugas) throw new Error("Sesi tidak valid. Harap login kembali.");
           await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya);

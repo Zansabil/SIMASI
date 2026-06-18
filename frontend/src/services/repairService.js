@@ -76,3 +76,11 @@ export const deleteRepair = async (id) => {
   const response = await axios.delete(`${API_BASE_URL}/api/laporan_kerusakan/${id}`, getAuthConfig());
   return response.data;
 };
+
+export const updateRepairProgress = async (id, status, keterangan) => {
+  const response = await axios.patch(`${API_BASE_URL}/api/laporan_kerusakan/${id}/progress`, {
+    status_kerusakan: status,
+    keterangan_perbaikan: keterangan
+  }, getAuthConfig());
+  return response.data;
+};

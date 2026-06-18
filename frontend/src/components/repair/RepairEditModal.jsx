@@ -7,6 +7,7 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
   const [editHasil, setEditHasil] = useState('');
   const [editBiaya, setEditBiaya] = useState('');
   const [editAlasanTolak, setEditAlasanTolak] = useState('');
+  const [editKeterangan, setEditKeterangan] = useState('');
 
   useEffect(() => {
     if (isOpen && selectedItem) {
@@ -15,6 +16,7 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
       setEditHasil('');
       setEditBiaya('');
       setEditAlasanTolak('');
+      setEditKeterangan(selectedItem.keterangan || '');
     }
   }, [isOpen, selectedItem]);
 
@@ -23,6 +25,7 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
     onSubmit({
       status: editStatus,
       priority: editPriority,
+      keterangan: editKeterangan,
       hasil: editStatus === 'completed' ? editHasil : '',
       biaya: editStatus === 'completed' ? editBiaya : 0,
       alasanTolak: editStatus === 'rejected' ? editAlasanTolak : ''
@@ -136,6 +139,16 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
                 <option value="rejected">Ditolak</option>
               </select>
             </div>
+          </div>
+
+          <div style={{ marginTop: '16px', background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+            <div className="detail-field-label" style={{ marginBottom: '8px', color: '#0f172a' }}>Keterangan Lapangan (Opsional)</div>
+            <textarea 
+              style={{ width: '100%', minHeight: '60px', padding: '8px', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '14px', fontFamily: 'Inter' }}
+              placeholder="Catatan dari petugas di lapangan mengenai perbaikan ini..."
+              value={editKeterangan}
+              onChange={(e) => setEditKeterangan(e.target.value)}
+            />
           </div>
 
           {editStatus === 'completed' && (

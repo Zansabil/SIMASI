@@ -187,8 +187,8 @@ export default function UserListPage({ role, currentPath }) {
             if (u.id_peran === 1) mappedRole = 'Super Admin';
             else if (u.id_peran === 2) mappedRole = 'Kepala Yayasan';
             else if (u.id_peran === 3) mappedRole = 'Admin';
-            else if (u.id_peran === 4) mappedRole = 'Guru';
-            else if (u.id_peran === 5) mappedRole = 'Petugas Perbaikan';
+            else if (u.id_peran === 4) mappedRole = 'Petugas Perbaikan';
+            else if (u.id_peran === 5) mappedRole = 'Guru';
             
             let mappedAccess = getRoleDefaultAccess(mappedRole);
 
@@ -261,8 +261,8 @@ export default function UserListPage({ role, currentPath }) {
     let id_peran = 1;
     if (formData.role === 'Administrator' || formData.role === 'Super Admin') id_peran = 1;
     else if (formData.role === 'Kepala Yayasan') id_peran = 2;
-    else if (formData.role === 'Petugas Perbaikan') id_peran = 5;
-    else if (formData.role === 'Guru') id_peran = 4;
+    else if (formData.role === 'Petugas Perbaikan') id_peran = 4;
+    else if (formData.role === 'Guru') id_peran = 5;
     else if (formData.role === 'Admin' || formData.role.startsWith('Admin')) id_peran = 3;
 
     const payload = {
@@ -298,11 +298,11 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.put(`${API_BASE_URL}/api/pengguna/${editingUser.id}`, payload, config);
+        const response = await axios.patch(`${API_BASE_URL}/api/pengguna/${editingUser.id}`, payload, config);
 
         if (response.data && response.data.data) {
           const u = response.data.data;
-          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : 'Admin')));
+          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 4 ? 'Petugas Perbaikan' : (u.id_peran === 5 ? 'Guru' : 'Admin')));
           const mappedUser = {
             id: u.id,
             username: u.nama_pengguna,
@@ -349,7 +349,7 @@ export default function UserListPage({ role, currentPath }) {
 
         if (response.data && response.data.data) {
           const u = response.data.data;
-          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : 'Admin')));
+          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 4 ? 'Petugas Perbaikan' : (u.id_peran === 5 ? 'Guru' : 'Admin')));
           const mappedUser = {
             id: u.id,
             username: u.nama_pengguna,
