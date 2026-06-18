@@ -12,6 +12,7 @@ import './UserListPage.css';
 
 const getRoleDefaultAccess = (role) => {
   switch (role) {
+    case 'Super Admin':
     case 'Administrator':
       return {
         dashboard: true,
@@ -30,6 +31,7 @@ const getRoleDefaultAccess = (role) => {
         perbaikanAset: true,
         manajemenPengguna: false
       };
+    case 'Admin':
     case 'Admin SD':
     case 'Admin SMP':
     case 'Admin SMA':
@@ -92,11 +94,11 @@ const initialMockUsers = [
     username: 'adminsd',
     name: 'Siti Aminah, S.Pd',
     email: 'admin.sd@simas.sch.id',
-    role: 'Admin SD',
+    role: 'Admin',
     unit: 'SD',
     status: 'Aktif',
     is_current: false,
-    access: getRoleDefaultAccess('Admin SD')
+    access: getRoleDefaultAccess('Admin')
   },
   {
     id: 'mock-4',
@@ -180,10 +182,10 @@ export default function UserListPage({ role, currentPath }) {
           }
 
           const mapped = rawData.map(u => {
-            let mappedRole = 'Administrator';
-            if (u.id_peran === 1) mappedRole = 'Administrator';
+            let mappedRole = 'Super Admin';
+            if (u.id_peran === 1) mappedRole = 'Super Admin';
             else if (u.id_peran === 2) mappedRole = 'Kepala Yayasan';
-            else if (u.id_peran === 3) mappedRole = u.area ? `Admin ${u.area}` : 'Admin SD';
+            else if (u.id_peran === 3) mappedRole = 'Admin';
             else if (u.id_peran === 4) mappedRole = 'Guru';
             else if (u.id_peran === 5) mappedRole = 'Petugas Perbaikan';
             
@@ -254,11 +256,11 @@ export default function UserListPage({ role, currentPath }) {
 
   const handleFormSubmit = async (formData) => {
     let id_peran = 1;
-    if (formData.role === 'Administrator') id_peran = 1;
+    if (formData.role === 'Super Admin' || formData.role === 'Administrator') id_peran = 1;
     else if (formData.role === 'Kepala Yayasan') id_peran = 2;
     else if (formData.role === 'Petugas Perbaikan') id_peran = 5;
     else if (formData.role === 'Guru') id_peran = 4;
-    else if (formData.role && formData.role.startsWith('Admin')) id_peran = 3;
+    else if (formData.role === 'Admin') id_peran = 3;
 
     const payload = {
       nama: formData.name,
@@ -297,7 +299,7 @@ export default function UserListPage({ role, currentPath }) {
 
         if (response.data && response.data.data) {
           const u = response.data.data;
-          const mappedRole = u.id_peran === 1 ? 'Administrator' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : (u.area ? `Admin ${u.area}` : 'Admin SD'))));
+          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : 'Admin')));
           const mappedUser = {
             id: u.id,
             username: u.nama_pengguna,
@@ -343,7 +345,7 @@ export default function UserListPage({ role, currentPath }) {
 
         if (response.data && response.data.data) {
           const u = response.data.data;
-          const mappedRole = u.id_peran === 1 ? 'Administrator' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : (u.area ? `Admin ${u.area}` : 'Admin SD'))));
+          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 5 ? 'Petugas Perbaikan' : (u.id_peran === 4 ? 'Guru' : 'Admin')));
           const mappedUser = {
             id: u.id,
             username: u.nama_pengguna,

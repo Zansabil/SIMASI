@@ -9,6 +9,7 @@ const CloseIcon = () => (
 
 const getRoleDefaultAccess = (role) => {
   switch (role) {
+    case 'Super Admin':
     case 'Administrator':
       return {
         dashboard: true,
@@ -27,6 +28,7 @@ const getRoleDefaultAccess = (role) => {
         perbaikanAset: true,
         manajemenPengguna: false
       };
+    case 'Admin':
     case 'Admin SD':
     case 'Admin SMP':
     case 'Admin SMA':
@@ -191,12 +193,9 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
               onChange={(e) => handleRoleChange(e.target.value)}
             >
               <option value="">Pilih Role Akses</option>
-              <option value="Administrator">Administrator</option>
+              <option value="Super Admin">Super Admin</option>
               <option value="Kepala Yayasan">Kepala Yayasan</option>
-              <option value="Admin SD">Admin SD</option>
-              <option value="Admin SMP">Admin SMP</option>
-              <option value="Admin SMA">Admin SMA</option>
-              <option value="Admin MA">Admin MA</option>
+              <option value="Admin">Admin</option>
               <option value="Petugas Perbaikan">Petugas Perbaikan</option>
               <option value="Guru">Guru</option>
             </select>

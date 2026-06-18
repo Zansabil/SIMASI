@@ -237,7 +237,6 @@ export default function AssetFormModal({
               min="1"
               className="modal-form-input"
               required
-              min="1"
               value={quantity}
               onChange={(e) => {
                 const val = e.target.value;

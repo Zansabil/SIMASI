@@ -16,10 +16,12 @@ const DeleteIcon = () => (
 
 const getRoleBadgeClass = (role) => {
   switch (role) {
+    case 'Super Admin':
     case 'Administrator':
       return 'role-admin';
     case 'Kepala Yayasan':
       return 'role-yayasan';
+    case 'Admin':
     case 'Admin SD':
     case 'Admin SMA':
     case 'Admin SMP':
