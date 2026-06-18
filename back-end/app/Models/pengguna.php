@@ -26,6 +26,24 @@ class Pengguna extends Authenticatable
         'id_peran',
     ];
 
+    // 2.5 Tambahkan attribute virtual 'jabatan' ke output JSON
+    protected $appends = ['jabatan'];
+
+    public function getJabatanAttribute()
+    {
+        // Cegah N+1 query jika peran tidak di-load, kembalikan string kosong atau ambil peran
+        $namaPeran = $this->peran ? $this->peran->nama : 'Unknown';
+        
+        if ($this->area && $this->area !== '-') {
+            if ($namaPeran === 'Admin Unit') {
+                return 'Admin ' . $this->area;
+            }
+            return $namaPeran . ' ' . $this->area;
+        }
+        
+        return $namaPeran;
+    }
+
     // 3. Sembunyikan kolom sensitif agar tidak bocor saat data dipanggil via API
     protected $hidden = [
         'password',
@@ -42,7 +60,7 @@ class Pengguna extends Authenticatable
     // Relasi ke tabel Peran (1 Pengguna punya 1 Peran)
     public function peran()
     {
-        return $this->belongsTo(peran::class, 'id_peran');
+        return $this->belongsTo(Peran::class, 'id_peran');
     }
 
     // Relasi ke tabel Laporan (1 Pengguna bisa membuat banyak Laporan)

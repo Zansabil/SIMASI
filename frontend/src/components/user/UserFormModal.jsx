@@ -11,6 +11,7 @@ const getRoleDefaultAccess = (role) => {
   switch (role) {
     case 'Super Admin':
     case 'Administrator':
+    case 'Super Admin':
       return {
         dashboard: true,
         daftarAset: true,

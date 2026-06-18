@@ -14,6 +14,7 @@ const getRoleDefaultAccess = (role) => {
   switch (role) {
     case 'Super Admin':
     case 'Administrator':
+    case 'Super Admin':
       return {
         dashboard: true,
         daftarAset: true,
@@ -193,9 +194,9 @@ export default function UserListPage({ role, currentPath }) {
 
             return {
               id: u.id,
-              username: u.nama_pengguna || u.email.split('@')[0],
-              name: u.nama,
-              email: u.email,
+              username: u.nama_pengguna || (u.email ? u.email.split('@')[0] : 'user'),
+              name: u.nama || 'Tanpa Nama',
+              email: u.email || '-',
               role: mappedRole,
               unit: u.area || '-',
               status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
@@ -208,6 +209,7 @@ export default function UserListPage({ role, currentPath }) {
           filterMockData();
         }
       } catch (err) {
+        console.error("Fetch Users Error Detail:", err);
         console.warn("Backend API not reachable. Using locally filtered mock data for presentation.", err);
         filterMockData();
       } finally {
@@ -241,7 +243,8 @@ export default function UserListPage({ role, currentPath }) {
         headers: { Authorization: `Bearer ${token}` }
       });
     } catch (err) {
-      console.warn('Backend API error, deleting user locally for presentation.', err);
+      console.error("Backend API error:", err);
+      alert("Gagal menghapus pengguna dari server.");
     }
     setAllUsers(prev => prev.filter(item => item.id !== userToDelete.id));
     setIsDeleteConfirmOpen(false);
@@ -256,11 +259,11 @@ export default function UserListPage({ role, currentPath }) {
 
   const handleFormSubmit = async (formData) => {
     let id_peran = 1;
-    if (formData.role === 'Super Admin' || formData.role === 'Administrator') id_peran = 1;
+    if (formData.role === 'Administrator' || formData.role === 'Super Admin') id_peran = 1;
     else if (formData.role === 'Kepala Yayasan') id_peran = 2;
     else if (formData.role === 'Petugas Perbaikan') id_peran = 5;
     else if (formData.role === 'Guru') id_peran = 4;
-    else if (formData.role === 'Admin') id_peran = 3;
+    else if (formData.role === 'Admin' || formData.role.startsWith('Admin')) id_peran = 3;
 
     const payload = {
       nama: formData.name,
@@ -316,8 +319,9 @@ export default function UserListPage({ role, currentPath }) {
           setAllUsers(prev => prev.map(item => item.id === editingUser.id ? updatedUser : item));
         }
       } catch (err) {
-        console.warn("Backend API error, updating user locally for presentation.", err);
-        setAllUsers(prev => prev.map(item => item.id === editingUser.id ? updatedUser : item));
+        console.error("Backend API error:", err);
+        const errorMessage = err.response?.data?.message || "Terjadi kesalahan saat menghubungi server.";
+        alert(`Gagal memperbarui pengguna: ${errorMessage}`);
       }
     } else {
       // Add Mode
@@ -362,8 +366,10 @@ export default function UserListPage({ role, currentPath }) {
           setAllUsers(prev => [newUser, ...prev]);
         }
       } catch (err) {
-        console.warn("Backend API error, adding user locally for presentation.", err);
-        setAllUsers(prev => [newUser, ...prev]);
+        console.error("Backend API error:", err);
+        const errorMessage = err.response?.data?.message || "Terjadi kesalahan saat menghubungi server.";
+        alert(`Gagal menambahkan pengguna: ${errorMessage}`);
+        // Remove the local fallback so user knows it failed
       }
     }
 

@@ -13,8 +13,8 @@ class PengadaanAsetController extends Controller
     // 1. Menampilkan daftar pengajuan (Bisa diakses semua peran)
     public function index()
     {
-        // Tarik semua data pengadaan beserta relasi ke tabel pengguna (pemohon)
-        $pengadaans = PengadaanAset::with('pengguna')->orderBy('tgl_pengajuan', 'desc')->get();
+        // Tarik semua data pengadaan beserta relasi ke tabel pengguna (pemohon) dan peran untuk jabatan virtual
+        $pengadaans = PengadaanAset::with('pengguna.peran')->orderBy('tgl_pengajuan', 'desc')->get();
         
         return response()->json([
             'success' => true,

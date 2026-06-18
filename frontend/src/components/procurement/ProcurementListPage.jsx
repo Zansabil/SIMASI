@@ -164,9 +164,14 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
 
   useEffect(() => {
     const storedName = localStorage.getItem('user_name');
+    const storedJabatan = localStorage.getItem('user_jabatan');
     const storedRole = localStorage.getItem('user_role');
     if (storedName) setUserName(storedName);
-    if (storedRole) setUserRole(storedRole);
+    if (storedJabatan) {
+        setUserRole(storedJabatan);
+    } else if (storedRole) {
+        setUserRole(storedRole);
+    }
   }, []);
 
   // State Management

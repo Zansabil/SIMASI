@@ -28,6 +28,6 @@ class Perizinan extends Model
     // Relasi ini akan sangat berguna nanti untuk mengecek apakah suatu 'Peran' memiliki 'Perizinan' tertentu.
     public function peran()
     {
-        return $this->belongsToMany(peran::class, 'perizinan_peran', 'id_perizinan', 'id_peran');
+        return $this->belongsToMany(Peran::class, 'perizinan_peran', 'id_perizinan', 'id_peran');
     }
 }

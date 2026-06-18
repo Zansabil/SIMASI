@@ -70,6 +70,7 @@ export default function Login() {
         // Store token and user data in localStorage
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_role', role);
+        localStorage.setItem('user_jabatan', user.jabatan || role);
         localStorage.setItem('user_name', name);
         localStorage.setItem('user_id', user.id);
         

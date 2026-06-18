@@ -36,7 +36,9 @@ class AsetController extends Controller
     // CETAK PDF (Menghasilkan file stream untuk diunduh ReactJS)
     public function cetakPDF()
     {
-        Gate::authorize('kelola-aset'); 
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        } 
 
         $asets = Aset::orderBy('tgl_dibuat', 'desc')->get();
         $pdf = Pdf::loadView('aset.cetak', compact('asets'));
@@ -48,7 +50,9 @@ class AsetController extends Controller
     // CETAK EXCEL (Menghasilkan file download untuk diunduh ReactJS)
     public function cetakExcel()
     {
-        Gate::authorize('kelola-aset'); 
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        } 
 
         return Excel::download(new AsetExport, 'Laporan_Data_Aset.xlsx');
     }
@@ -56,7 +60,9 @@ class AsetController extends Controller
     // 2. STORE: Memproses penyimpanan data baru dari ReactJS
     public function store(Request $request)
     {
-        Gate::authorize('kelola-aset'); 
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        } 
         
         $request->validate([
             'nama_aset'       => 'required',
@@ -127,7 +133,9 @@ class AsetController extends Controller
     // 4. UPDATE: Memproses perubahan data dari ReactJS
     public function update(Request $request, $id)
     {
-        Gate::authorize('kelola-aset'); 
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        } 
 
         $request->validate([
             'jumlah_aset' => 'nullable|numeric|min:1',
@@ -176,7 +184,9 @@ class AsetController extends Controller
     // 5. DELETE: Menghapus data aset
     public function destroy($id)
     {
-        Gate::authorize('kelola-aset'); 
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        } 
 
         $aset = Aset::findOrFail($id);
         
