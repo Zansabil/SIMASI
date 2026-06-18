@@ -131,7 +131,7 @@ export default function ProcurementForm({
                     <input
                       type="number"
                       className="form-field-input"
-                      min="1"
+                      min="0"
                       value={item.qty}
                       onChange={(e) => onItemChange(index, 'qty', e.target.value)}
                       required

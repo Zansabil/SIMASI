@@ -293,12 +293,12 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     setFormRole(userRole);
     setFormLetterNumber(letterNo);
     setFormDate(dateStr);
-    setFormItems([{ name: '', unit: '', location: '', qty: 1, price: '' }]);
+    setFormItems([{ name: '', unit: '', location: '', qty: 0, price: '' }]);
     setView('create');
   };
 
   const handleAddItemRow = () => {
-    setFormItems([...formItems, { name: '', unit: '', location: '', qty: 1, price: '' }]);
+    setFormItems([...formItems, { name: '', unit: '', location: '', qty: 0, price: '' }]);
   };
 
   const handleRemoveItemRow = (index) => {

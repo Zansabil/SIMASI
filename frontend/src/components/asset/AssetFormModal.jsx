@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiUpload } from 'react-icons/fi';
 
 const formatToRupiah = (value) => {
@@ -28,6 +28,8 @@ export default function AssetFormModal({
   const [source, setSource] = useState('Dana Yayasan');
   const [price, setPrice] = useState('');
   const [image, setImage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const fileReaderRef = useRef(null);
 
   // Synchronize form states on open or change of assetToEdit
   useEffect(() => {
@@ -77,36 +79,63 @@ export default function AssetFormModal({
 
   // Auto-generate code for new assets was moved to backend to prevent race conditions.
 
+  // Cleanup FileReader on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (fileReaderRef.current && fileReaderRef.current.readyState === 1) {
+        fileReaderRef.current.abort();
+      }
+    };
+  }, []);
+
   if (!isOpen) return null;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validasi ukuran file maksimal 5MB
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran file maksimal adalah 5MB.');
+        e.target.value = ''; // Reset input agar user bisa memilih ulang file lain
+        return;
+      }
+
       const reader = new FileReader();
+      fileReaderRef.current = reader;
       reader.onloadend = () => {
         setImage(reader.result);
+      };
+      reader.onerror = () => {
+        alert('Gagal membaca file');
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmitForm = (e) => {
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
     const combinedLocation = unit && room ? `${unit} - ${room}` : (unit || room);
-    onSubmit({
-      name,
-      unit,
-      room,
-      category,
-      location: combinedLocation,
-      purchaseDate,
-      code,
-      quantity,
-      condition,
-      source,
-      price,
-      image
-    });
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        name,
+        unit,
+        room,
+        category,
+        location: combinedLocation,
+        purchaseDate,
+        code,
+        quantity,
+        condition,
+        source,
+        price,
+        image
+      });
+    } catch (err) {
+      console.error("Error submitting form: ", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isEditing = !!assetToEdit;
@@ -205,11 +234,17 @@ export default function AssetFormModal({
             <label className="modal-form-label">Jumlah Barang <span className="req-star">*</span></label>
             <input
               type="number"
+              min="1"
               className="modal-form-input"
               required
               min="1"
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || Number(val) >= 1) {
+                  setQuantity(val);
+                }
+              }}
             />
           </div>
 
@@ -280,8 +315,8 @@ export default function AssetFormModal({
             <button type="button" className="modal-btn-batal" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="modal-btn-tambahan">
-              {isEditing ? 'Simpan Perubahan' : 'Tambahkan Aset'}
+            <button type="submit" className="modal-btn-tambahan" disabled={isSubmitting}>
+              {isSubmitting ? 'Menyimpan...' : (isEditing ? 'Simpan Perubahan' : 'Tambahkan Aset')}
             </button>
           </div>
         </form>
