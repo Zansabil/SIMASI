@@ -1,0 +1,70 @@
+.grouped-asset-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.asset-group-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #edf2f7;
+}
+
+.asset-group-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #f8fafc;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.asset-group-header:hover {
+  background-color: #f1f5f9;
+}
+
+.asset-group-header.expanded {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.asset-group-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #1e293b;
+  flex: 1;
+}
+
+.asset-group-title h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.location-icon {
+  color: #3b82f6;
+}
+
+.asset-count-badge {
+  background-color: #e0f2fe;
+  color: #0284c7;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.asset-group-body {
+  padding: 20px;
+  background-color: white;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

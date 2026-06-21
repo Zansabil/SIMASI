@@ -13,6 +13,7 @@ export default function AssetFormModal({
   onSubmit,
   assetToEdit = null,
   availableUnits = ['TK', 'SD', 'SMP', 'SMA', 'MA'], // Pilihan Unit default jika tidak dikirim dari parent
+  availableRooms = [], // Pilihan Ruangan dari Master Data
   availableCategories = ['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum'], // Pilihan Kategori default
   existingSources = [] // Daftar sumber dana unik yang diambil dari data aset yang ada
 }) {
@@ -339,13 +340,20 @@ export default function AssetFormModal({
           {/* Input: Ruangan */}
           <div className="modal-form-group">
             <label className="modal-form-label">Lokasi Penempatan Barang <span className="req-star">*</span></label>
-            <input
-              type="text"
+            <select
               id="asset-room"
-              placeholder="Contoh: Ruang Tata Usaha"
-              className={`modal-form-input ${errors.room ? 'input-error' : ''}`}
+              className={`modal-form-select ${errors.room ? 'input-error' : ''}`}
               {...register('room', { required: 'Ruangan wajib diisi' })}
-            />
+            >
+              <option value="" disabled hidden>Pilih Ruangan</option>
+              {availableRooms.length > 0 ? (
+                availableRooms.map((r, i) => (
+                  <option key={i} value={r}>{r}</option>
+                ))
+              ) : (
+                <option value="" disabled>Belum ada data Master Ruangan</option>
+              )}
+            </select>
             {errors.room && <span className="error-text">{errors.room.message}</span>}
           </div>
 

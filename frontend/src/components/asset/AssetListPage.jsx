@@ -10,7 +10,8 @@ import AssetDetailModal from './AssetDetailModal';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
 import FilterSelect from '../ui/FilterSelect';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiGrid, FiList } from 'react-icons/fi';
+import GroupedAssetView from './GroupedAssetView';
 import { mapLaravelListToReact, mapReactToLaravel, mapLaravelToReact } from '../../utils/assetMapper';
 import './AssetListPage.css';
 
@@ -98,6 +99,8 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
   const [assets, setAssets] = useState(initialMockAssets);
   const [availableUnits, setAvailableUnits] = useState(['SD', 'SMP', 'SMA', 'MA', 'TK']); // Fallback
   const [availableCategories, setAvailableCategories] = useState(['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum']); // Fallback
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'grouped'
 
   // Local filtering helper for offline demo
   const filterMockData = () => {
@@ -191,9 +194,24 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
       }
     };
 
+    const fetchRooms = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const response = await axios.get(`${API_BASE_URL}/api/ruangan`, config);
+        if (response.data && response.data.success && response.data.data) {
+          const roomList = response.data.data.map(r => r.nama_ruangan);
+          if (roomList.length > 0) setAvailableRooms(roomList);
+        }
+      } catch (err) {
+        console.warn("Could not fetch rooms from API, using fallback.");
+      }
+    };
+
     fetchAssets();
     fetchUnits();
     fetchCategories();
+    fetchRooms();
   }, [searchQuery, selectedFilterField, currentPage, itemsPerPage, refreshTrigger]);
 
   // Actions handlers
@@ -349,27 +367,54 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
                 { value: 'location', label: 'Lokasi Barang' }
               ]}
             />
+
+            <div className="view-mode-toggle">
+              <button 
+                className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`} 
+                onClick={() => setViewMode('list')}
+                title="Tampilan Semua Aset"
+              >
+                <FiList /> Daftar Semua
+              </button>
+              <button 
+                className={`view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`} 
+                onClick={() => setViewMode('grouped')}
+                title="Tampilan Dikelompokkan per Ruang"
+              >
+                <FiGrid /> Per Ruangan
+              </button>
+            </div>
           </div>
         </PageHeader>
 
-        {/* Reusable Asset Table Component */}
-        <AssetTable
-          assets={assets}
-          isLoading={isLoading}
-          showActions={hasWriteAccess}
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-        />
-
-        {/* Pagination Controls Footer */}
-        <Pagination
-          currentPage={currentPage}
-          itemsPerPage={itemsPerPage}
-          onPageChange={setCurrentPage}
-          onItemsPerPageChange={setItemsPerPage}
-          hasMore={assets.length >= itemsPerPage}
-        />
+        {viewMode === 'list' ? (
+          <>
+            <AssetTable
+              assets={assets}
+              isLoading={isLoading}
+              showActions={hasWriteAccess}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDeleteClick}
+            />
+            <Pagination
+              currentPage={currentPage}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+              hasMore={assets.length >= itemsPerPage}
+            />
+          </>
+        ) : (
+          <GroupedAssetView
+            assets={allAssets}
+            isLoading={isLoading}
+            showActions={hasWriteAccess}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDeleteClick}
+          />
+        )}
 
         {/* Footer copyright */}
         <footer className="footer-copyright-text">
@@ -384,6 +429,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onSubmit={handleFormSubmit}
             assetToEdit={assetToEdit}
             availableUnits={availableUnits}
+            availableRooms={availableRooms}
             availableCategories={availableCategories}
             existingSources={allAssets ? [...new Set(allAssets.map(a => a.source_of_funds).filter(Boolean))] : []}
           />
