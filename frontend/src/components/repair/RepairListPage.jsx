@@ -298,7 +298,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Laporan kerusakan berhasil dikirim ke sistem.' });
       } catch (err) {
         console.error("Gagal buat laporan", err);
-        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal membuat laporan: " + (err.response?.data?.message || err.message) });
+        throw err;
       }
     } else {
       // Offline fallback

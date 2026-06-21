@@ -320,8 +320,7 @@ export default function UserListPage({ role, currentPath }) {
         }
       } catch (err) {
         console.error("Backend API error:", err);
-        const errorMessage = err.response?.data?.message || "Terjadi kesalahan saat menghubungi server.";
-        alert(`Gagal memperbarui pengguna: ${errorMessage}`);
+        throw err;
       }
     } else {
       // Add Mode
@@ -367,9 +366,7 @@ export default function UserListPage({ role, currentPath }) {
         }
       } catch (err) {
         console.error("Backend API error:", err);
-        const errorMessage = err.response?.data?.message || "Terjadi kesalahan saat menghubungi server.";
-        alert(`Gagal menambahkan pengguna: ${errorMessage}`);
-        // Remove the local fallback so user knows it failed
+        throw err;
       }
     }
 

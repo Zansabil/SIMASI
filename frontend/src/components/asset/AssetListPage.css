@@ -255,6 +255,8 @@
   padding: 24px;
   overflow-y: auto;
   flex-grow: 1;
+  max-height: 65vh; /* Safe max height for mobile viewport scroll */
+  -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling on iOS */
 }
 
 .modal-form-group {
@@ -444,3 +446,38 @@
   from { transform: scale(0.95); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* CUSTOM VALIDATION ERROR STYLES */
+.error-text {
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  display: block;
+  text-align: left;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.input-error:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15) !important;
+}
+
+.modal-upload-box-wrapper.upload-error {
+  border: 2px dashed #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.required-note {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+  margin-top: 0;
+  text-align: left;
+}
+
+

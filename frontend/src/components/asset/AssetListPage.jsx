@@ -271,10 +271,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         setRefreshTrigger(prev => prev + 1);
       } catch (err) {
         console.error("Backend API error, updating asset failed.", err);
-        const errorMsg = err.response?.data?.message || err.message || 'Gagal memperbarui aset.';
-        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
-        setIsFormOpen(false);
-        return;
+        throw err;
       }
     } else {
       // Mode Tambah
@@ -308,10 +305,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         setRefreshTrigger(prev => prev + 1);
       } catch (err) {
         console.error("Backend API error, adding asset failed.", err);
-        const errorMsg = err.response?.data?.message || err.message || 'Gagal menambahkan aset.';
-        setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
-        setIsFormOpen(false);
-        return;
+        throw err;
       }
     }
 
@@ -389,9 +383,9 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onClose={() => setIsFormOpen(false)}
             onSubmit={handleFormSubmit}
             assetToEdit={assetToEdit}
-            allAssets={allAssets}
             availableUnits={availableUnits}
             availableCategories={availableCategories}
+            existingSources={allAssets ? [...new Set(allAssets.map(a => a.source_of_funds).filter(Boolean))] : []}
           />
         )}
 

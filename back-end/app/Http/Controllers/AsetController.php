@@ -64,6 +64,17 @@ class AsetController extends Controller
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
         
+        $sanitizeFields = ['nama_aset', 'jenis_aset', 'unit', 'ruangan', 'kondisi_aset', 'sumber_dana'];
+        $sanitizedData = [];
+        foreach ($sanitizeFields as $field) {
+            if ($request->has($field)) {
+                $sanitizedData[$field] = strip_tags($request->input($field));
+            }
+        }
+        if (!empty($sanitizedData)) {
+            $request->merge($sanitizedData);
+        }
+        
         $request->validate([
             'nama_aset'       => 'required',
             'jenis_aset'      => 'required',
@@ -136,6 +147,17 @@ class AsetController extends Controller
         if (!in_array(auth()->user()->id_peran, [1, 3])) {
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
+
+        $sanitizeFields = ['nama_aset', 'jenis_aset', 'unit', 'ruangan', 'kondisi_aset', 'sumber_dana'];
+        $sanitizedData = [];
+        foreach ($sanitizeFields as $field) {
+            if ($request->has($field)) {
+                $sanitizedData[$field] = strip_tags($request->input($field));
+            }
+        }
+        if (!empty($sanitizedData)) {
+            $request->merge($sanitizedData);
+        }
 
         $request->validate([
             'jumlah_aset' => 'nullable|numeric|min:1',

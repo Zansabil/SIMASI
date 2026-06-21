@@ -22,3 +22,28 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+.req-star {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+.required-note {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 20px;
+  margin-top: 0;
+  text-align: left;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #ef4444;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+  text-align: left;
+}

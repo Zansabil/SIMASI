@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import StatusModal from '../ui/StatusModal';
 import { API_BASE_URL } from '../../config';
 
 const CloseIcon = () => (
@@ -30,10 +31,18 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
   const [formDesc, setFormDesc] = useState('');
   const [formImage, setFormImage] = useState('');
   const [formImageFile, setFormImageFile] = useState(null); 
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const modalBodyRef = useRef(null);
+
+  const [isRestoreDraftOpen, setIsRestoreDraftOpen] = useState(false);
+  const [tempDraft, setTempDraft] = useState(null);
+  const [hasCheckedDraft, setHasCheckedDraft] = useState(false);
 
   // Load daftar aset saat komponen di-mount atau dibuka
   useEffect(() => {
     if (isOpen) {
+      setSubmitError('');
       const fetchAssets = async () => {
         try {
           const token = localStorage.getItem('auth_token');
@@ -62,6 +71,92 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
     }
   }, [isOpen]);
 
+  // Efek untuk menyesuaikan tinggi modal secara dinamis saat ukuran layar berubah (resize/rotate)
+  useEffect(() => {
+    const handleResize = () => {
+      if (modalBodyRef.current) {
+        modalBodyRef.current.style.maxHeight = `${window.innerHeight * 0.65}px`;
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('resize', handleResize);
+      handleResize(); // Panggil sekali saat pertama kali dibuka
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen]);
+
+  // Effect untuk mendeteksi draf saat modal dibuka
+  useEffect(() => {
+    if (isOpen) {
+      const savedDraft = localStorage.getItem('simasi_draft_repair');
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          setTempDraft(parsed);
+          setIsRestoreDraftOpen(true);
+          setHasCheckedDraft(false); // Blokir autosave dulu
+        } catch (e) {
+          console.error("Gagal membaca draf repair:", e);
+          localStorage.removeItem('simasi_draft_repair');
+          setHasCheckedDraft(true);
+        }
+      } else {
+        setHasCheckedDraft(true); // Tidak ada draf, aktifkan autosave
+      }
+    } else {
+      setHasCheckedDraft(false);
+      setTempDraft(null);
+      setIsRestoreDraftOpen(false);
+    }
+  }, [isOpen]);
+
+  // Effect untuk menyimpan draf secara otomatis saat field berubah
+  useEffect(() => {
+    if (isOpen && hasCheckedDraft) {
+      const draftData = {
+        formReporter,
+        formUnit,
+        formDate,
+        selectedAssetId,
+        formLocation,
+        formDesc
+      };
+      
+      const hasContent = formReporter || formUnit || formDate || selectedAssetId || formLocation || formDesc;
+      
+      if (hasContent) {
+        localStorage.setItem('simasi_draft_repair', JSON.stringify(draftData));
+      } else {
+        localStorage.removeItem('simasi_draft_repair');
+      }
+    }
+  }, [isOpen, hasCheckedDraft, formReporter, formUnit, formDate, selectedAssetId, formLocation, formDesc]);
+
+  const handleRestoreDraft = () => {
+    if (tempDraft) {
+      setFormReporter(tempDraft.formReporter || '');
+      setFormUnit(tempDraft.formUnit || '');
+      setFormDate(tempDraft.formDate || '');
+      setSelectedAssetId(tempDraft.selectedAssetId || '');
+      setFormLocation(tempDraft.formLocation || '');
+      setFormDesc(tempDraft.formDesc || '');
+    }
+    setIsRestoreDraftOpen(false);
+    setTempDraft(null);
+    setHasCheckedDraft(true); // Aktifkan autosave
+  };
+
+  const handleDiscardDraft = () => {
+    localStorage.removeItem('simasi_draft_repair');
+    setIsRestoreDraftOpen(false);
+    setTempDraft(null);
+    setHasCheckedDraft(true); // Aktifkan autosave
+  };
+
   // Handle ketika aset dipilih
   const handleAssetSelect = (e) => {
     const id = e.target.value;
@@ -79,6 +174,22 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      
+      // Validasi format file
+      if (!allowedTypes.includes(file.type)) {
+        alert('Format file tidak didukung. Harap gunakan format PNG, JPG, atau JPEG.');
+        e.target.value = ''; // Reset input
+        return;
+      }
+
+      // Validasi ukuran file maksimal 5MB
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran file maksimal adalah 5MB.');
+        e.target.value = ''; // Reset input
+        return;
+      }
+
       setFormImageFile(file); // Simpan file aslinya
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -88,24 +199,42 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (formDate > todayStr) {
+      setSubmitError('Tanggal pengaduan tidak boleh di masa depan.');
+      setIsSubmitting(false);
+      return;
+    }
     
     // Cari nama aset untuk dikirim sebagai text (opsional untuk display fallback)
     const selectedAsset = assets.find(a => a.id.toString() === selectedAssetId.toString());
     const assetName = selectedAsset ? selectedAsset.nama_aset : 'Aset Tidak Diketahui';
 
-    onSubmit({
-      reporter_name: formReporter,
-      unit: formUnit,
-      date: formDate,
-      asset_id: selectedAssetId,
-      asset_name: assetName,
-      location: formLocation,
-      description: formDesc,
-      image_file: formImageFile, 
-      image_path: formImage 
-    });
+    try {
+      await onSubmit({
+        reporter_name: formReporter,
+        unit: formUnit,
+        date: formDate,
+        asset_id: selectedAssetId,
+        asset_name: assetName,
+        location: formLocation,
+        description: formDesc,
+        image_file: formImageFile, 
+        image_path: formImage 
+      });
+      localStorage.removeItem('simasi_draft_repair');
+    } catch (err) {
+      console.error("Error submitting repair form:", err);
+      const errMsg = err.response?.data?.message || err.message || 'Gagal menyimpan data laporan. Silakan coba lagi.';
+      setSubmitError(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -120,7 +249,10 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form-body">
+        <form ref={modalBodyRef} onSubmit={handleSubmit} className="modal-form-body">
+          <p className="required-note">
+            Field bertanda <span className="req-star">*</span> wajib diisi
+          </p>
           <div className="modal-form-group">
             <label className="modal-form-label">Nama Pelapor <span className="req-star">*</span></label>
             <input 
@@ -159,6 +291,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
               required
               value={formDate}
               onChange={(e) => setFormDate(e.target.value)}
+              max={new Date().toISOString().split('T')[0]}
             />
           </div>
 
@@ -228,17 +361,30 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
             </div>
           </div>
 
+          {submitError && <div className="alert-error">{submitError}</div>}
+
           {/* Action Buttons */}
           <div className="modal-action-buttons-wrapper">
             <button type="button" className="modal-btn-batal" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="modal-btn-tambahan" style={{ backgroundColor: '#f59e0b' }}>
-              Laporkan
+            <button type="submit" className="modal-btn-tambahan" style={{ backgroundColor: '#f59e0b' }} disabled={isSubmitting}>
+              {isSubmitting ? 'Mengirim...' : 'Laporkan'}
             </button>
           </div>
         </form>
       </div>
+
+      <StatusModal
+        isOpen={isRestoreDraftOpen}
+        type="confirm"
+        title="Temukan Draf Sebelumnya"
+        message="Kami menemukan draf pengisian Laporan Kerusakan yang belum selesai. Apakah Anda ingin memulihkan draf tersebut?"
+        confirmText="Ya, Pulihkan"
+        cancelText="Mulai Baru"
+        onConfirm={handleRestoreDraft}
+        onCancel={handleDiscardDraft}
+      />
     </div>
   );
 }

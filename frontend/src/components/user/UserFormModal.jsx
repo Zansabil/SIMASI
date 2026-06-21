@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import StatusModal from '../ui/StatusModal';
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -80,10 +81,18 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
     perbaikanAset: false,
     manajemenPengguna: false
   });
+  const [submitError, setSubmitError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const modalBodyRef = useRef(null);
+
+  const [isRestoreDraftOpen, setIsRestoreDraftOpen] = useState(false);
+  const [tempDraft, setTempDraft] = useState(null);
+  const [hasCheckedDraft, setHasCheckedDraft] = useState(false);
 
   // Load values when editingUser or modal status changes
   useEffect(() => {
     if (isOpen) {
+      setSubmitError('');
       if (editingUser) {
         setFormUsername(editingUser.username);
         setFormName(editingUser.name);
@@ -113,24 +122,136 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
     }
   }, [isOpen, editingUser]);
 
+  // Efek untuk menyesuaikan tinggi modal secara dinamis saat ukuran layar berubah (resize/rotate)
+  useEffect(() => {
+    const handleResize = () => {
+      if (modalBodyRef.current) {
+        modalBodyRef.current.style.maxHeight = `${window.innerHeight * 0.65}px`;
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('resize', handleResize);
+      handleResize(); // Panggil sekali saat pertama kali dibuka
+    }
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [isOpen]);
+
+  // Effect untuk mendeteksi draf saat modal dibuka dalam mode Tambah (Create)
+  useEffect(() => {
+    if (isOpen) {
+      if (!editingUser) {
+        const savedDraft = localStorage.getItem('simasi_draft_user');
+        if (savedDraft) {
+          try {
+            const parsed = JSON.parse(savedDraft);
+            setTempDraft(parsed);
+            setIsRestoreDraftOpen(true);
+            setHasCheckedDraft(false); // Blokir autosave dulu
+          } catch (e) {
+            console.error("Gagal membaca draf user:", e);
+            localStorage.removeItem('simasi_draft_user');
+            setHasCheckedDraft(true);
+          }
+        } else {
+          setHasCheckedDraft(true); // Tidak ada draf, aktifkan autosave
+        }
+      } else {
+        setHasCheckedDraft(false); // Mode Edit tidak menggunakan draf
+      }
+    } else {
+      setHasCheckedDraft(false);
+      setTempDraft(null);
+      setIsRestoreDraftOpen(false);
+    }
+  }, [isOpen, editingUser]);
+
+  // Effect untuk menyimpan draf secara otomatis saat field berubah
+  useEffect(() => {
+    if (isOpen && !editingUser && hasCheckedDraft) {
+      const draftData = {
+        formUsername,
+        formName,
+        formEmail,
+        formRole,
+        formUnit,
+        formStatus,
+        formAccess
+      };
+      
+      const hasContent = formUsername || formName || formEmail || formRole || formUnit || 
+                         (formStatus && formStatus !== 'Aktif') || 
+                         Object.values(formAccess).some(val => val === true);
+      
+      if (hasContent) {
+        localStorage.setItem('simasi_draft_user', JSON.stringify(draftData));
+      } else {
+        localStorage.removeItem('simasi_draft_user');
+      }
+    }
+  }, [isOpen, editingUser, hasCheckedDraft, formUsername, formName, formEmail, formRole, formUnit, formStatus, formAccess]);
+
+  const handleRestoreDraft = () => {
+    if (tempDraft) {
+      setFormUsername(tempDraft.formUsername || '');
+      setFormName(tempDraft.formName || '');
+      setFormEmail(tempDraft.formEmail || '');
+      setFormRole(tempDraft.formRole || '');
+      setFormUnit(tempDraft.formUnit || '');
+      setFormStatus(tempDraft.formStatus || 'Aktif');
+      setFormAccess(tempDraft.formAccess || {
+        dashboard: false,
+        daftarAset: false,
+        pengadaanAset: false,
+        persetujuanPengadaan: false,
+        perbaikanAset: false,
+        manajemenPengguna: false
+      });
+    }
+    setIsRestoreDraftOpen(false);
+    setTempDraft(null);
+    setHasCheckedDraft(true); // Aktifkan autosave
+  };
+
+  const handleDiscardDraft = () => {
+    localStorage.removeItem('simasi_draft_user');
+    setIsRestoreDraftOpen(false);
+    setTempDraft(null);
+    setHasCheckedDraft(true); // Aktifkan autosave
+  };
+
   const handleRoleChange = (role) => {
     setFormRole(role);
     const defaults = getRoleDefaultAccess(role);
     setFormAccess(defaults);
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
-    onSubmit({
-      username: formUsername,
-      name: formName,
-      email: formEmail,
-      role: formRole,
-      unit: formUnit,
-      password: formPassword,
-      status: formStatus,
-      access: formAccess
-    });
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      await onSubmit({
+        username: formUsername,
+        name: formName,
+        email: formEmail,
+        role: formRole,
+        unit: formUnit,
+        password: formPassword,
+        status: formStatus,
+        access: formAccess
+      });
+      localStorage.removeItem('simasi_draft_user');
+    } catch (err) {
+      console.error("Error submitting user form:", err);
+      const errMsg = err.response?.data?.message || err.message || 'Gagal menyimpan data pengguna. Silakan coba lagi.';
+      setSubmitError(errMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -147,7 +268,10 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         </div>
 
         {/* Scrollable Form Body */}
-        <form onSubmit={handleFormSubmit} className="modal-form-body">
+        <form ref={modalBodyRef} onSubmit={handleFormSubmit} className="modal-form-body">
+          <p className="required-note">
+            Field bertanda <span className="req-star">*</span> wajib diisi
+          </p>
           <div className="modal-form-group">
             <label className="modal-form-label">Username <span className="req-star">*</span></label>
             <input
@@ -299,17 +423,30 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
             </div>
           </div>
 
+          {submitError && <div className="alert-error">{submitError}</div>}
+
           {/* Form Actions */}
           <div className="modal-action-buttons-wrapper">
             <button type="button" className="modal-btn-batal" onClick={onClose}>
               Batal
             </button>
-            <button type="submit" className="modal-btn-tambahan">
-              {editingUser ? 'Simpan Perubahan' : 'Simpan Pengguna'}
+            <button type="submit" className="modal-btn-tambahan" disabled={isSubmitting}>
+              {isSubmitting ? 'Menyimpan...' : (editingUser ? 'Simpan Perubahan' : 'Simpan Pengguna')}
             </button>
           </div>
         </form>
       </div>
+
+      <StatusModal
+        isOpen={isRestoreDraftOpen}
+        type="confirm"
+        title="Temukan Draf Sebelumnya"
+        message="Kami menemukan draf pengisian data Pengguna yang belum selesai. Apakah Anda ingin memulihkan draf tersebut?"
+        confirmText="Ya, Pulihkan"
+        cancelText="Mulai Baru"
+        onConfirm={handleRestoreDraft}
+        onCancel={handleDiscardDraft}
+      />
     </div>
   );
 }

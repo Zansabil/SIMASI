@@ -56,6 +56,10 @@ class LaporanKerusakanController extends Controller
     // 4. Fungsi untuk menolak laporan kerusakan dengan alasan
     public function tolak(Request $request, $id)
     {
+        $request->merge([
+            'alasan_penolakan' => $request->has('alasan_penolakan') ? strip_tags($request->alasan_penolakan) : null
+        ]);
+
         $request->validate([
             'alasan_penolakan' => 'required'
         ], [
@@ -81,6 +85,11 @@ class LaporanKerusakanController extends Controller
     // 5. Simpan Data Baru (STORE)
     public function store(Request $request)
     {
+        $request->merge([
+            'deskripsi' => $request->has('deskripsi') ? strip_tags($request->deskripsi) : null,
+            'kategori_aset' => $request->has('kategori_aset') ? strip_tags($request->kategori_aset) : null
+        ]);
+
         $request->validate([
             'id_aset'          => 'required',
             'deskripsi'        => 'required',
@@ -111,6 +120,17 @@ class LaporanKerusakanController extends Controller
     // 6. Simpan Perubahan / Validasi (UPDATE)
     public function update(Request $request, $id)
     {
+        $sanitizeFields = ['deskripsi', 'status_kerusakan'];
+        $sanitizedData = [];
+        foreach ($sanitizeFields as $field) {
+            if ($request->has($field)) {
+                $sanitizedData[$field] = strip_tags($request->input($field));
+            }
+        }
+        if (!empty($sanitizedData)) {
+            $request->merge($sanitizedData);
+        }
+
         $request->validate([
             'status_kerusakan' => 'required',
             'deskripsi'        => 'required',
@@ -170,6 +190,17 @@ class LaporanKerusakanController extends Controller
     // 8. Update Progress Perbaikan (Khusus Petugas)
     public function updateProgress(Request $request, $id)
     {
+        $sanitizeFields = ['status_kerusakan', 'keterangan_perbaikan'];
+        $sanitizedData = [];
+        foreach ($sanitizeFields as $field) {
+            if ($request->has($field)) {
+                $sanitizedData[$field] = strip_tags($request->input($field));
+            }
+        }
+        if (!empty($sanitizedData)) {
+            $request->merge($sanitizedData);
+        }
+
         $request->validate([
             'status_kerusakan' => 'required|string',
             'keterangan_perbaikan' => 'nullable|string'
