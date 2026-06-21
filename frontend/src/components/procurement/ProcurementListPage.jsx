@@ -191,7 +191,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   const [formRole, setFormRole] = useState('');
   const [formLetterNumber, setFormLetterNumber] = useState('');
   const [formDate, setFormDate] = useState('');
-  const [formItems, setFormItems] = useState([{ name: '', unit: '', location: '', qty: 1, price: '' }]);
+  const [formItems, setFormItems] = useState([{ name: '', unit: '', location: '', qty: '', price: '' }]);
   const [formClosing, setFormClosing] = useState(
     'Demikian surat pengajuan pengadaan aset ini kami sampaikan. Besar harapan kami agar permohonan ini dapat disetujui demi kelancaran kegiatan belajar mengajar dan operasional sekolah. Atas perhatian dan persetujuannya, kami ucapkan terima kasih.'
   );
@@ -298,12 +298,12 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     setFormRole(userRole);
     setFormLetterNumber(letterNo);
     setFormDate(dateStr);
-    setFormItems([{ name: '', unit: '', location: '', qty: 0, price: '' }]);
+    setFormItems([{ name: '', unit: '', location: '', qty: '', price: '' }]);
     setView('create');
   };
 
   const handleAddItemRow = () => {
-    setFormItems([...formItems, { name: '', unit: '', location: '', qty: 0, price: '' }]);
+    setFormItems([...formItems, { name: '', unit: '', location: '', qty: '', price: '' }]);
   };
 
   const handleRemoveItemRow = (index) => {

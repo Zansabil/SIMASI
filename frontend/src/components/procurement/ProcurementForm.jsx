@@ -132,8 +132,10 @@ export default function ProcurementForm({
                       type="number"
                       className="form-field-input"
                       min="0"
+                      placeholder="0"
                       value={item.qty}
                       onChange={(e) => onItemChange(index, 'qty', e.target.value)}
+                      onFocus={(e) => e.target.select()}
                       required
                     />
                   </td>

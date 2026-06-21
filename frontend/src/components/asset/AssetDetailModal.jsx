@@ -2,23 +2,8 @@
 import { API_BASE_URL } from '../../config';
 import './AssetDetailModal.css';
 import { formatPrice } from '../../utils/currency';
-
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const formatDate = (dateString) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric'
-  });
-};
+import { FiX } from 'react-icons/fi';
+import { formatDate } from '../../utils/formatDate';
 
 // Menggunakan helper formatPrice dari utils/currency
 
@@ -43,7 +28,7 @@ export default function AssetDetailModal({ isOpen, onClose, asset }) {
         <div className="detail-modal-header">
           <h3 className="detail-modal-title">Informasi Detail Aset</h3>
           <button className="detail-modal-close-btn" onClick={onClose} aria-label="Tutup">
-            <CloseIcon />
+            <FiX size={20} />
           </button>
         </div>
 
@@ -71,7 +56,7 @@ export default function AssetDetailModal({ isOpen, onClose, asset }) {
               </div>
               <div className="detail-info-group">
                 <span className="detail-info-label">Kondisi Aset</span>
-                <span className={`detail-info-value condition-badge condition-${asset.condition?.toLowerCase()}`}>
+                <span className={`detail-info-value condition-badge condition-${asset.condition?.toLowerCase().replace(/\s+/g, '-')}`}>
                   {asset.condition || '-'}
                 </span>
               </div>

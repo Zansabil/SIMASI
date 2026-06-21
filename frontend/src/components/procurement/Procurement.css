@@ -429,7 +429,8 @@
   font-family: 'Times New Roman', Times, serif; /* Formal serif typography */
   color: #000000;
   text-align: justify;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.15;
 }
 
 /* Kop Surat (Letterhead) Styles */
@@ -438,7 +439,7 @@
   align-items: center;
   border-bottom: 3px double #000000;
   padding-bottom: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 32px; /* 2 enters equivalent */
 }
 
 .letterhead-logo {
@@ -453,7 +454,7 @@
 }
 
 .letterhead-title {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
   margin: 0 0 2px 0;
   text-transform: uppercase;
@@ -461,18 +462,18 @@
 }
 
 .letterhead-school {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   margin: 0 0 4px 0;
   text-transform: uppercase;
 }
 
 .letterhead-address {
-  font-size: 11px;
+  font-size: 14px;
   margin: 0;
   font-weight: normal;
   font-style: italic;
-  line-height: 1.4;
+  line-height: 1.15;
   color: #1e293b;
 }
 
@@ -481,7 +482,7 @@
   display: flex;
   justify-content: space-between;
   margin-bottom: 24px;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .letter-meta-left {
@@ -495,8 +496,8 @@
 
 /* Recipient Block */
 .letter-recipient-block {
-  margin-bottom: 24px;
-  font-size: 13.5px;
+  margin-bottom: 32px; /* 2 enters equivalent */
+  font-size: 14px;
 }
 
 .recipient-title {
@@ -508,7 +509,8 @@
 .letter-body-paragraph {
   margin-bottom: 16px;
   text-indent: 40px; /* Indent paragraph */
-  font-size: 13.5px;
+  font-size: 14px;
+  line-height: 1.15;
 }
 
 /* Table of items in Letter */
@@ -516,7 +518,7 @@
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .letter-items-table th {
@@ -543,11 +545,11 @@
 
 /* Signature block */
 .letter-signatures-block {
-  margin-top: 40px;
+  margin-top: 64px; /* 4 enters equivalent */
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .sig-col {
@@ -573,10 +575,10 @@
 
 /* Approval signature (Centered below) */
 .letter-approval-row {
-  margin-top: 40px;
+  margin-top: 30px;
   display: flex;
   justify-content: center;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 /* ======================================================== */
@@ -615,6 +617,24 @@
     width: 100% !important;
     max-width: 100% !important;
     min-height: auto !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+  }
+
+  /* Reset container scrollbars & table min-width on print */
+  .letter-table-container {
+    overflow: visible !important;
+    width: 100% !important;
+    border: none !important;
+    margin: 10px 0 !important;
+  }
+
+  .letter-items-table {
+    min-width: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    line-height: 1.15 !important;
   }
 
   /* Make sure background colors are printed correctly */
@@ -623,10 +643,81 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+
+  /* Compact layout for print to fit on 1 page */
+  .letterhead-container {
+    margin-top: 0 !important;
+    margin-bottom: 32px !important; /* 2 enters equivalent */
+    padding-bottom: 8px !important;
+  }
+
+  .letterhead-title {
+    font-size: 18px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .letterhead-school {
+    font-size: 18px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .letterhead-address {
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+  
+  .letter-meta-row {
+    margin-bottom: 12px !important;
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+  
+  .letter-recipient-block {
+    margin-bottom: 32px !important; /* 2 enters equivalent */
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .letter-body-paragraph {
+    font-size: 14px !important;
+    margin-bottom: 12px !important;
+    line-height: 1.15 !important;
+    text-indent: 30px !important;
+  }
+  
+  .letter-items-table th,
+  .letter-items-table td {
+    padding: 6px 8px !important;
+  }
+  
+  .letter-signatures-block {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Force side-by-side signature boxes */
+    gap: 40px !important;
+    margin-top: 64px !important; /* 4 enters equivalent from closing paragraph */
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .sig-col {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .sig-spacer {
+    height: 45px !important; /* Compact signature area */
+  }
+  
+  .letter-approval-row {
+    margin-top: 30px !important; /* Added space between signature blocks */
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
   
   @page {
     size: A4;
-    margin: 2cm 2cm 2cm 2cm; /* Standard print margin */
+    margin: 1cm 1.5cm 1cm 1.5cm !important; /* Tight margin on top/bottom, good margin on left/right */
   }
 }
 
@@ -928,6 +1019,83 @@
 
   .footer-copyright-text {
     margin-top: 32px;
+  }
+
+  /* --- Letter Preview Mobile Responsiveness --- */
+  .letter-preview-screen {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 10px;
+  }
+
+  .official-letter-paper {
+    order: 1;
+    padding: 30px 16px;
+    min-height: auto;
+  }
+
+  .letter-actions-bar {
+    order: 2;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    margin-top: 24px;
+    margin-bottom: 20px;
+  }
+
+  .letter-actions-bar > div {
+    flex-direction: column;
+    width: 100%;
+    gap: 8px !important;
+  }
+
+  .letter-actions-bar button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .letterhead-title {
+    font-size: 16px;
+  }
+
+  .letterhead-school {
+    font-size: 17px;
+  }
+
+  .letterhead-address {
+    font-size: 10px;
+  }
+
+  .letter-meta-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .letter-meta-right {
+    text-align: left;
+  }
+
+  .letter-table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin: 16px 0;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+  }
+
+  .letter-items-table {
+    margin: 0;
+    min-width: 650px; /* Prevent columns from shrinking too much, force scroll instead */
+  }
+
+  .letter-signatures-block {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .letter-approval-row {
+    margin-top: 24px;
   }
 }
 
