@@ -26,6 +26,17 @@ class PemindahanAsetController extends Controller
     // 2. STORE: Menyimpan data pemindahan ke database dari inputan ReactJS
     public function store(Request $request)
     {
+        $sanitizeFields = ['lokasi_sebelumnya', 'lokasi_baru', 'alasan_pemindahan', 'status_aset'];
+        $sanitizedData = [];
+        foreach ($sanitizeFields as $field) {
+            if ($request->has($field)) {
+                $sanitizedData[$field] = strip_tags($request->input($field));
+            }
+        }
+        if (!empty($sanitizedData)) {
+            $request->merge($sanitizedData);
+        }
+
         // 1. Validasi inputan
         $request->validate([
             'id_aset'           => 'required',

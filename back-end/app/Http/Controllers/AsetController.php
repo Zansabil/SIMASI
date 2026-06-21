@@ -21,7 +21,9 @@ class AsetController extends Controller
         if ($search) {
             $query->where('nama_aset', 'like', "%{$search}%")
                   ->orWhere('kode_inventaris', 'like', "%{$search}%")
-                  ->orWhere('jenis_aset', 'like', "%{$search}%");
+                  ->orWhere('jenis_aset', 'like', "%{$search}%")
+                  ->orWhere('unit', 'like', "%{$search}%")
+                  ->orWhere('ruangan', 'like', "%{$search}%");
         }
 
         $asets = $query->orderBy('tgl_dibuat', 'desc')->get();
