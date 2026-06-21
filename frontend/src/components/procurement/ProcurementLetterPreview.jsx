@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiPrinter } from 'react-icons/fi';
+import logo from '../../assets/logo.png';
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -39,6 +40,7 @@ export default function ProcurementLetterPreview({
 
       <div className="official-letter-paper">
         <div className="letterhead-container">
+          <img src={logo} alt="Logo Pesantren" className="letterhead-logo" />
           <div className="letterhead-text">
             <h1 className="letterhead-title">Yayasan Amir Ash-Shiddiiqi</h1>
             <h2 className="letterhead-school">Pesantren Modern Amir Ash-Shiddiiqi</h2>
@@ -70,38 +72,40 @@ export default function ProcurementLetterPreview({
           Dengan hormat, sehubungan dengan adanya kebutuhan sarana dan prasarana untuk menunjang kegiatan operasional pembelajaran di lingkungan Yayasan Amir Ash-Shiddiiqi, bersama surat ini kami mengajukan permohonan pengadaan barang/aset sebagai berikut:
         </p>
 
-        <table className="letter-items-table">
-          <thead>
-            <tr>
-              <th style={{ width: '40px' }}>No.</th>
-              <th>Nama Aset / Barang</th>
-              <th style={{ width: '100px' }}>Unit</th>
-              <th>Lokasi Penempatan</th>
-              <th style={{ width: '80px' }}>Jumlah</th>
-              <th style={{ width: '140px' }}>Harga Satuan</th>
-              <th style={{ width: '150px' }}>Total Harga</th>
-            </tr>
-          </thead>
-          <tbody>
-            {previewItem.items.map((item, index) => (
-              <tr key={index}>
-                <td className="text-center">{index + 1}.</td>
-                <td>{item.name}</td>
-                <td>{item.unit}</td>
-                <td>{item.location}</td>
-                <td className="text-center">{item.qty} Unit</td>
-                <td className="text-right">{formatRupiah(item.price)}</td>
-                <td className="text-right" style={{ fontWeight: 'bold' }}>{formatRupiah(item.qty * item.price)}</td>
+        <div className="letter-table-container">
+          <table className="letter-items-table">
+            <thead>
+              <tr>
+                <th style={{ width: '40px' }}>No.</th>
+                <th>Nama Aset / Barang</th>
+                <th style={{ width: '100px' }}>Unit</th>
+                <th>Lokasi Penempatan</th>
+                <th style={{ width: '80px' }}>Jumlah</th>
+                <th style={{ width: '140px' }}>Harga Satuan</th>
+                <th style={{ width: '150px' }}>Total Harga</th>
               </tr>
-            ))}
-            <tr>
-              <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold', padding: '8px' }}>Grand Total Biaya:</td>
-              <td className="text-right" style={{ fontWeight: 'bold', fontSize: '14px', borderTop: '2px double #000' }}>
-                {formatRupiah(previewItem.total_cost)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {previewItem.items.map((item, index) => (
+                <tr key={index}>
+                  <td className="text-center">{index + 1}.</td>
+                  <td>{item.name}</td>
+                  <td>{item.unit}</td>
+                  <td>{item.location}</td>
+                  <td className="text-center">{item.qty} Unit</td>
+                  <td className="text-right">{formatRupiah(item.price)}</td>
+                  <td className="text-right" style={{ fontWeight: 'bold' }}>{formatRupiah(item.qty * item.price)}</td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'right', fontWeight: 'bold', padding: '8px' }}>Grand Total Biaya:</td>
+                <td className="text-right" style={{ fontWeight: 'bold', fontSize: '14px', borderTop: '2px double #000' }}>
+                  {formatRupiah(previewItem.total_cost)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p className="letter-body-paragraph">
           {previewItem.closing_text}

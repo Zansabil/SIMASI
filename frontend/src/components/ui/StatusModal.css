@@ -10,7 +10,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10000; /* Ensure it stays on top of everything */
+  z-index: 10000;
+  /* Ensure it stays on top of everything */
   animation: statusModalFadeIn 0.2s ease-out;
   padding: 16px;
   box-sizing: border-box;
@@ -68,7 +69,7 @@
   font-size: 14.5px;
   font-weight: 500;
   line-height: 1.5;
-  margin: 0 0 36px 0;
+  margin: 0 0 4px 0 !important;
 }
 
 .status-modal-btn {
@@ -86,6 +87,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 20px !important;
 }
 
 /* Success Button */
@@ -157,6 +159,7 @@
   display: flex;
   gap: 12px;
   width: 100%;
+  margin-top: 24px !important;
 }
 
 /* Cancel Button */
@@ -179,11 +182,23 @@
 
 /* Animations */
 @keyframes statusModalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes statusModalScaleUp {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
