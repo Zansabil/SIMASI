@@ -1,6 +1,7 @@
-import React from 'react';
+
 import { API_BASE_URL } from '../../config';
 import './AssetTable.css';
+import { formatPrice } from '../../utils/currency';
 
 export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete, showActions = true }) {
   // SVGs for Actions
@@ -26,15 +27,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
     </svg>
   );
 
-  // Format currency helper
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price).replace('IDR', 'Rp.');
-  };
+  // Menggunakan helper formatPrice dari utils/currency
 
   return (
     <div className="table-responsive-wrapper">

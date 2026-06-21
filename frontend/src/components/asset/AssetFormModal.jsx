@@ -1,235 +1,200 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FiX, FiUpload } from 'react-icons/fi';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { FiX } from 'react-icons/fi';
 import StatusModal from '../ui/StatusModal';
-
-const formatToRupiah = (value) => {
-  if (value === null || value === undefined || value === '') return '';
-  const cleanNumber = value.toString().replace(/[^0-9]/g, '');
-  if (!cleanNumber) return '';
-  return 'Rp ' + Number(cleanNumber).toLocaleString('id-ID');
-};
+import ImageUploader from '../ui/ImageUploader';
+import { useFormDraft } from '../../hooks/useFormDraft';
+import { parseLocation } from '../../utils/locationHelper';
+import { useForm } from 'react-hook-form';
+import { formatToRupiah } from '../../utils/currency';
 
 export default function AssetFormModal({
   isOpen,
   onClose,
   onSubmit,
   assetToEdit = null,
-  availableUnits = ['TK', 'SD', 'SMP', 'SMA', 'MA'], // Default fallback
-  availableCategories = ['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum'], // Default fallback
-  existingSources = []
+  availableUnits = ['TK', 'SD', 'SMP', 'SMA', 'MA'], // Pilihan Unit default jika tidak dikirim dari parent
+  availableCategories = ['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum'], // Pilihan Kategori default
+  existingSources = [] // Daftar sumber dana unik yang diambil dari data aset yang ada
 }) {
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
-  const [unit, setUnit] = useState('');
-  const [room, setRoom] = useState('');
-  const [purchaseDate, setPurchaseDate] = useState('');
-  const [code, setCode] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [condition, setCondition] = useState('');
-  const [source, setSource] = useState('');
-  const [price, setPrice] = useState('');
-  const [image, setImage] = useState('');
+  // --- STATE LOKAL ---
+  // State untuk melacak apakah formulir sedang dalam proses pengiriman ke server
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // State untuk melacak apakah dialog konfirmasi keluar (saat data belum disimpan) sedang terbuka
   const [isConfirmCloseOpen, setIsConfirmCloseOpen] = useState(false);
-  const [errors, setErrors] = useState({});
+
+  // State untuk menyimpan pesan kesalahan yang dikirimkan oleh API Laravel
   const [submitError, setSubmitError] = useState('');
-  const fileReaderRef = useRef(null);
+
+  // Ref untuk mengakses elemen DOM body modal guna menyesuaikan tingginya secara dinamis
   const modalBodyRef = useRef(null);
 
-  const [isRestoreDraftOpen, setIsRestoreDraftOpen] = useState(false);
-  const [tempDraft, setTempDraft] = useState(null);
-  const [hasCheckedDraft, setHasCheckedDraft] = useState(false);
+  // Status apakah modal saat ini dalam mode Edit (jika assetToEdit terisi) atau Tambah Baru
+  const isEditing = !!assetToEdit;
 
+  // --- INITIALISASI REACT HOOK FORM ---
+  // RHF mengontrol seluruh state input form secara terpusat tanpa render berlebih
+  const {
+    register,            // Mendaftarkan elemen input ke dalam sistem RHF
+    handleSubmit,        // Wrapper pengiriman form untuk validasi sebelum submit
+    formState: { errors, isDirty }, // Mengambil errors validasi dan status kebersihan form (apakah ada perubahan data)
+    setValue,            // Mengubah nilai field RHF secara programatik (digunakan untuk uploader gambar & format rupiah)
+    watch,               // Memantau perubahan nilai field form secara real-time
+    reset                // Mengatur ulang seluruh isi form (reset ke kosong atau muat data edit)
+  } = useForm({
+    defaultValues: {
+      name: '',
+      category: '',
+      unit: '',
+      room: '',
+      purchaseDate: '',
+      code: '',
+      quantity: '',
+      condition: '',
+      source: '',
+      price: '',
+      image: ''
+    }
+  });
+
+  // Memantau seluruh nilai form untuk dikirimkan ke fitur penyimpanan draf otomatis
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const watchedValues = watch();
+  
+  // Objek data draf yang akan disimpan ke LocalStorage (tidak menyimpan file/gambar karena ukurannya terlalu besar)
+  const draftFields = {
+    name: watchedValues.name || '',
+    category: watchedValues.category || '',
+    unit: watchedValues.unit || '',
+    room: watchedValues.room || '',
+    purchaseDate: watchedValues.purchaseDate || '',
+    quantity: watchedValues.quantity || '',
+    condition: watchedValues.condition || '',
+    source: watchedValues.source || '',
+    price: watchedValues.price || ''
+  };
+
+  // --- INTEGRASI HOOK DRAF FORM (AUTO-SAVE) ---
+  // Menyimpan draf formulir secara otomatis saat ada perubahan input, dan menawarkan restorasi data draf ketika membuka form baru
+  const {
+    isRestoreDraftOpen,  // State apakah dialog penawaran pemulihan draf aktif
+    handleRestoreDraft,  // Fungsi untuk memulihkan data draf ke dalam form
+    handleDiscardDraft,  // Fungsi untuk membuang draf yang lama
+    clearDraft           // Fungsi untuk menghapus draf dari LocalStorage setelah sukses submit
+  } = useFormDraft(
+    'simasi_draft_asset',
+    isOpen && !isEditing, // Hanya aktifkan penyimpanan otomatis jika form terbuka dan dalam mode TAMBAH BARU
+    draftFields,
+    (draft) => {
+      // Callback ketika pengguna menekan "Ya, Pulihkan"
+      reset({
+        name: draft.name || '',
+        category: draft.category || '',
+        unit: draft.unit || '',
+        room: draft.room || '',
+        purchaseDate: draft.purchaseDate || '',
+        code: '',
+        quantity: draft.quantity || '',
+        condition: draft.condition || '',
+        source: draft.source || '',
+        price: draft.price || '',
+        image: ''
+      });
+    }
+  );
+
+  // --- OPSI DATALIST SUMBER DANA ---
+  // Menggabungkan pilihan sumber dana bawaan dengan data dinamis yang sudah ada dari database agar tidak duplikat
   const defaultSources = ['Dana Yayasan', 'Dana BOS'];
   const combinedSources = [...new Set([...defaultSources, ...(existingSources || [])])];
 
-  const handleFieldChange = (field, setter, value) => {
-    setter(value);
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
+  // --- REGISTRASI FIELD KUSTOM ---
+  // ImageUploader bukan input HTML biasa, jadi kita mendaftarkannya secara manual ke RHF
+  useEffect(() => {
+    register('image', {
+      required: !isEditing ? 'Foto kondisi aset wajib diunggah' : false // Wajib diisi hanya saat tambah aset baru
+    });
+  }, [register, isEditing]);
 
-  // Synchronize form states on open or change of assetToEdit
+  // --- HELPER LOAD DATA EDIT ---
+  // Memuat data aset yang ingin diedit ke dalam form RHF saat modal dibuka
+  const loadEditData = useCallback((asset) => {
+    if (!asset) return;
+    // Memecah field lokasi gabungan database lama (misal: "Unit - Ruangan") menggunakan utility parseLocation
+    const { unit: parsedUnit, room: parsedRoom } = parseLocation(asset);
+    reset({
+      name: asset.name || '',
+      category: asset.category || 'Umum',
+      unit: parsedUnit,
+      room: parsedRoom,
+      purchaseDate: asset.purchase_date || '',
+      code: asset.asset_code || '',
+      quantity: asset.quantity || '',
+      condition: asset.condition || '',
+      source: asset.source_of_funds || '',
+      price: formatToRupiah(asset.price),
+      image: asset.image_path || ''
+    });
+  }, [reset]);
+
+  // --- HELPER RESET FORM KE KOSONG ---
+  // Mengosongkan kembali isi form saat menutup form atau membuka form tambah baru
+  const resetForm = useCallback(() => {
+    reset({
+      name: '',
+      category: '',
+      unit: '',
+      room: '',
+      purchaseDate: '',
+      code: '',
+      quantity: '',
+      condition: '',
+      source: '',
+      price: '',
+      image: ''
+    });
+  }, [reset]);
+
+  // --- LIFECYCLE MONITOR MODAL OPEN / CHANGE ---
+  // Sinkronisasi state form setiap kali modal dibuka/ditutup atau aset yang diedit berganti
   useEffect(() => {
     if (isOpen) {
-      setIsConfirmCloseOpen(false);
-      setErrors({});
-      setSubmitError('');
+      setIsConfirmCloseOpen(false); // Pastikan konfirmasi keluar tertutup
+      setSubmitError('');           // Bersihkan error pengiriman sebelumnya
       if (assetToEdit) {
-        setName(assetToEdit.name || '');
-        
-        if (assetToEdit.unit || assetToEdit.room) {
-          setUnit(assetToEdit.unit || '');
-          setRoom(assetToEdit.room || '');
-        } else {
-          const locStr = assetToEdit.location || '';
-          if (locStr.includes(' - ')) {
-            const parts = locStr.split(' - ');
-            setUnit(parts[0] || '');
-            setRoom(parts.slice(1).join(' - ') || '');
-          } else {
-            // Backward compatibility for old records
-            setUnit(locStr);
-            setRoom('');
-          }
-        }
-        
-        setCategory(assetToEdit.category || 'Umum');
-        setPurchaseDate(assetToEdit.purchase_date || '');
-        setCode(assetToEdit.asset_code || '');
-        setQuantity(assetToEdit.quantity || '');
-        setCondition(assetToEdit.condition || '');
-        setSource(assetToEdit.source_of_funds || 'Dana Yayasan');
-        setPrice(formatToRupiah(assetToEdit.price));
-        setImage(assetToEdit.image_path || '');
+        loadEditData(assetToEdit);  // Muat data jika masuk mode Edit
       } else {
-        setName('');
-        setUnit('');
-        setRoom('');
-        setCategory('');
-        setPurchaseDate('');
-        setCode('');
-        setQuantity('');
-        setCondition('');
-        setSource('');
-        setPrice('');
-        setImage('');
+        resetForm();                 // Kosongkan form jika masuk mode Tambah
       }
     }
-  }, [isOpen, assetToEdit]);
+  }, [isOpen, assetToEdit, loadEditData, resetForm]);
 
-  // Auto-generate code for new assets was moved to backend to prevent race conditions.
-
-  // Cleanup FileReader on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (fileReaderRef.current && fileReaderRef.current.readyState === 1) {
-        fileReaderRef.current.abort();
-      }
-    };
-  }, []);
-
-  if (!isOpen) return null;
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-      
-      // Validasi format file
-      if (!allowedTypes.includes(file.type)) {
-        alert('Format file tidak didukung. Harap gunakan format PNG, JPG, atau JPEG.');
-        e.target.value = ''; // Reset input
-        return;
-      }
-
-      // Validasi ukuran file maksimal 5MB
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Ukuran file maksimal adalah 5MB.');
-        e.target.value = ''; // Reset input agar user bisa memilih ulang file lain
-        return;
-      }
-
-      const reader = new FileReader();
-      fileReaderRef.current = reader;
-      reader.onloadend = () => {
-        setImage(reader.result);
-        if (errors.image) {
-          setErrors(prev => {
-            const newErrors = { ...prev };
-            delete newErrors.image;
-            return newErrors;
-          });
-        }
-      };
-      reader.onerror = () => {
-        alert('Gagal membaca file');
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const validate = () => {
-    const newErrors = {};
-    if (!name.trim()) newErrors.name = 'Nama barang wajib diisi';
-    if (!unit) newErrors.unit = 'Unit wajib dipilih';
-    if (!category) newErrors.category = 'Kategori barang wajib dipilih';
-    if (!room.trim()) newErrors.room = 'Lokasi penempatan barang wajib diisi';
-    if (!purchaseDate) {
-      newErrors.purchaseDate = 'Tanggal pembelian wajib diisi';
-    } else {
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (purchaseDate > todayStr) {
-        newErrors.purchaseDate = 'Tanggal pembelian tidak boleh di masa depan';
-      }
-    }
-    if (!quantity) {
-      newErrors.quantity = 'Jumlah barang wajib diisi';
-    } else if (Number(quantity) <= 0) {
-      newErrors.quantity = 'Jumlah barang harus lebih dari 0';
-    }
-    if (!condition) {
-      newErrors.condition = 'Kondisi barang wajib dipilih';
-    }
-    if (!source) {
-      newErrors.source = 'Sumber dana wajib dipilih';
-    }
-    if (!price) {
-      newErrors.price = 'Harga barang wajib diisi';
-    } else {
-      const cleanPrice = Number(price.replace(/\D/g, ''));
-      if (cleanPrice <= 0) {
-        newErrors.price = 'Harga barang harus lebih dari 0';
-      }
-    }
-    if (!image) {
-      newErrors.image = 'Foto kondisi aset wajib diunggah';
-    }
-
-    setErrors(newErrors);
-
-    const errorKeys = Object.keys(newErrors);
-    if (errorKeys.length > 0) {
-      const firstErrorKey = errorKeys[0];
-      const errorElement = document.getElementById(`asset-${firstErrorKey}`);
-      if (errorElement) {
-        errorElement.focus();
-      }
-    }
-
-    return errorKeys.length === 0;
-  };
-
-  const handleSubmitForm = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    const combinedLocation = unit && room ? `${unit} - ${room}` : (unit || room);
+  // --- HANDLER SUBMIT FORM ---
+  // Memproses data formulir setelah lolos validasi RHF untuk dikirimkan ke API backend Laravel
+  const handleSubmitForm = async (data) => {
+    // Gabungkan kembali unit dan ruangan menjadi format "Unit - Ruangan" sebelum disimpan
+    const combinedLocation = data.unit && data.room ? `${data.unit} - ${data.room}` : (data.unit || data.room);
     setIsSubmitting(true);
     setSubmitError('');
     try {
       await onSubmit({
-        name,
-        unit,
-        room,
-        category,
+        name: data.name,
+        unit: data.unit,
+        room: data.room,
+        category: data.category,
         location: combinedLocation,
-        purchaseDate,
-        code,
-        quantity,
-        condition,
-        source,
-        price,
-        image
+        purchaseDate: data.purchaseDate,
+        code: data.code,
+        quantity: data.quantity,
+        condition: data.condition,
+        source: data.source,
+        price: data.price,
+        image: data.image
       });
-      localStorage.removeItem('simasi_draft_asset');
+      clearDraft(); // Hapus draf di LocalStorage jika data berhasil disimpan ke database
     } catch (err) {
       console.error("Error submitting form: ", err);
+      // Tangkap pesan error dari API Laravel dan tampilkan secara lokal di atas tombol simpan
       const errMsg = err.response?.data?.message || err.message || 'Gagal menyimpan data aset. Silakan coba lagi.';
       setSubmitError(errMsg);
     } finally {
@@ -237,85 +202,18 @@ export default function AssetFormModal({
     }
   };
 
-  const checkIsDirty = () => {
-    if (assetToEdit) {
-      // Edit Mode
-      const origName = assetToEdit.name || '';
-      
-      let origUnit = '';
-      let origRoom = '';
-      if (assetToEdit.unit || assetToEdit.room) {
-        origUnit = assetToEdit.unit || '';
-        origRoom = assetToEdit.room || '';
-      } else {
-        const locStr = assetToEdit.location || '';
-        if (locStr.includes(' - ')) {
-          const parts = locStr.split(' - ');
-          origUnit = parts[0] || '';
-          origRoom = parts.slice(1).join(' - ') || '';
-        } else {
-          origUnit = locStr;
-          origRoom = '';
-        }
-      }
-      
-      const origCategory = assetToEdit.category || 'Umum';
-      const origPurchaseDate = assetToEdit.purchase_date || '';
-      const origQuantity = assetToEdit.quantity || '';
-      const origCondition = assetToEdit.condition || '';
-      const origSource = assetToEdit.source_of_funds || 'Dana Yayasan';
-      const origPrice = formatToRupiah(assetToEdit.price);
-      const origImage = assetToEdit.image_path || '';
-
-      const isNameDiff = name !== origName;
-      const isUnitDiff = unit !== origUnit;
-      const isRoomDiff = room !== origRoom;
-      const isCategoryDiff = category !== origCategory;
-      const isPurchaseDateDiff = purchaseDate !== origPurchaseDate;
-      const isQuantityDiff = quantity.toString() !== origQuantity.toString();
-      const isConditionDiff = (condition ? condition.toLowerCase() : '') !== (origCondition ? origCondition.toLowerCase() : '');
-      const isSourceDiff = source !== origSource;
-      const isPriceDiff = price !== origPrice;
-      const isImageDiff = image !== origImage;
-
-      return (
-        isNameDiff ||
-        isUnitDiff ||
-        isRoomDiff ||
-        isCategoryDiff ||
-        isPurchaseDateDiff ||
-        isQuantityDiff ||
-        isConditionDiff ||
-        isSourceDiff ||
-        isPriceDiff ||
-        isImageDiff
-      );
-    } else {
-      // Create Mode
-      return (
-        name !== '' ||
-        unit !== '' ||
-        room !== '' ||
-        category !== '' ||
-        purchaseDate !== '' ||
-        quantity !== '' ||
-        condition !== '' ||
-        source !== 'Dana Yayasan' ||
-        price !== '' ||
-        image !== ''
-      );
-    }
-  };
-
+  // --- HANDLER CLOSE WITH CONFIRM ---
+  // Fungsi penutup form modal secara aman dengan mendeteksi status kebersihan form (isDirty)
   const handleCloseWithConfirm = () => {
-    if (checkIsDirty()) {
-      setIsConfirmCloseOpen(true);
+    if (isDirty) {
+      setIsConfirmCloseOpen(true); // Jika ada perubahan data, tampilkan popup konfirmasi keluar
     } else {
-      onClose();
+      onClose(); // Jika form bersih, langsung tutup modal
     }
   };
 
-  // Keyboard listener untuk tombol Escape agar menutup modal secara aman
+  // --- KEYBOARD LISTENER (ESC KEY) ---
+  // Pengaman tambahan agar menekan tombol Escape tetap mendeteksi konfirmasi keluar (menggunakan Latest Ref Pattern demi performa)
   const handleCloseWithConfirmRef = useRef(handleCloseWithConfirm);
   useEffect(() => {
     handleCloseWithConfirmRef.current = handleCloseWithConfirm;
@@ -337,7 +235,8 @@ export default function AssetFormModal({
     };
   }, [isOpen]);
 
-  // Efek untuk mengunci scroll halaman belakang (background) saat modal terbuka
+  // --- BACKGROUND SCROLL LOCK ---
+  // Mengunci scroll halaman utama di belakang modal saat modal sedang terbuka agar tampilan tidak tergeser
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -349,7 +248,9 @@ export default function AssetFormModal({
       document.body.style.overflow = 'auto';
     };
   }, [isOpen]);
-  // Efek untuk menyesuaikan tinggi modal secara dinamis saat ukuran layar berubah (resize/rotate)
+
+  // --- RESPONSIVE MODAL HEIGHT ---
+  // Menyesuaikan tinggi maksimal body modal secara dinamis agar tombol tindakan tidak terpotong pada berbagai layar (handphone/landscape)
   useEffect(() => {
     const handleResize = () => {
       if (modalBodyRef.current) {
@@ -359,7 +260,7 @@ export default function AssetFormModal({
 
     if (isOpen) {
       window.addEventListener('resize', handleResize);
-      handleResize(); // Panggil sekali saat pertama kali dibuka
+      handleResize(); // Jalankan fungsi sekali saat modal pertama kali terbuka
     }
 
     return () => {
@@ -367,90 +268,14 @@ export default function AssetFormModal({
     };
   }, [isOpen]);
 
-  // Effect untuk mendeteksi draf saat modal dibuka dalam mode Tambah (Create)
-  useEffect(() => {
-    if (isOpen) {
-      if (!assetToEdit) {
-        const savedDraft = localStorage.getItem('simasi_draft_asset');
-        if (savedDraft) {
-          try {
-            const parsed = JSON.parse(savedDraft);
-            setTempDraft(parsed);
-            setIsRestoreDraftOpen(true);
-            setHasCheckedDraft(false); // Blokir autosave dulu
-          } catch (e) {
-            console.error("Gagal membaca draf:", e);
-            localStorage.removeItem('simasi_draft_asset');
-            setHasCheckedDraft(true);
-          }
-        } else {
-          setHasCheckedDraft(true); // Tidak ada draf, aktifkan autosave
-        }
-      } else {
-        setHasCheckedDraft(false); // Mode Edit tidak menggunakan draf
-      }
-    } else {
-      setHasCheckedDraft(false);
-      setTempDraft(null);
-      setIsRestoreDraftOpen(false);
-    }
-  }, [isOpen, assetToEdit]);
+  // Jika status modal tidak terbuka, jangan render elemen apa pun ke dalam DOM
+  if (!isOpen) return null;
 
-  // Effect untuk menyimpan draf secara otomatis saat field berubah
-  useEffect(() => {
-    if (isOpen && !assetToEdit && hasCheckedDraft) {
-      const draftData = {
-        name,
-        category,
-        unit,
-        room,
-        purchaseDate,
-        quantity,
-        condition,
-        source,
-        price
-      };
-      
-      const hasContent = name || category || unit || room || purchaseDate || quantity || condition || source || price;
-      
-      if (hasContent) {
-        localStorage.setItem('simasi_draft_asset', JSON.stringify(draftData));
-      } else {
-        localStorage.removeItem('simasi_draft_asset');
-      }
-    }
-  }, [isOpen, assetToEdit, hasCheckedDraft, name, category, unit, room, purchaseDate, quantity, condition, source, price]);
-
-  const handleRestoreDraft = () => {
-    if (tempDraft) {
-      setName(tempDraft.name || '');
-      setCategory(tempDraft.category || '');
-      setUnit(tempDraft.unit || '');
-      setRoom(tempDraft.room || '');
-      setPurchaseDate(tempDraft.purchaseDate || '');
-      setQuantity(tempDraft.quantity || '');
-      setCondition(tempDraft.condition || '');
-      setSource(tempDraft.source || '');
-      setPrice(tempDraft.price || '');
-    }
-    setIsRestoreDraftOpen(false);
-    setTempDraft(null);
-    setHasCheckedDraft(true); // Aktifkan autosave
-  };
-
-  const handleDiscardDraft = () => {
-    localStorage.removeItem('simasi_draft_asset');
-    setIsRestoreDraftOpen(false);
-    setTempDraft(null);
-    setHasCheckedDraft(true); // Aktifkan autosave
-  };
-
-  const isEditing = !!assetToEdit;
-
+  // --- TEMPLATE RENDER UI ---
   return (
     <div className="modal-overlay-bg">
       <div className="modal-form-container">
-        {/* Modal Header */}
+        {/* Header Modal */}
         <div className="modal-header-row">
           <h3 className="modal-header-title">
             {isEditing ? 'Edit Aset' : 'Tambah Aset'}
@@ -460,81 +285,90 @@ export default function AssetFormModal({
           </button>
         </div>
 
-        {/* Modal Body / Scrollable Form */}
-        <form ref={modalBodyRef} onSubmit={handleSubmitForm} className="modal-form-body" noValidate>
+        {/* Formulir Modal */}
+        <form ref={modalBodyRef} onSubmit={handleSubmit(handleSubmitForm)} className="modal-form-body" noValidate>
           <p className="required-note">
             Field bertanda <span className="req-star">*</span> wajib diisi
           </p>
+
+          {/* Input: Nama Barang */}
           <div className="modal-form-group">
             <label className="modal-form-label">Nama Barang <span className="req-star">*</span></label>
             <input
               type="text"
               id="asset-name"
+              placeholder="Contoh: Proyektor Epson"
               className={`modal-form-input ${errors.name ? 'input-error' : ''}`}
-              value={name}
-              onChange={(e) => handleFieldChange('name', setName, e.target.value)}
+              {...register('name', { required: 'Nama aset wajib diisi' })}
             />
-            {errors.name && <span className="error-text">{errors.name}</span>}
+            {errors.name && <span className="error-text">{errors.name.message}</span>}
           </div>
 
+          {/* Input: Unit */}
           <div className="modal-form-group">
             <label className="modal-form-label">Unit <span className="req-star">*</span></label>
             <select
               id="asset-unit"
               className={`modal-form-select ${errors.unit ? 'input-error' : ''}`}
-              value={unit}
-              onChange={(e) => handleFieldChange('unit', setUnit, e.target.value)}
+              {...register('unit', { required: 'Unit wajib diisi' })}
             >
               <option value="" disabled hidden>Unit</option>
               {availableUnits.map((u, i) => (
                 <option key={i} value={u}>{u}</option>
               ))}
             </select>
-            {errors.unit && <span className="error-text">{errors.unit}</span>}
+            {errors.unit && <span className="error-text">{errors.unit.message}</span>}
           </div>
 
+          {/* Input: Kategori Barang */}
           <div className="modal-form-group">
             <label className="modal-form-label">Kategori Barang <span className="req-star">*</span></label>
             <select
               id="asset-category"
               className={`modal-form-select ${errors.category ? 'input-error' : ''}`}
-              value={category}
-              onChange={(e) => handleFieldChange('category', setCategory, e.target.value)}
+              {...register('category', { required: 'Kategori wajib diisi' })}
             >
               <option value="" disabled hidden>Pilih Kategori</option>
               {availableCategories.map((cat, i) => (
                 <option key={i} value={cat}>{cat}</option>
               ))}
             </select>
-            {errors.category && <span className="error-text">{errors.category}</span>}
+            {errors.category && <span className="error-text">{errors.category.message}</span>}
           </div>
 
+          {/* Input: Ruangan */}
           <div className="modal-form-group">
             <label className="modal-form-label">Lokasi Penempatan Barang <span className="req-star">*</span></label>
             <input
               type="text"
               id="asset-room"
-              className={`modal-form-input ${errors.room ? 'input-error' : ''}`}
-              value={room}
-              onChange={(e) => handleFieldChange('room', setRoom, e.target.value)}
               placeholder="Contoh: Ruang Tata Usaha"
+              className={`modal-form-input ${errors.room ? 'input-error' : ''}`}
+              {...register('room', { required: 'Ruangan wajib diisi' })}
             />
-            {errors.room && <span className="error-text">{errors.room}</span>}
+            {errors.room && <span className="error-text">{errors.room.message}</span>}
           </div>
 
+          {/* Input: Tanggal Pembelian */}
           <div className="modal-form-group">
             <label className="modal-form-label">Tanggal Pembelian / Perolehan <span className="req-star">*</span></label>
             <input
               type="date"
               id="asset-purchaseDate"
+              max={new Date().toISOString().split('T')[0]} // Cegah memilih tanggal di masa depan
               className={`modal-form-input ${errors.purchaseDate ? 'input-error' : ''}`}
-              value={purchaseDate}
-              onChange={(e) => handleFieldChange('purchaseDate', setPurchaseDate, e.target.value)}
-              max={new Date().toISOString().split('T')[0]}
+              {...register('purchaseDate', {
+                required: 'Tanggal pembelian wajib diisi',
+                validate: (value) => {
+                  const today = new Date().toISOString().split('T')[0];
+                  return value <= today || 'Tanggal pembelian tidak boleh di masa depan';
+                }
+              })}
             />
-            {errors.purchaseDate && <span className="error-text">{errors.purchaseDate}</span>}
+            {errors.purchaseDate && <span className="error-text">{errors.purchaseDate.message}</span>}
           </div>
 
+          {/* Input: Kode Barang (Hanya Tampil Read-Only Saat Edit) */}
           <div className="modal-form-group">
             <label className="modal-form-label">Kode Barang <span className="req-star">*</span></label>
             <input
@@ -542,11 +376,12 @@ export default function AssetFormModal({
               id="asset-code"
               className="modal-form-input"
               readOnly
-              value={isEditing ? code : ''}
+              {...register('code')}
               placeholder={isEditing ? '' : 'Dibuat otomatis oleh server setelah disimpan'}
             />
           </div>
 
+          {/* Input: Jumlah Barang */}
           <div className="modal-form-group">
             <label className="modal-form-label">Jumlah Barang <span className="req-star">*</span></label>
             <input
@@ -554,95 +389,97 @@ export default function AssetFormModal({
               min="1"
               id="asset-quantity"
               className={`modal-form-input ${errors.quantity ? 'input-error' : ''}`}
-              value={quantity}
+              {...register('quantity', {
+                required: 'Jumlah unit wajib diisi',
+                validate: (value) => {
+                  const num = Number(value);
+                  return (num > 0) || 'Jumlah unit harus lebih besar dari 0';
+                }
+              })}
               onChange={(e) => {
                 const val = e.target.value;
                 if (val === '' || Number(val) >= 1) {
-                  handleFieldChange('quantity', setQuantity, val);
+                  setValue('quantity', val, { shouldValidate: true, shouldDirty: true });
                 }
               }}
             />
-            {errors.quantity && <span className="error-text">{errors.quantity}</span>}
+            {errors.quantity && <span className="error-text">{errors.quantity.message}</span>}
           </div>
 
+          {/* Input: Kondisi */}
           <div className="modal-form-group">
             <label className="modal-form-label">Kondisi Barang <span className="req-star">*</span></label>
             <select
               id="asset-condition"
               className={`modal-form-select ${errors.condition ? 'input-error' : ''}`}
-              value={condition ? condition.toLowerCase() : ''}
-              onChange={(e) => handleFieldChange('condition', setCondition, e.target.value)}
+              {...register('condition', { required: 'Kondisi wajib diisi' })}
             >
               <option value="" disabled hidden>Pilih Kondisi</option>
               <option value="baik">Baik</option>
               <option value="rusak ringan">Rusak Ringan</option>
               <option value="rusak berat">Rusak Berat</option>
             </select>
-            {errors.condition && <span className="error-text">{errors.condition}</span>}
+            {errors.condition && <span className="error-text">{errors.condition.message}</span>}
           </div>
 
+          {/* Input: Sumber Dana (Combobox dengan Auto-Suggest) */}
           <div className="modal-form-group">
             <label className="modal-form-label">Sumber Dana <span className="req-star">*</span></label>
             <input
               type="text"
               id="asset-source"
-              className={`modal-form-input ${errors.source ? 'input-error' : ''}`}
               list="sumber-dana-options"
-              value={source}
-              onChange={(e) => handleFieldChange('source', setSource, e.target.value)}
               placeholder="Pilih atau ketik sumber dana..."
               autoComplete="off"
+              className={`modal-form-input ${errors.source ? 'input-error' : ''}`}
+              {...register('source', { required: 'Sumber dana wajib diisi' })}
             />
             <datalist id="sumber-dana-options">
               {combinedSources.map((src, i) => (
                 <option key={i} value={src} />
               ))}
             </datalist>
-            {errors.source && <span className="error-text">{errors.source}</span>}
+            {errors.source && <span className="error-text">{errors.source.message}</span>}
           </div>
 
+          {/* Input: Harga Barang */}
           <div className="modal-form-group">
             <label className="modal-form-label">Harga Barang <span className="req-star">*</span></label>
             <input
               type="text"
               id="asset-price"
-              className={`modal-form-input ${errors.price ? 'input-error' : ''}`}
-              value={price}
-              onChange={(e) => handleFieldChange('price', setPrice, formatToRupiah(e.target.value))}
               placeholder="Rp 2.000.000"
+              className={`modal-form-input ${errors.price ? 'input-error' : ''}`}
+              {...register('price', {
+                required: 'Harga wajib diisi',
+                validate: (value) => {
+                  const cleanPrice = value.replace(/[^0-9]/g, '');
+                  return (Number(cleanPrice) > 0) || 'Harga barang harus lebih besar dari 0';
+                }
+              })}
+              onChange={(e) => {
+                const formatted = formatToRupiah(e.target.value);
+                setValue('price', formatted, { shouldValidate: true, shouldDirty: true });
+              }}
             />
-            {errors.price && <span className="error-text">{errors.price}</span>}
+            {errors.price && <span className="error-text">{errors.price.message}</span>}
           </div>
 
-          <div className="modal-form-group">
-            <label className="modal-form-label">Foto Kondisi Aset <span className="req-star">*</span></label>
-            <div className={`modal-upload-box-wrapper ${errors.image ? 'upload-error' : ''}`} id="asset-image-container">
-              <input
-                type="file"
-                id="asset-photo-upload"
-                className="hidden-file-input"
-                onChange={handleFileChange}
-                accept="image/*"
-                required={!image}
-              />
-              <label htmlFor="asset-photo-upload" className="modal-upload-label-area">
-                {image ? (
-                  <img src={image.startsWith('http') ? image : image} alt="Preview" className="upload-preview-thumbnail-img" />
-                ) : (
-                  <>
-                    <FiUpload size={36} color="#94a3b8" />
-                    <span className="upload-main-prompt">Klik untuk upload foto atau drag and drop</span>
-                    <span className="upload-sub-prompt">PNG, JPG, JPEG (Max. 5MB)</span>
-                  </>
-                )}
-              </label>
-            </div>
-            {errors.image && <span className="error-text">{errors.image}</span>}
-          </div>
+          {/* Uploader Gambar Kustom */}
+          <ImageUploader
+            id="asset-photo-upload"
+            image={watch('image')}
+            onImageChange={(val) => {
+              setValue('image', val, { shouldValidate: true, shouldDirty: true });
+            }}
+            error={errors.image?.message}
+            required={!isEditing}
+          />
 
+          {/* Error Message dari API Laravel */}
           {submitError && <div className="alert-error">{submitError}</div>}
 
-          {/* Action Buttons */}
+          {/* Tombol Aksi */}
           <div className="modal-action-buttons-wrapper">
             <button type="button" className="modal-btn-batal" onClick={handleCloseWithConfirm}>
               Batal
@@ -654,6 +491,7 @@ export default function AssetFormModal({
         </form>
       </div>
 
+      {/* Modal Popup: Konfirmasi Batal Keluar */}
       <StatusModal
         isOpen={isConfirmCloseOpen}
         type="confirm"
@@ -668,6 +506,7 @@ export default function AssetFormModal({
         onCancel={() => setIsConfirmCloseOpen(false)}
       />
 
+      {/* Modal Popup: Pemulihan Draf Form */}
       <StatusModal
         isOpen={isRestoreDraftOpen}
         type="confirm"

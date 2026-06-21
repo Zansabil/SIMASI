@@ -1,3 +1,0 @@
-// Placeholder for generateAssetCode
-export {}
-

@@ -13,6 +13,7 @@ import { FiPlus, FiLoader } from 'react-icons/fi';
 import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
 import { API_BASE_URL } from '../../config';
+import { parseLocation } from '../../utils/locationHelper';
 
 // Import service API
 import { 
@@ -94,8 +95,8 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         }
 
         if (parsedLocation && parsedLocation !== '-') {
-          const parts = parsedLocation.split(' - ');
-          parsedUnit = parts[0] || 'Unit';
+          const { unit } = parseLocation(parsedLocation);
+          parsedUnit = unit || 'Unit';
         }
 
         let imagePath = 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop';

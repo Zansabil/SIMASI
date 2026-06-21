@@ -1,6 +1,7 @@
-import React from 'react';
+
 import { API_BASE_URL } from '../../config';
 import './AssetDetailModal.css';
+import { formatPrice } from '../../utils/currency';
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,15 +20,7 @@ const formatDate = (dateString) => {
   });
 };
 
-const formatCurrency = (amount) => {
-  if (!amount) return 'Rp 0';
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
-};
+// Menggunakan helper formatPrice dari utils/currency
 
 export default function AssetDetailModal({ isOpen, onClose, asset }) {
   if (!isOpen || !asset) return null;
@@ -108,7 +101,7 @@ export default function AssetDetailModal({ isOpen, onClose, asset }) {
 
             <div className="detail-info-group full-width price-group">
               <span className="detail-info-label">Estimasi Harga Per Unit</span>
-              <span className="detail-info-value price-value">{formatCurrency(asset.price)}</span>
+              <span className="detail-info-value price-value">{formatPrice(asset.price)}</span>
             </div>
           </div>
         </div>
