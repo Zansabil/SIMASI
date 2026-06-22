@@ -185,6 +185,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUsingBackend, setIsUsingBackend] = useState(false);
+  const [availableUnits, setAvailableUnits] = useState([]);
 
   // Form states
   const [formName, setFormName] = useState('');
