@@ -22,7 +22,7 @@ class PengadaanAset extends Model
     protected $fillable = [
         'idpengguna',         
         'nama_barang',
-        'unit',               // Unit penempatan (TK/SD/SMP/SMA/MA/Yayasan)
+        'id_unit',            // Relasi ke tabel lokasi_unit
         'tgl_pengajuan',
         'lokasi_penempatan',
         'jumlah_barang',
@@ -36,5 +36,10 @@ class PengadaanAset extends Model
     public function pengguna()
     {
         return $this->belongsTo(Pengguna::class, 'idpengguna', 'id');
+    }
+
+    public function lokasiUnit()
+    {
+        return $this->belongsTo(LokasiUnit::class, 'id_unit', 'id');
     }
 }

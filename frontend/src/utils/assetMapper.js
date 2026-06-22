@@ -3,9 +3,18 @@
  */
 export const mapLaravelToReact = (item) => {
   if (!item) return null;
-  const combinedLocation = item.unit && item.ruangan 
-    ? `${item.unit} - ${item.ruangan}` 
-    : (item.unit || item.ruangan || '');
+  const roomName = typeof item.ruangan === 'object' && item.ruangan !== null 
+    ? item.ruangan.nama_ruangan 
+    : (item.ruangan || '');
+    
+  const unitName = typeof item.lokasi_unit === 'object' && item.lokasi_unit !== null 
+    ? item.lokasi_unit.nama_unit 
+    : (item.unit || '');
+  
+  const combinedLocation = unitName && roomName 
+    ? `${unitName} - ${roomName}` 
+    : (unitName || roomName || '');
+    
   return {
     id: item.id,
     name: item.nama_aset,
@@ -16,8 +25,10 @@ export const mapLaravelToReact = (item) => {
     source_of_funds: item.sumber_dana || item.source_of_funds || 'Dana Yayasan',
     price: item.harga_aset || item.price || 0,
     image_path: item.foto || item.image_path || null,
-    unit: item.unit || '',
-    room: item.ruangan || '',
+    unit_id: item.id_unit || '',
+    unit: unitName,
+    room_id: item.id_ruangan || '',
+    room_name: roomName,
     category: item.jenis_aset || 'Umum',
     purchase_date: item.tgl_diperoleh || ''
   };
@@ -45,8 +56,8 @@ export const mapReactToLaravel = (formData, existingAssetCode = null) => {
     kode_inventaris: formData.code || existingAssetCode,
     nama_aset: formData.name,
     jenis_aset: formData.category || 'Umum',
-    unit: formData.unit,
-    ruangan: formData.room,
+    id_unit: formData.unit, // unit is now the id_unit from the select
+    id_ruangan: formData.room, // room is now the id_ruangan from the select
     jumlah_aset: Number(formData.quantity) || 1,
     kondisi_aset: formData.condition,
     tgl_diperoleh: resolvedDate,

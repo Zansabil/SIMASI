@@ -122,12 +122,12 @@ export default function AssetFormModal({
   const loadEditData = useCallback((asset) => {
     if (!asset) return;
     // Memecah field lokasi gabungan database lama (misal: "Unit - Ruangan") menggunakan utility parseLocation
-    const { unit: parsedUnit, room: parsedRoom } = parseLocation(asset);
+    const { unit: parsedUnit } = parseLocation(asset);
     reset({
       name: asset.name || '',
       category: asset.category || 'Umum',
-      unit: parsedUnit,
-      room: parsedRoom,
+      unit: asset.unit_id || parsedUnit || '',
+      room: asset.room_id || '',
       purchaseDate: asset.purchase_date || '',
       code: asset.asset_code || '',
       quantity: asset.quantity || '',
@@ -174,7 +174,12 @@ export default function AssetFormModal({
   // Memproses data formulir setelah lolos validasi RHF untuk dikirimkan ke API backend Laravel
   const handleSubmitForm = async (data) => {
     // Gabungkan kembali unit dan ruangan menjadi format "Unit - Ruangan" sebelum disimpan
-    const combinedLocation = data.unit && data.room ? `${data.unit} - ${data.room}` : (data.unit || data.room);
+    // data.room is now the ID, we need to find the name for optimistic UI updates
+    const roomObj = availableRooms.find(r => String(r.id) === String(data.room));
+    const roomName = roomObj ? roomObj.nama_ruangan : data.room;
+    const unitObj = availableUnits.find(u => String(u.id) === String(data.unit));
+    const unitName = unitObj ? unitObj.nama_unit : data.unit;
+    const combinedLocation = unitName && roomName ? `${unitName} - ${roomName}` : (unitName || roomName);
     setIsSubmitting(true);
     setSubmitError('');
     try {
@@ -314,9 +319,13 @@ export default function AssetFormModal({
               {...register('unit', { required: 'Unit wajib diisi' })}
             >
               <option value="" disabled hidden>Unit</option>
-              {availableUnits.map((u, i) => (
-                <option key={i} value={u}>{u}</option>
-              ))}
+              {availableUnits.length > 0 ? (
+                availableUnits.map((u, i) => (
+                  <option key={u.id || i} value={u.id || u}>{u.nama_unit || u}</option>
+                ))
+              ) : (
+                <option value="" disabled>Belum ada data Master Unit</option>
+              )}
             </select>
             {errors.unit && <span className="error-text">{errors.unit.message}</span>}
           </div>
@@ -348,7 +357,7 @@ export default function AssetFormModal({
               <option value="" disabled hidden>Pilih Ruangan</option>
               {availableRooms.length > 0 ? (
                 availableRooms.map((r, i) => (
-                  <option key={i} value={r}>{r}</option>
+                  <option key={r.id || i} value={r.id || r}>{r.nama_ruangan || r}</option>
                 ))
               ) : (
                 <option value="" disabled>Belum ada data Master Ruangan</option>

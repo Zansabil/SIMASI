@@ -13,8 +13,8 @@ class PengadaanAsetController extends Controller
     // 1. Menampilkan daftar pengajuan (Bisa diakses semua peran)
     public function index()
     {
-        // Tarik semua data pengadaan beserta relasi ke tabel pengguna (pemohon) dan peran untuk jabatan virtual
-        $pengadaans = PengadaanAset::with('pengguna.peran')->orderBy('tgl_pengajuan', 'desc')->get();
+        // Tarik semua data pengadaan beserta relasi ke tabel pengguna (pemohon), peran, dan lokasi unit
+        $pengadaans = PengadaanAset::with(['pengguna.peran', 'lokasiUnit'])->orderBy('tgl_pengajuan', 'desc')->get();
         
         return response()->json([
             'success' => true,
@@ -28,7 +28,7 @@ class PengadaanAsetController extends Controller
     {
         $request->validate([
             'nama_barang'       => 'required|string',
-            'unit'              => 'nullable|string',
+            'id_unit'           => 'nullable|exists:lokasi_unit,id',
             'tgl_pengajuan'     => 'required|date',
             'lokasi_penempatan' => 'required|string',
             'jumlah_barang'     => 'required|integer|min:1',
@@ -40,7 +40,7 @@ class PengadaanAsetController extends Controller
             // Otomatis mengambil ID pengguna yang sedang login dari token Sanctum!
             'idpengguna'        => auth()->user()->id, 
             'nama_barang'       => $request->nama_barang,
-            'unit'              => $request->unit,
+            'id_unit'           => $request->id_unit,
             'tgl_pengajuan'     => $request->tgl_pengajuan,
             'lokasi_penempatan' => $request->lokasi_penempatan,
             'jumlah_barang'     => $request->jumlah_barang,

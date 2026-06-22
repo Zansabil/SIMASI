@@ -117,7 +117,7 @@ const groupBackendData = (records) => {
     groups[groupKey].items.push({
       id: record.idpengadaan_aset, // Simpan ID backend untuk approval
       name: record.nama_barang,
-      unit: record.unit || '-',
+      unit: record.lokasi_unit ? record.lokasi_unit.nama_unit : (record.unit || '-'),
       location: record.lokasi_penempatan,
       qty: record.jumlah_barang,
       price: record.harga_barang,
@@ -217,6 +217,13 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
         `${API_BASE_URL}/api/pengadaan_aset`,
         config
       );
+
+      const responseUnits = await axios.get(`${API_BASE_URL}/api/lokasi_unit`, config);
+      if (responseUnits.data && responseUnits.data.success && responseUnits.data.data) {
+        if (responseUnits.data.data.length > 0) {
+          setAvailableUnits(responseUnits.data.data);
+        }
+      }
 
       if (response.data && response.data.success && response.data.data) {
         const grouped = groupBackendData(response.data.data);
@@ -377,7 +384,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
         const promises = formItems.map(item => 
           axios.post(`${API_BASE_URL}/api/pengadaan_aset`, {
             nama_barang: item.name,
-            unit: item.unit,
+            id_unit: item.unit,
             tgl_pengajuan: tgl_pengajuan,
             lokasi_penempatan: item.location,
             jumlah_barang: item.qty,
@@ -649,6 +656,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
 
         {view === 'create' && (
           <ProcurementForm
+            availableUnits={availableUnits}
             formLetterNumber={formLetterNumber}
             formDate={formDate}
             formName={formName}

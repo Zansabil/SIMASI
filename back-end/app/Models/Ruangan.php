@@ -18,4 +18,9 @@ class Ruangan extends Model
         'kode_ruangan', 
         'nama_ruangan'
     ];
+
+    public function aset()
+    {
+        return $this->hasMany(Aset::class, 'id_ruangan', 'id');
+    }
 }

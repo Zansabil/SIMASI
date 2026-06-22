@@ -66,7 +66,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                 </td>
                 <td className="col-code hide-on-mobile">{asset.asset_code}</td>
                 <td className="col-unit hide-on-mobile text-center">{asset.unit || '-'}</td>
-                <td className="col-location hide-on-mobile">{asset.room || '-'}</td>
+                <td className="col-location hide-on-mobile">{asset.room_name !== undefined ? (asset.room_name || '-') : (asset.location || '-')}</td>
                 <td className="col-qty text-center">{asset.quantity}</td>
                 <td className="col-condition hide-on-mobile">
                   {asset.condition.charAt(0).toUpperCase() + asset.condition.slice(1)}

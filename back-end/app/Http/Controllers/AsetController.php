@@ -22,11 +22,15 @@ class AsetController extends Controller
             $query->where('nama_aset', 'like', "%{$search}%")
                   ->orWhere('kode_inventaris', 'like', "%{$search}%")
                   ->orWhere('jenis_aset', 'like', "%{$search}%")
-                  ->orWhere('unit', 'like', "%{$search}%")
-                  ->orWhere('ruangan', 'like', "%{$search}%");
+                  ->orWhereHas('lokasiUnit', function ($q) use ($search) {
+                      $q->where('nama_unit', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('ruangan', function ($q) use ($search) {
+                      $q->where('nama_ruangan', 'like', "%{$search}%");
+                  });
         }
 
-        $asets = $query->orderBy('tgl_dibuat', 'desc')->get();
+        $asets = $query->with(['ruangan', 'lokasiUnit'])->orderBy('tgl_dibuat', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -42,7 +46,7 @@ class AsetController extends Controller
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
 
-        $asets = Aset::orderBy('tgl_dibuat', 'desc')->get();
+        $asets = Aset::with(['ruangan', 'lokasiUnit'])->orderBy('tgl_dibuat', 'desc')->get();
         $pdf = Pdf::loadView('aset.cetak', compact('asets'));
         $pdf->setPaper('A4', 'landscape');
         
@@ -66,7 +70,7 @@ class AsetController extends Controller
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
         
-        $sanitizeFields = ['nama_aset', 'jenis_aset', 'unit', 'ruangan', 'kondisi_aset', 'sumber_dana'];
+        $sanitizeFields = ['nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan', 'kondisi_aset', 'sumber_dana'];
         $sanitizedData = [];
         foreach ($sanitizeFields as $field) {
             if ($request->has($field)) {
@@ -80,8 +84,8 @@ class AsetController extends Controller
         $request->validate([
             'nama_aset'       => 'required',
             'jenis_aset'      => 'required',
-            'unit'            => 'required',
-            'ruangan'         => 'required',
+            'id_unit'         => 'required|exists:lokasi_unit,id',
+            'id_ruangan'      => 'required|exists:ruangan,id',
             'jumlah_aset'     => 'required|numeric|min:1',
             'kondisi_aset'    => 'required',
             'tgl_diperoleh'   => 'required|date'
@@ -91,9 +95,12 @@ class AsetController extends Controller
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
         $aset = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $dataAset) {
-            $unit = strtoupper(trim($request->unit));
+            // Kita butuh nama unit untuk prefix kode inventaris
+            $unitModel = \App\Models\LokasiUnit::find($request->id_unit);
+            $unitName = $unitModel ? strtoupper(trim($unitModel->nama_unit)) : 'UNKNOWN';
+            
             $tanggal = \Carbon\Carbon::parse($request->tgl_diperoleh)->format('dmY');
-            $prefix = "{$unit}-{$tanggal}-";
+            $prefix = "{$unitName}-{$tanggal}-";
 
             // Find the highest sequence number for this prefix with a lock
             $latestAset = Aset::where('kode_inventaris', 'like', "{$prefix}%")
@@ -134,7 +141,7 @@ class AsetController extends Controller
     // 3. DETAIL: Menampilkan satu data spesifik berdasarkan ID
     public function show($id)
     {
-        $aset = Aset::findOrFail($id);
+        $aset = Aset::with(['ruangan', 'lokasiUnit'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -150,7 +157,7 @@ class AsetController extends Controller
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
 
-        $sanitizeFields = ['nama_aset', 'jenis_aset', 'unit', 'ruangan', 'kondisi_aset', 'sumber_dana'];
+        $sanitizeFields = ['nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan', 'kondisi_aset', 'sumber_dana'];
         $sanitizedData = [];
         foreach ($sanitizeFields as $field) {
             if ($request->has($field)) {

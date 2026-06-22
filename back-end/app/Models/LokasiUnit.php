@@ -15,4 +15,14 @@ class LokasiUnit extends Model
         'nama_unit',
         'keterangan'
     ];
+
+    public function aset()
+    {
+        return $this->hasMany(Aset::class, 'id_unit', 'id');
+    }
+
+    public function pengadaan()
+    {
+        return $this->hasMany(PengadaanAset::class, 'id_unit', 'id');
+    }
 }

@@ -18,12 +18,12 @@ class Aset extends Model
 
     // 3. Mendaftarkan kolom apa saja yang boleh diisi data (Mass Assignment)
     protected $fillable = [
-        'kode_inventaris',
         'id_pengguna',
+        'kode_inventaris',
         'nama_aset',
         'jenis_aset',
-        'unit',
-        'ruangan',
+        'id_unit',
+        'id_ruangan',
         'jumlah_aset',
         'kondisi_aset',
         'tgl_diperoleh',
@@ -31,10 +31,21 @@ class Aset extends Model
         'sumber_dana',
         'foto'
     ]; 
-    //
+
     public function pengguna()
-{
-    // Aset ini "Milik" (belongsTo) seorang Pengguna
-    return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
-}
+    {
+        // Aset ini "Milik" (belongsTo) seorang Pengguna
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
+    }
+
+    public function ruangan()
+    {
+        // Aset ini "Milik" (belongsTo) sebuah Ruangan
+        return $this->belongsTo(Ruangan::class, 'id_ruangan', 'id');
+    }
+
+    public function lokasiUnit()
+    {
+        return $this->belongsTo(LokasiUnit::class, 'id_unit', 'id');
+    }
 }

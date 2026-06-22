@@ -11,6 +11,7 @@ const formatRupiah = (number) => {
 };
 
 export default function ProcurementForm({
+  availableUnits = [],
   formLetterNumber,
   formDate,
   formName,
@@ -109,12 +110,13 @@ export default function ProcurementForm({
                       required
                     >
                       <option value="" disabled hidden>Unit</option>
-                      <option value="TK">TK</option>
-                      <option value="SD">SD</option>
-                      <option value="SMP">SMP</option>
-                      <option value="SMA">SMA</option>
-                      <option value="MA">MA</option>
-                      <option value="Yayasan">Yayasan</option>
+                      {availableUnits.length > 0 ? (
+                        availableUnits.map((u, i) => (
+                          <option key={u.id || i} value={u.id || u}>{u.nama_unit || u}</option>
+                        ))
+                      ) : (
+                        <option value="" disabled>Belum ada Master Unit</option>
+                      )}
                     </select>
                   </td>
                   <td>

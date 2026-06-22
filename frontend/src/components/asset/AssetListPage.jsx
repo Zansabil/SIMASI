@@ -167,10 +167,8 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(`${API_BASE_URL}/api/lokasi_unit`, config);
         if (response.data && response.data.success && response.data.data) {
-          // Extract only the names for the dropdown
-          const unitsList = response.data.data.map(u => u.nama_unit);
-          if (unitsList.length > 0) {
-            setAvailableUnits(unitsList);
+          if (response.data.data.length > 0) {
+            setAvailableUnits(response.data.data);
           }
         }
       } catch (err) {
@@ -200,8 +198,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const response = await axios.get(`${API_BASE_URL}/api/ruangan`, config);
         if (response.data && response.data.success && response.data.data) {
-          const roomList = response.data.data.map(r => r.nama_ruangan);
-          if (roomList.length > 0) setAvailableRooms(roomList);
+          if (response.data.data.length > 0) setAvailableRooms(response.data.data);
         }
       } catch (err) {
         console.warn("Could not fetch rooms from API, using fallback.");
