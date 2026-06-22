@@ -14,6 +14,7 @@ import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
 import { API_BASE_URL } from '../../config';
 import { parseLocation } from '../../utils/locationHelper';
+import { resolveImageUrl, DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 // Import service API
 import { 
@@ -38,7 +39,7 @@ const defaultMockRepairs = [
     description: 'Proyektor tidak bisa menyala ...',
     status: 'pending',
     priority: 'high',
-    image_path: 'https://images.unsplash.com/photo-1535016120720-40c646be5580?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   }
 ];
 
@@ -99,19 +100,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           parsedUnit = unit || 'Unit';
         }
 
-        let imagePath = 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop';
-        
-        // Prioritaskan foto dari data aset master jika ada
-        if (item.aset && item.aset.foto) {
-          if (item.aset.foto.startsWith('http') || item.aset.foto.startsWith('data:')) {
-            imagePath = item.aset.foto;
-          } else {
-            imagePath = `${API_BASE_URL}/storage/${item.aset.foto}`;
-          }
-        } else if (item.lampiran) {
-          // Fallback ke lampiran laporan kerusakan jika foto master tidak ada
-          imagePath = `${API_BASE_URL}/storage/${item.lampiran}`;
-        }
+        const imagePath = resolveImageUrl(item.aset?.foto || item.lampiran);
 
         return {
           id: item.id,
@@ -314,7 +303,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         description: formData.description,
         status: 'pending',
         priority: 'medium',
-        image_path: formData.image_path || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
+        image_path: formData.image_path || DEFAULT_ASSET_IMAGE
       };
       
       const updated = [newRepair, ...stored];

@@ -147,6 +147,11 @@
     margin-bottom: 20px;
   }
 
+  .view-mode-row {
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
+
   .pagination-footer-row {
     flex-direction: row;
     justify-content: space-between;
@@ -430,6 +435,13 @@
 }
 
 /* Toggle Buttons for View Mode */
+.view-mode-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+  width: 100%;
+}
+
 .view-mode-toggle {
   display: flex;
   gap: 4px;

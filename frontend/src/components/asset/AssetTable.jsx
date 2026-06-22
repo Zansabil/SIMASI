@@ -1,7 +1,7 @@
 
-import { API_BASE_URL } from '../../config';
 import './AssetTable.css';
 import { formatPrice } from '../../utils/currency';
+import { resolveImageUrl } from '../../utils/imageHelper';
 
 export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete, showActions = true }) {
   // SVGs for Actions
@@ -76,7 +76,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                 <td className="col-photo">
                   <div className="asset-thumbnail-container">
                     <img 
-                      src={asset.image_path ? (asset.image_path.startsWith('http') || asset.image_path.startsWith('data:') ? asset.image_path : `${API_BASE_URL}/storage/${asset.image_path}`) : 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'} 
+                      src={resolveImageUrl(asset.image_path)} 
                       alt={asset.name || asset.nama_aset} 
                       className="asset-thumbnail-img"
                     />

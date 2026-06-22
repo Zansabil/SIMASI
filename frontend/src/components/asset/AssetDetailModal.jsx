@@ -4,22 +4,14 @@ import './AssetDetailModal.css';
 import { formatPrice } from '../../utils/currency';
 import { FiX } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatDate';
+import { resolveImageUrl, DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 // Menggunakan helper formatPrice dari utils/currency
 
 export default function AssetDetailModal({ isOpen, onClose, asset }) {
   if (!isOpen || !asset) return null;
 
-  const defaultImage = 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&fit=crop';
-  
-  let resolvedImage = defaultImage;
-  if (asset.image_path) {
-    if (asset.image_path.startsWith('http') || asset.image_path.startsWith('data:')) {
-      resolvedImage = asset.image_path;
-    } else {
-      resolvedImage = `${API_BASE_URL}/storage/${asset.image_path}`;
-    }
-  }
+  const resolvedImage = resolveImageUrl(asset.image_path);
 
   return (
     <div className="detail-modal-overlay">
@@ -39,7 +31,7 @@ export default function AssetDetailModal({ isOpen, onClose, asset }) {
               src={resolvedImage} 
               alt={asset.name} 
               className="detail-modal-image"
-              onError={(e) => { e.target.src = defaultImage; }}
+              onError={(e) => { e.target.src = DEFAULT_ASSET_IMAGE; }}
             />
           </div>
 

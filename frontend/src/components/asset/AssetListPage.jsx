@@ -13,6 +13,7 @@ import FilterSelect from '../ui/FilterSelect';
 import { FiPlus, FiGrid, FiList } from 'react-icons/fi';
 import GroupedAssetView from './GroupedAssetView';
 import { mapLaravelListToReact, mapReactToLaravel, mapLaravelToReact } from '../../utils/assetMapper';
+import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 import './AssetListPage.css';
 
 // Mock data matching the mockup images exactly (default fallback)
@@ -26,7 +27,7 @@ const initialMockAssets = [
     condition: 'baik',
     source_of_funds: 'Dana Yayasan',
     price: 20000,
-    image_path: 'https://images.unsplash.com/photo-1577705998148-6da4f3e46cf0?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   },
   {
     id: 'mock-2',
@@ -37,7 +38,7 @@ const initialMockAssets = [
     condition: 'baik',
     source_of_funds: 'Dana Yayasan',
     price: 4000000,
-    image_path: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   },
   {
     id: 'mock-3',
@@ -48,7 +49,7 @@ const initialMockAssets = [
     condition: 'baik',
     source_of_funds: 'Dana Yayasan',
     price: 20000,
-    image_path: 'https://images.unsplash.com/photo-1577705998148-6da4f3e46cf0?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   },
   {
     id: 'mock-4',
@@ -59,7 +60,7 @@ const initialMockAssets = [
     condition: 'baik',
     source_of_funds: 'Dana Yayasan',
     price: 20000,
-    image_path: 'https://images.unsplash.com/photo-1577705998148-6da4f3e46cf0?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   },
   {
     id: 'mock-5',
@@ -70,7 +71,7 @@ const initialMockAssets = [
     condition: 'baik',
     source_of_funds: 'Dana Yayasan',
     price: 20000,
-    image_path: 'https://images.unsplash.com/photo-1577705998148-6da4f3e46cf0?w=120&fit=crop'
+    image_path: DEFAULT_ASSET_IMAGE
   }
 ];
 
@@ -300,7 +301,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         source_of_funds: formData.source,
         price: parsedPrice,
         purchase_date: resolvedDate,
-        image_path: formData.image || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=120&fit=crop'
+        image_path: formData.image || DEFAULT_ASSET_IMAGE
       };
 
       try {
@@ -346,6 +347,25 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           actionIcon={FiPlus}
           actionClassName="btn-tambah-aset"
         >
+          <div className="view-mode-row">
+            <div className="view-mode-toggle">
+              <button 
+                className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`} 
+                onClick={() => setViewMode('list')}
+                title="Tampilan Semua Aset"
+              >
+                <FiList /> Daftar Semua
+              </button>
+              <button 
+                className={`view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`} 
+                onClick={() => setViewMode('grouped')}
+                title="Tampilan Dikelompokkan per Ruang"
+              >
+                <FiGrid /> Per Ruangan
+              </button>
+            </div>
+          </div>
+
           {/* Filter Row: Search & Dropdown Filter Fields */}
           <div className="filter-row">
             <SearchBar
@@ -364,23 +384,6 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
                 { value: 'location', label: 'Lokasi Barang' }
               ]}
             />
-
-            <div className="view-mode-toggle">
-              <button 
-                className={`view-mode-btn ${viewMode === 'list' ? 'active' : ''}`} 
-                onClick={() => setViewMode('list')}
-                title="Tampilan Semua Aset"
-              >
-                <FiList /> Daftar Semua
-              </button>
-              <button 
-                className={`view-mode-btn ${viewMode === 'grouped' ? 'active' : ''}`} 
-                onClick={() => setViewMode('grouped')}
-                title="Tampilan Dikelompokkan per Ruang"
-              >
-                <FiGrid /> Per Ruangan
-              </button>
-            </div>
           </div>
         </PageHeader>
 

@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { FiUpload } from 'react-icons/fi';
+import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 /**
  * Reusable image uploader component with drag & drop and validation support.
@@ -97,7 +98,7 @@ export default function ImageUploader({
               alt="Preview" 
               className="upload-preview-thumbnail-img" 
               onError={(e) => {
-                e.target.src = 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&fit=crop';
+                e.target.src = DEFAULT_ASSET_IMAGE;
               }}
             />
           ) : (

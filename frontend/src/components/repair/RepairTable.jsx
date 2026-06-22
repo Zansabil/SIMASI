@@ -2,6 +2,7 @@ import React from 'react';
 import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import RepairStatusBadge from './RepairStatusBadge';
 import PriorityBadge from './PriorityBadge';
+import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit, onDelete }) {
   return (
@@ -56,7 +57,7 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                     <img
                       src={
                         item.image_path ||
-                        'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&fit=crop'
+                        DEFAULT_ASSET_IMAGE
                       }
                       alt={item.asset_name}
                       className="repair-thumbnail-img"

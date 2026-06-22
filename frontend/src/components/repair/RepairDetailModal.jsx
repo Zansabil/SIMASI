@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiX, FiAlertCircle } from 'react-icons/fi';
+import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 // Status mapping helper
 const renderStatusBadge = (status) => {
@@ -105,7 +106,7 @@ export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
             <img 
               src={
                 selectedItem.image_path ||
-                'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&fit=crop'
+                DEFAULT_ASSET_IMAGE
               } 
               alt="lampiran-1" 
               className="detail-photo-img" 
@@ -115,7 +116,7 @@ export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
             <img 
               src={
                 selectedItem.image_path ||
-                'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&fit=crop'
+                DEFAULT_ASSET_IMAGE
               } 
               alt="lampiran-2" 
               className="detail-photo-img" 

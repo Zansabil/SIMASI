@@ -110,12 +110,7 @@ export default function AssetFormModal({
   const combinedSources = [...new Set([...defaultSources, ...(existingSources || [])])];
 
   // --- REGISTRASI FIELD KUSTOM ---
-  // ImageUploader bukan input HTML biasa, jadi kita mendaftarkannya secara manual ke RHF
-  useEffect(() => {
-    register('image', {
-      required: !isEditing ? 'Foto kondisi aset wajib diunggah' : false // Wajib diisi hanya saat tambah aset baru
-    });
-  }, [register, isEditing]);
+  // ImageUploader bukan input HTML biasa, jadi kita mendaftarkannya secara manual ke RHF setelah form di-reset (di dalam useEffect sync modal)
 
   // --- HELPER LOAD DATA EDIT ---
   // Memuat data aset yang ingin diedit ke dalam form RHF saat modal dibuka
@@ -167,8 +162,13 @@ export default function AssetFormModal({
       } else {
         resetForm();                 // Kosongkan form jika masuk mode Tambah
       }
+
+      // Daftarkan ulang validasi gambar setelah form di-reset agar tidak hilang
+      register('image', {
+        required: !isEditing ? 'Foto kondisi aset wajib diunggah' : false
+      });
     }
-  }, [isOpen, assetToEdit, loadEditData, resetForm]);
+  }, [isOpen, assetToEdit, loadEditData, resetForm, register, isEditing]);
 
   // --- HANDLER SUBMIT FORM ---
   // Memproses data formulir setelah lolos validasi RHF untuk dikirimkan ke API backend Laravel

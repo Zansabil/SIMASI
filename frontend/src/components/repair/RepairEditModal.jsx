@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiAlertCircle } from 'react-icons/fi';
+import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedItem }) {
   const [editStatus, setEditStatus] = useState('');
@@ -88,7 +89,7 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
             <img 
               src={
                 selectedItem.image_path ||
-                'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&fit=crop'
+                DEFAULT_ASSET_IMAGE
               } 
               alt="lampiran-1" 
               className="detail-photo-img" 
@@ -98,7 +99,7 @@ export default function RepairEditModal({ isOpen, onClose, onSubmit, selectedIte
             <img 
               src={
                 selectedItem.image_path ||
-                'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=200&fit=crop'
+                DEFAULT_ASSET_IMAGE
               } 
               alt="lampiran-2" 
               className="detail-photo-img" 
