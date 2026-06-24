@@ -81,11 +81,24 @@ class AsetController extends Controller
             $request->merge($sanitizedData);
         }
         
+        if ($request->has('id_ruangan')) {
+            $ruanganInput = $request->id_ruangan;
+            if (!is_numeric($ruanganInput)) {
+                $namaRuangan = strip_tags($ruanganInput);
+                $ruangan = \App\Models\Ruangan::firstOrCreate([
+                    'nama_ruangan' => $namaRuangan
+                ], [
+                    'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99)
+                ]);
+                $request->merge(['id_ruangan' => $ruangan->id]);
+            }
+        }
+        
         $request->validate([
             'nama_aset'       => 'required',
             'jenis_aset'      => 'required',
             'id_unit'         => 'required|exists:lokasi_unit,id',
-            'id_ruangan'      => 'required|exists:ruangan,id',
+            'id_ruangan'      => 'required',
             'jumlah_aset'     => 'required|numeric|min:1',
             'kondisi_aset'    => 'required',
             'tgl_diperoleh'   => 'required|date'
@@ -131,6 +144,8 @@ class AsetController extends Controller
             'waktu'       => now() 
         ]);
         
+        $aset->load(['ruangan', 'lokasiUnit']);
+        
         return response()->json([
             'success' => true,
             'message' => 'Data aset berhasil ditambahkan!',
@@ -168,6 +183,19 @@ class AsetController extends Controller
             $request->merge($sanitizedData);
         }
 
+        if ($request->has('id_ruangan')) {
+            $ruanganInput = $request->id_ruangan;
+            if (!is_numeric($ruanganInput)) {
+                $namaRuangan = strip_tags($ruanganInput);
+                $ruangan = \App\Models\Ruangan::firstOrCreate([
+                    'nama_ruangan' => $namaRuangan
+                ], [
+                    'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99)
+                ]);
+                $request->merge(['id_ruangan' => $ruangan->id]);
+            }
+        }
+
         $request->validate([
             'jumlah_aset' => 'nullable|numeric|min:1',
         ]);
@@ -198,12 +226,16 @@ class AsetController extends Controller
                 'waktu'       => now()
             ]);
             
+            $aset->load(['ruangan', 'lokasiUnit']);
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Aset berhasil diperbarui beserta log perubahannya!',
                 'data'    => $aset
             ], 200);
         }
+
+        $aset->load(['ruangan', 'lokasiUnit']);
 
         return response()->json([
             'success' => true,

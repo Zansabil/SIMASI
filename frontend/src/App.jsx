@@ -34,6 +34,7 @@ import SuperPerbaikanAset from './pages/super-admin/PerbaikanAset';
 import SuperManajemenPengguna from './pages/super-admin/ManajemenPengguna';
 import SuperProfile from './pages/super-admin/Profile';
 import SuperNotifikasi from './pages/super-admin/Notifikasi';
+import SuperKelolaKodeRegistrasi from './pages/super-admin/KelolaKodeRegistrasi';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -92,6 +93,7 @@ export default function App() {
           <Route path="/super-admin/pengadaan" element={<SuperPengadaanAset />} />
           <Route path="/super-admin/perbaikan" element={<SuperPerbaikanAset />} />
           <Route path="/super-admin/manajemen-pengguna" element={<SuperManajemenPengguna />} />
+          <Route path="/super-admin/kelola-kode-registrasi" element={<SuperKelolaKodeRegistrasi />} />
           <Route path="/super-admin/profile" element={<SuperProfile />} />
           <Route path="/super-admin/notifikasi" element={<SuperNotifikasi />} />
         </Route>

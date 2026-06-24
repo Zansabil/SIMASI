@@ -52,8 +52,17 @@ class PerbaikanAsetController extends Controller
             // Cari data laporan kerusakan terkait
             $laporan = LaporanKerusakan::findOrFail($request->id_laporan);
             
-            // A. Ubah status laporan jadi Selesai
-            $laporan->update(['status_kerusakan' => 'Selesai']);
+            // A. Ubah status laporan jadi Selesai dan update tanggal
+            $updateData = ['status_kerusakan' => 'Selesai'];
+            
+            if (!$laporan->tgl_mulai_perbaikan) {
+                $updateData['tgl_mulai_perbaikan'] = $request->tanggal_mulai;
+            }
+            if (!$laporan->tgl_selesai_perbaikan) {
+                $updateData['tgl_selesai_perbaikan'] = $request->tanggal_selesai ?? now();
+            }
+            
+            $laporan->update($updateData);
             
             // B. Kembalikan status kondisi aset utama menjadi "Baik"
             $aset = Aset::findOrFail($laporan->id_aset);

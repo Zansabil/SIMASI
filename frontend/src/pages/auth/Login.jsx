@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import logo from '../../assets/logo.png';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Login.css';
@@ -243,6 +243,10 @@ export default function Login() {
             <button type="submit" className="btn-primary" style={{ marginTop: '8px' }} disabled={isLoading}>
               {isLoading ? 'Sedang Masuk...' : 'Masuk'}
             </button>
+
+            <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: '#4b5563' }}>
+              Belum punya akun? <Link to="/register" style={{ color: '#2563eb', fontWeight: '600', textDecoration: 'none' }}>Daftar di sini</Link>
+            </div>
 
 
           </form>

@@ -28,7 +28,9 @@ class LaporanKerusakan extends Model
         'tgl_validasi',
         'lampiran',
         'alasan_penolakan',
-        'keterangan_perbaikan'
+        'keterangan_perbaikan',
+        'tgl_mulai_perbaikan',
+        'tgl_selesai_perbaikan'
     ]; 
  
 

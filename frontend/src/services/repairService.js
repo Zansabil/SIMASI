@@ -29,7 +29,7 @@ export const fetchRepairs = async (searchQuery = '', status = 'all') => {
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
     data = data.filter(item => {
-      const assetName = item.aset ? item.aset.nama_barang : '';
+      const assetName = item.aset ? item.aset.nama_aset : '';
       const reporterName = item.pelapor ? item.pelapor.nama : '';
       return assetName.toLowerCase().includes(query) || reporterName.toLowerCase().includes(query);
     });

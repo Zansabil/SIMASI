@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoWide from '../../assets/logo-wide.png';
-import { FiHome, FiList, FiShoppingCart, FiTool, FiUsers } from 'react-icons/fi';
+import { FiHome, FiList, FiShoppingCart, FiTool, FiUsers, FiKey } from 'react-icons/fi';
 
 // Sidebar Menu Configuration based on Role
 const MENU_CONFIG = {
@@ -34,7 +34,8 @@ const MENU_CONFIG = {
     { path: '/super-admin/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/super-admin/pengadaan', label: 'Pengadaan Aset', icon: FiShoppingCart },
     { path: '/super-admin/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
-    { path: '/super-admin/manajemen-pengguna', label: 'Manajemen Pengguna', icon: FiUsers }
+    { path: '/super-admin/manajemen-pengguna', label: 'Manajemen Pengguna', icon: FiUsers },
+    { path: '/super-admin/kelola-kode-registrasi', label: 'Kode Registrasi', icon: FiKey }
   ]
 };
 

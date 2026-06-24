@@ -17,6 +17,8 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
             <th className="col-asset">Nama Aset</th>
             <th className="col-location">Lokasi Aset</th>
             <th className="col-desc">Deskripsi Perbaikan</th>
+            <th className="col-date">Tgl. Mulai</th>
+            <th className="col-date">Tgl. Selesai</th>
             <th className="col-status">Status</th>
             {hasStaffAccess && <th className="col-priority">Prioritas</th>}
             <th className="col-photo">Foto</th>
@@ -26,13 +28,13 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={hasStaffAccess ? 11 : 9} className="text-center py-8">
+              <td colSpan={hasStaffAccess ? 13 : 11} className="text-center py-8">
                 Memuat data perbaikan...
               </td>
             </tr>
           ) : repairs.length === 0 ? (
             <tr>
-              <td colSpan={hasStaffAccess ? 11 : 9} className="text-center py-8">
+              <td colSpan={hasStaffAccess ? 13 : 11} className="text-center py-8">
                 Tidak ada laporan perbaikan yang ditemukan.
               </td>
             </tr>
@@ -46,6 +48,8 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                 <td className="col-asset font-semibold">{item.asset_name}</td>
                 <td className="col-location">{item.location}</td>
                 <td className="col-desc">{item.description}</td>
+                <td className="col-date text-center">{item.start_date}</td>
+                <td className="col-date text-center">{item.end_date}</td>
                 <td className="col-status"><RepairStatusBadge status={item.status} /></td>
                 {hasStaffAccess && (
                   <td className="col-priority">

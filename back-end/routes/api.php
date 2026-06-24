@@ -15,6 +15,7 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\KategoriAsetController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\LokasiUnitController;
+use App\Http\Controllers\KodeRegistrasiController;
 
 // Rute awal (Opsional: Biasanya di API hanya digunakan untuk mengecek apakah server hidup)
 Route::get('/', function () {
@@ -28,6 +29,9 @@ Route::get('/', function () {
 // API hanya butuh rute POST untuk menerima datanya.
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/register', [AuthController::class, 'storeRegister']);
+
+// Data Master Publik
+Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
 
 // Trik cepat untuk membuat password acak (Bcrypt)
 Route::get('/buat-password', function() {
@@ -95,6 +99,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('kategori_aset', KategoriAsetController::class);
     Route::apiResource('ruangan', RuanganController::class);
     
-    // Route Lokasi Unit
-    Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
+    // Route Kode Registrasi (Super Admin)
+    Route::get('/kode-registrasi', [KodeRegistrasiController::class, 'index']);
+    Route::post('/kode-registrasi', [KodeRegistrasiController::class, 'store']);
+    Route::patch('/kode-registrasi/{id}/status', [KodeRegistrasiController::class, 'updateStatus']);
+    Route::delete('/kode-registrasi/{id}', [KodeRegistrasiController::class, 'destroy']);
+    Route::get('/kode-registrasi/{id}/logs', [KodeRegistrasiController::class, 'logs']);
 });

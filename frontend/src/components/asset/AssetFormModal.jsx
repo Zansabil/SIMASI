@@ -117,12 +117,12 @@ export default function AssetFormModal({
   const loadEditData = useCallback((asset) => {
     if (!asset) return;
     // Memecah field lokasi gabungan database lama (misal: "Unit - Ruangan") menggunakan utility parseLocation
-    const { unit: parsedUnit } = parseLocation(asset);
+    const { unit: parsedUnit, room: parsedRoom } = parseLocation(asset);
     reset({
       name: asset.name || '',
       category: asset.category || 'Umum',
       unit: asset.unit_id || parsedUnit || '',
-      room: asset.room_id || '',
+      room: parsedRoom || '',
       purchaseDate: asset.purchase_date || '',
       code: asset.asset_code || '',
       quantity: asset.quantity || '',
@@ -349,20 +349,20 @@ export default function AssetFormModal({
           {/* Input: Ruangan */}
           <div className="modal-form-group">
             <label className="modal-form-label">Lokasi Penempatan Barang <span className="req-star">*</span></label>
-            <select
+            <input
+              type="text"
               id="asset-room"
-              className={`modal-form-select ${errors.room ? 'input-error' : ''}`}
+              list="ruangan-options"
+              placeholder="Pilih atau ketik ruangan baru..."
+              autoComplete="off"
+              className={`modal-form-input ${errors.room ? 'input-error' : ''}`}
               {...register('room', { required: 'Ruangan wajib diisi' })}
-            >
-              <option value="" disabled hidden>Pilih Ruangan</option>
-              {availableRooms.length > 0 ? (
-                availableRooms.map((r, i) => (
-                  <option key={r.id || i} value={r.id || r}>{r.nama_ruangan || r}</option>
-                ))
-              ) : (
-                <option value="" disabled>Belum ada data Master Ruangan</option>
-              )}
-            </select>
+            />
+            <datalist id="ruangan-options">
+              {availableRooms.length > 0 && availableRooms.map((r, i) => (
+                <option key={r.id || i} value={r.nama_ruangan || r} />
+              ))}
+            </datalist>
             {errors.room && <span className="error-text">{errors.room.message}</span>}
           </div>
 

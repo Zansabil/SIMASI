@@ -81,23 +81,26 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         if (item.status_kerusakan === 'Ditolak') status = 'rejected';
 
         let parsedAssetName = item.aset ? item.aset.nama_aset : 'Aset';
-        let parsedLocation = item.aset ? item.aset.lokasi_aset : '-';
+        let parsedLocation = (item.aset && item.aset.ruangan) ? item.aset.ruangan.nama_ruangan : '-';
         let parsedDesc = item.deskripsi;
-        let parsedUnit = 'Unit';
+        let parsedUnit = (item.aset && item.aset.lokasi_unit) ? item.aset.lokasi_unit.nama_unit : 'Unit';
 
         // Extract information from description if it follows the pattern (useful when asset is deleted or properties are missing)
         if (item.deskripsi && item.deskripsi.includes('Nama Aset:')) {
           const match = item.deskripsi.match(/Nama Aset:\s*(.*?)\s*Lokasi:\s*(.*?)\s*Deskripsi:\s*(.*)/is);
           if (match) {
             parsedAssetName = item.aset ? item.aset.nama_aset : match[1].trim();
-            parsedLocation = item.aset ? item.aset.lokasi_aset : match[2].trim();
+            
+            const reportedLocation = match[2].trim();
+            const { unit: reportedUnit, room: reportedRoom } = parseLocation(reportedLocation);
+            
+            parsedLocation = reportedRoom || reportedLocation || '-';
             parsedDesc = match[3].trim();
+            
+            if (reportedUnit) {
+              parsedUnit = reportedUnit;
+            }
           }
-        }
-
-        if (parsedLocation && parsedLocation !== '-') {
-          const { unit } = parseLocation(parsedLocation);
-          parsedUnit = unit || 'Unit';
         }
 
         const imagePath = resolveImageUrl(item.aset?.foto || item.lampiran);
@@ -111,6 +114,8 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           location: parsedLocation,
           description: parsedDesc,
           keterangan: item.keterangan_perbaikan || '',
+          start_date: item.tgl_mulai_perbaikan ? new Date(item.tgl_mulai_perbaikan).toLocaleDateString('id-ID') : '-',
+          end_date: item.tgl_selesai_perbaikan ? new Date(item.tgl_selesai_perbaikan).toLocaleDateString('id-ID') : '-',
           status: status,
           priority: 'medium', // Prototype (tidak ada field priority di DB)
           image_path: imagePath
@@ -276,6 +281,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         // Gabungkan nama & lokasi aset ke dalam deskripsi agar info tidak hilang
         const fullDesc = `Nama Aset: ${formData.asset_name}\nLokasi: ${formData.location}\nDeskripsi: ${formData.description}`;
         formDataObj.append('deskripsi', fullDesc);
+        formDataObj.append('lokasi_baru', formData.location);
         
         if (formData.image_file) {
           formDataObj.append('lampiran', formData.image_file);

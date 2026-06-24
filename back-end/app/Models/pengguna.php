@@ -24,6 +24,7 @@ class Pengguna extends Authenticatable
         'area',
         'status_aktif',
         'id_peran',
+        'id_kode_registrasi',
     ];
 
     // 2.5 Tambahkan attribute virtual 'jabatan' ke output JSON
@@ -85,5 +86,10 @@ class Pengguna extends Authenticatable
     {
         // 1 Pengguna bisa memegang "Banyak" (hasMany) Aset
         return $this->hasMany(Aset::class, 'id_pengguna', 'id');
+    }
+
+    public function kodeRegistrasi()
+    {
+        return $this->belongsTo(KodeRegistrasi::class, 'id_kode_registrasi', 'id');
     }
 }

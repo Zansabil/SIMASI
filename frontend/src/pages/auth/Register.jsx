@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { useNavigate, Link } from 'react-router-dom';
@@ -17,7 +17,23 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [konfirmasiPassword, setKonfirmasiPassword] = useState('');
+  const [kodeRegistrasi, setKodeRegistrasi] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [lokasiUnits, setLokasiUnits] = useState([]);
+
+  useEffect(() => {
+    const fetchLokasiUnits = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/lokasi_unit`);
+        if (response.data && response.data.success) {
+          setLokasiUnits(response.data.data);
+        }
+      } catch (err) {
+        console.error("Gagal mengambil data lokasi unit:", err);
+      }
+    };
+    fetchLokasiUnits();
+  }, []);
   
   // Feedback states
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +66,9 @@ export default function Register() {
         nama_pengguna: username,
         email: email,
         password: password,
-        area: unitKerja
+        area: unitKerja,
+        kode_registrasi: kodeRegistrasi,
+        jabatan: jabatan
       });
 
       setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');
@@ -64,6 +82,7 @@ export default function Register() {
       setUsername('');
       setPassword('');
       setKonfirmasiPassword('');
+      setKodeRegistrasi('');
       setAgreeTerms(false);
 
       // Redirect to login after 2 seconds
@@ -199,10 +218,9 @@ export default function Register() {
                     onChange={(e) => setUnitKerja(e.target.value)}
                   >
                     <option value="">Pilih Unit Kerja</option>
-                    <option value="MI Ash-Shiddiqi">MI Ash-Shiddiqi</option>
-                    <option value="MTs Ash-Shiddiqi">MTs Ash-Shiddiqi</option>
-                    <option value="MA Ash-Shiddiqi">MA Ash-Shiddiqi</option>
-                    <option value="Yayasan Ash-Shiddiqi">Yayasan Ash-Shiddiqi</option>
+                    {lokasiUnits.map(unit => (
+                      <option key={unit.id} value={unit.nama_unit}>{unit.nama_unit}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -211,6 +229,20 @@ export default function Register() {
             {/* Section 3: Data Akun */}
             <div className="form-section">
               <h3 className="section-heading">Data Akun</h3>
+
+              <div className="form-group">
+                <label className="form-label" htmlFor="kodeRegistrasi">Kode Registrasi Yayasan <span className="required-asterisk">*</span></label>
+                <input
+                  id="kodeRegistrasi"
+                  type="text"
+                  className="form-input"
+                  placeholder="Masukkan kode registrasi"
+                  required
+                  value={kodeRegistrasi}
+                  onChange={(e) => setKodeRegistrasi(e.target.value)}
+                />
+                <div className="input-note">Dapatkan kode ini dari Administrator / Grup WhatsApp Resmi Yayasan</div>
+              </div>
               
               <div className="form-group">
                 <label className="form-label" htmlFor="username">User Name <span className="required-asterisk">*</span></label>

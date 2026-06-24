@@ -126,7 +126,8 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
         formDesc
       };
       
-      const hasContent = formReporter || formUnit || formDate || selectedAssetId || formLocation || formDesc;
+      const todayStr = new Date().toISOString().split('T')[0];
+      const hasContent = formReporter || formUnit || (formDate && formDate !== todayStr) || selectedAssetId || formLocation || formDesc;
       
       if (hasContent) {
         localStorage.setItem('simasi_draft_repair', JSON.stringify(draftData));
@@ -165,7 +166,10 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
     // Auto fill lokasi berdasarkan aset yang dipilih
     const selectedAsset = assets.find(a => a.id.toString() === id.toString());
     if (selectedAsset) {
-      setFormLocation(selectedAsset.lokasi_aset || '');
+      const roomName = selectedAsset.ruangan ? selectedAsset.ruangan.nama_ruangan : '';
+      const unitName = selectedAsset.lokasi_unit ? selectedAsset.lokasi_unit.nama_unit : '';
+      const combinedLocation = unitName && roomName ? `${unitName} - ${roomName}` : (unitName || roomName || '');
+      setFormLocation(combinedLocation);
     } else {
       setFormLocation('');
     }

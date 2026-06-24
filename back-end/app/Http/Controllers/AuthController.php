@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash; 
 use App\Models\Pengguna;            
+use App\Models\KodeRegistrasi;
 
 class AuthController extends Controller
 {
@@ -48,11 +49,48 @@ class AuthController extends Controller
             'email'         => 'required|email|unique:pengguna,email',
             'password'      => 'required|min:8', 
             'area'          => 'nullable|string|max:100',
+            'kode_registrasi' => 'required|string',
+            'jabatan'       => 'required|string',
+
         ], [
             'email.unique'         => 'Email ini sudah terdaftar.',
             'nama_pengguna.unique' => 'Username ini sudah dipakai orang lain.',
-            'password.min'         => 'Password minimal harus 8 karakter.'
+            'password.min'         => 'Password minimal harus 8 karakter.',
+            'kode_registrasi.required' => 'Kode Registrasi Yayasan wajib diisi.'
         ]);
+
+        $kodeDb = KodeRegistrasi::where('kode', $request->kode_registrasi)->first();
+        if (!$kodeDb) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode Registrasi Yayasan yang Anda masukkan tidak terdaftar.'
+            ], 403);
+        }
+
+        if (!$kodeDb->status_aktif) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode Registrasi Yayasan tersebut sudah tidak aktif.'
+            ], 403);
+        }
+
+        // Menentukan id_peran berdasarkan jabatan
+        $idPeran = 5; // Default guru
+        switch ($request->jabatan) {
+            case 'kepala-yayasan': 
+                $idPeran = 2; 
+                break;
+            case 'admin': 
+                $idPeran = 3; 
+                break;
+            case 'petugas-perbaikan': 
+                $idPeran = 4; 
+                break;
+            case 'guru':
+            default: 
+                $idPeran = 5; 
+                break;
+        }
 
         $user = Pengguna::create([
             'nama'          => $request->nama,
@@ -61,7 +99,8 @@ class AuthController extends Controller
             'password'      => Hash::make($request->password), 
             'area'          => $request->area,
             'status_aktif'  => 1, 
-            'id_peran'      => 2, 
+            'id_peran'      => $idPeran, 
+            'id_kode_registrasi' => $kodeDb->id,
         ]);
 
         return response()->json([

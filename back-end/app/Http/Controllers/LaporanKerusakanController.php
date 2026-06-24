@@ -17,7 +17,7 @@ class LaporanKerusakanController extends Controller
     public function index()
     {
         // Eager Loading untuk efisiensi query saat dikirim ke Frontend
-        $laporans = LaporanKerusakan::with(['aset', 'pelapor', 'validator'])->get();
+        $laporans = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'validator'])->get();
         
         return response()->json([
             'success' => true,
@@ -29,7 +29,7 @@ class LaporanKerusakanController extends Controller
     // 2. Detail Data (READ SINGLE) - Berguna jika React ingin melihat detail 1 laporan
     public function show($id)
     {
-        $laporan = LaporanKerusakan::with(['aset', 'pelapor', 'validator'])->findOrFail($id);
+        $laporan = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'validator'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -52,7 +52,7 @@ class LaporanKerusakanController extends Controller
         Notifikasi::create([
             'id_pengguna'    => $laporan->id_pelapor,
             'tipe'           => 'Status Laporan',
-            'pesan'          => 'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' telah disetujui dan akan segera diproses.',
+            'pesan'          => 'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah disetujui dan akan segera diproses.',
             'terbaca'        => 0,
             'waktu_terkirim' => now(),
             'tgl_dibuat'     => now()
@@ -61,7 +61,7 @@ class LaporanKerusakanController extends Controller
         if ($laporan->pelapor && $laporan->pelapor->email) {
             try {
                 Mail::to($laporan->pelapor->email)->send(new StatusLaporanKerusakanMail(
-                    'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' telah disetujui dan akan segera diproses.',
+                    'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah disetujui dan akan segera diproses.',
                     'Status Laporan',
                     $laporan->pelapor->nama
                 ));
@@ -102,7 +102,7 @@ class LaporanKerusakanController extends Controller
         Notifikasi::create([
             'id_pengguna'    => $laporan->id_pelapor,
             'tipe'           => 'Status Laporan',
-            'pesan'          => 'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' ditolak. Alasan: ' . $request->alasan_penolakan,
+            'pesan'          => 'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' ditolak. Alasan: ' . $request->alasan_penolakan,
             'terbaca'        => 0,
             'waktu_terkirim' => now(),
             'tgl_dibuat'     => now()
@@ -111,7 +111,7 @@ class LaporanKerusakanController extends Controller
         if ($laporan->pelapor && $laporan->pelapor->email) {
             try {
                 Mail::to($laporan->pelapor->email)->send(new StatusLaporanKerusakanMail(
-                    'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' ditolak. Alasan: ' . $request->alasan_penolakan,
+                    'Laporan kerusakan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' ditolak. Alasan: ' . $request->alasan_penolakan,
                     'Status Laporan',
                     $laporan->pelapor->nama
                 ));
@@ -144,6 +144,21 @@ class LaporanKerusakanController extends Controller
 
         $data = $request->all();
 
+        // Cek jika ada lokasi baru dari input manual, simpan ke master Ruangan jika belum ada
+        if ($request->has('lokasi_baru') && !empty($request->lokasi_baru)) {
+            $lokasiInput = strip_tags($request->lokasi_baru);
+            $parts = explode(' - ', $lokasiInput);
+            $namaRuangan = count($parts) > 1 ? trim(implode(' - ', array_slice($parts, 1))) : trim($lokasiInput);
+            
+            if (!empty($namaRuangan)) {
+                \App\Models\Ruangan::firstOrCreate([
+                    'nama_ruangan' => $namaRuangan
+                ], [
+                    'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99)
+                ]);
+            }
+        }
+
         // Otomatisasi ID Pelapor dan Tanggal agar lebih aman dan tidak perlu diinput manual dari Frontend
         $data['id_pelapor'] = auth()->user()->id;
         $data['tgl_laporan'] = now();
@@ -159,7 +174,7 @@ class LaporanKerusakanController extends Controller
         Notifikasi::create([
             'id_pengguna'    => auth()->user()->id,
             'tipe'           => 'Laporan Kerusakan',
-            'pesan'          => 'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_barang : '') . ' berhasil dikirim dan menunggu validasi.',
+            'pesan'          => 'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_aset : '') . ' berhasil dikirim dan menunggu validasi.',
             'terbaca'        => 0,
             'waktu_terkirim' => now(),
             'tgl_dibuat'     => now()
@@ -169,7 +184,7 @@ class LaporanKerusakanController extends Controller
         if ($pengguna && $pengguna->email) {
             try {
                 Mail::to($pengguna->email)->send(new StatusLaporanKerusakanMail(
-                    'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_barang : '') . ' berhasil dikirim dan menunggu validasi.',
+                    'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_aset : '') . ' berhasil dikirim dan menunggu validasi.',
                     'Laporan Kerusakan',
                     $pengguna->nama
                 ));
@@ -276,15 +291,24 @@ class LaporanKerusakanController extends Controller
 
         $laporan = LaporanKerusakan::with('aset')->findOrFail($id);
         
-        $laporan->update([
+        $updateData = [
             'status_kerusakan' => $request->status_kerusakan,
             'keterangan_perbaikan' => $request->keterangan_perbaikan
-        ]);
+        ];
+
+        if ($request->status_kerusakan === 'Diproses' && !$laporan->tgl_mulai_perbaikan) {
+            $updateData['tgl_mulai_perbaikan'] = now();
+        }
+        if ($request->status_kerusakan === 'Selesai' && !$laporan->tgl_selesai_perbaikan) {
+            $updateData['tgl_selesai_perbaikan'] = now();
+        }
+
+        $laporan->update($updateData);
 
         Notifikasi::create([
             'id_pengguna'    => $laporan->id_pelapor,
             'tipe'           => 'Progress Perbaikan',
-            'pesan'          => 'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
+            'pesan'          => 'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
             'terbaca'        => 0,
             'waktu_terkirim' => now(),
             'tgl_dibuat'     => now()
@@ -293,7 +317,7 @@ class LaporanKerusakanController extends Controller
         if ($laporan->pelapor && $laporan->pelapor->email) {
             try {
                 Mail::to($laporan->pelapor->email)->send(new StatusLaporanKerusakanMail(
-                    'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_barang : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
+                    'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
                     'Progress Perbaikan',
                     $laporan->pelapor->nama
                 ));
