@@ -1,14 +1,14 @@
 import { API_BASE_URL } from '../config';
-import defaultLaptopImage from '../assets/laptop.jpg';
+import defaultPlaceholder from '../assets/placeholder.svg';
 
 /**
- * Nilai default gambar laptop dari folder assets.
+ * Nilai default gambar placeholder dari folder assets.
  */
-export const DEFAULT_ASSET_IMAGE = defaultLaptopImage;
+export const DEFAULT_ASSET_IMAGE = defaultPlaceholder;
 
 /**
  * Menyusun URL gambar secara terpusat untuk aplikasi.
- * Jika path kosong, akan menggunakan gambar default laptop.jpg dari folder assets.
+ * Jika path kosong, akan menggunakan gambar default placeholder.svg dari folder assets.
  * 
  * @param {string} path - Path gambar dari API (bisa URL penuh, base64, atau path relatif storage)
  * @returns {string} URL gambar lengkap yang siap dipakai
