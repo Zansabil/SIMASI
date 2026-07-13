@@ -1,33 +1,29 @@
-
+import React, { memo } from 'react';
 import './AssetTable.css';
 import { formatPrice } from '../../utils/currency';
 import { resolveImageUrl } from '../../utils/imageHelper';
+import { FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
-export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete, showActions = true }) {
-  // SVGs for Actions
-  const EyeIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  );
+const BASE_COLUMNS = 10;
 
-  const PencilIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9"/>
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-    </svg>
-  );
+const formatCondition = (condition) => {
+  if (!condition) return '-';
+  return condition.charAt(0).toUpperCase() + condition.slice(1);
+};
 
-  const TrashIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18"/>
-      <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-      <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-    </svg>
-  );
-
-  // Menggunakan helper formatPrice dari utils/currency
+function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true }) {
+  // Normalisasi data aset agar field-fieldnya seragam (kontrak data yang konsisten)
+  const normalizedAssets = assets.map(asset => ({
+    ...asset,
+    name: asset.name ?? asset.nama_aset ?? '-',
+    asset_code: asset.asset_code ?? asset.kode_inventaris ?? '-',
+    location: asset.location ?? asset.room_name ?? asset.lokasi_aset ?? '-',
+    condition: asset.condition ?? asset.kondisi_aset ?? '-',
+    quantity: asset.quantity ?? asset.jumlah_aset ?? 0,
+    source_of_funds: asset.source_of_funds ?? asset.sumber_dana ?? 'Dana Yayasan',
+    price: asset.price ?? asset.harga_aset ?? 0,
+    image_path: asset.image_path ?? asset.foto_aset
+  }));
 
   return (
     <div className="table-responsive-wrapper">
@@ -50,15 +46,15 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
         <tbody>
           {isLoading ? (
             <tr>
-              <td colSpan={showActions ? 11 : 10} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Memuat data aset...</td>
+              <td colSpan={showActions ? BASE_COLUMNS + 1 : BASE_COLUMNS} className="table-status-message">Memuat data aset...</td>
             </tr>
-          ) : assets.length === 0 ? (
+          ) : normalizedAssets.length === 0 ? (
             <tr>
-              <td colSpan={showActions ? 11 : 10} className="text-center py-8" style={{ color: '#64748b', fontWeight: '500' }}>Tidak ada data aset yang ditemukan.</td>
+              <td colSpan={showActions ? BASE_COLUMNS + 1 : BASE_COLUMNS} className="table-status-message">Tidak ada data aset yang ditemukan.</td>
             </tr>
           ) : (
-            assets.map((asset, index) => (
-              <tr key={asset.id || index}>
+            normalizedAssets.map((asset, index) => (
+              <tr key={asset.id}>
                 <td className="col-no text-center">{index + 1}.</td>
                 <td className="col-name">
                   <div className="asset-name-text">{asset.name}</div>
@@ -66,18 +62,18 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                 </td>
                 <td className="col-code hide-on-mobile">{asset.asset_code}</td>
                 <td className="col-unit hide-on-mobile text-center">{asset.unit || '-'}</td>
-                <td className="col-location hide-on-mobile">{asset.room_name !== undefined ? (asset.room_name || '-') : (asset.location || '-')}</td>
-                <td className="col-qty text-center">{asset.quantity}</td>
+                <td className="col-location hide-on-mobile">{asset.location}</td>
+                <td className="col-qty text-center">{asset.quantity ?? '-'}</td>
                 <td className="col-condition hide-on-mobile">
-                  {asset.condition.charAt(0).toUpperCase() + asset.condition.slice(1)}
+                  {formatCondition(asset.condition)}
                 </td>
-                <td className="col-source hide-on-mobile">{asset.source_of_funds || 'Dana Yayasan'}</td>
+                <td className="col-source hide-on-mobile">{asset.source_of_funds}</td>
                 <td className="col-price hide-on-mobile">{formatPrice(asset.price)}</td>
                 <td className="col-photo">
                   <div className="asset-thumbnail-container">
                     <img 
                       src={resolveImageUrl(asset.image_path)} 
-                      alt={asset.name || asset.nama_aset} 
+                      alt={asset.name} 
                       className="asset-thumbnail-img"
                     />
                   </div>
@@ -91,7 +87,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                         title="Lihat Detail"
                         aria-label="Lihat Detail"
                       >
-                        <EyeIcon />
+                        <FiEye size={16} color="#3b82f6" strokeWidth={2.5} />
                       </button>
                       <button 
                         className="action-btn btn-edit" 
@@ -99,7 +95,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                         title="Edit Aset"
                         aria-label="Edit Aset"
                       >
-                        <PencilIcon />
+                        <FiEdit2 size={16} color="#f59e0b" strokeWidth={2.5} />
                       </button>
                       <button 
                         className="action-btn btn-delete" 
@@ -107,7 +103,7 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
                         title="Hapus Aset"
                         aria-label="Hapus Aset"
                       >
-                        <TrashIcon />
+                        <FiTrash2 size={16} color="#ef4444" strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>
@@ -120,3 +116,5 @@ export default function AssetTable({ assets, isLoading, onView, onEdit, onDelete
     </div>
   );
 }
+
+export default memo(AssetTable);

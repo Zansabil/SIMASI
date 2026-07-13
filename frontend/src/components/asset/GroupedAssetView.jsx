@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import PropTypes from 'prop-types';
 import AssetTable from './AssetTable';
 import { FiChevronDown, FiChevronRight, FiMapPin } from 'react-icons/fi';
+import { groupAssetsByLocation } from '../../utils/groupAssetsByLocation';
 import './GroupedAssetView.css';
 
 export default function GroupedAssetView({ assets, isLoading, showActions, onView, onEdit, onDelete }) {
   const [expandedGroups, setExpandedGroups] = useState({});
+
+  // Reset status expand ketika data assets berubah (misal karena filter atau refetch)
+  useEffect(() => {
+    setExpandedGroups({});
+  }, [assets]);
 
   if (isLoading) {
     return <div className="loading-state">Memuat data per ruangan...</div>;
@@ -14,13 +21,10 @@ export default function GroupedAssetView({ assets, isLoading, showActions, onVie
     return <div className="empty-state">Tidak ada data aset untuk ditampilkan.</div>;
   }
 
-  // Group assets by location (unit + room)
-  const groupedData = assets.reduce((acc, asset) => {
-    const loc = asset.location || 'Tidak Diketahui';
-    if (!acc[loc]) acc[loc] = [];
-    acc[loc].push(asset);
-    return acc;
-  }, {});
+  // Group assets by location (unit + room) and sort alphabetically (extracted logic)
+  const sortedGroupedData = useMemo(() => {
+    return groupAssetsByLocation(assets);
+  }, [assets]);
 
   const toggleGroup = (loc) => {
     setExpandedGroups(prev => ({
@@ -31,7 +35,7 @@ export default function GroupedAssetView({ assets, isLoading, showActions, onVie
 
   return (
     <div className="grouped-asset-container">
-      {Object.entries(groupedData).sort(([a], [b]) => a.localeCompare(b)).map(([location, items]) => {
+      {sortedGroupedData.map(([location, items]) => {
         const isExpanded = !!expandedGroups[location];
         return (
           <div key={location} className="asset-group-card">
@@ -65,3 +69,12 @@ export default function GroupedAssetView({ assets, isLoading, showActions, onVie
     </div>
   );
 }
+
+GroupedAssetView.propTypes = {
+  assets: PropTypes.array.isRequired,
+  isLoading: PropTypes.bool,
+  showActions: PropTypes.bool,
+  onView: PropTypes.func,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+};
