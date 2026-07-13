@@ -38,6 +38,6 @@ class PerbaikanAset extends Model
     // Agar kita bisa memanggil nama petugas yang mengerjakan perbaikan ini
     public function petugas()
     {
-        return $this->belongsTo(Pengguna::class, 'id_petugas', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_petugas', 'id')->withTrashed();
     }
 }

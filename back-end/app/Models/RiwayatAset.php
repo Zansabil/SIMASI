@@ -36,6 +36,6 @@ class RiwayatAset extends Model
     // Membantu kita mengetahui siapa nama admin/staf pelakunya
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id')->withTrashed();
     }
 }

@@ -16,11 +16,16 @@ const MenuIcon = () => (
 export default function Navbar({ role, onToggleMobileMenu }) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('User');
+  const [userAvatar, setUserAvatar] = useState('');
 
   useEffect(() => {
     const storedName = localStorage.getItem('user_name');
+    const storedAvatar = localStorage.getItem('user_avatar');
     if (storedName) {
       setUserName(storedName);
+    }
+    if (storedAvatar) {
+      setUserAvatar(storedAvatar);
     }
   }, []);
 
@@ -52,10 +57,14 @@ export default function Navbar({ role, onToggleMobileMenu }) {
           className="nav-profile-circle" 
           title={userName} 
           aria-label="Profil" 
-          style={{ cursor: 'pointer' }} 
+          style={{ cursor: 'pointer', padding: userAvatar ? '0' : undefined, overflow: 'hidden' }} 
           onClick={handleProfileClick}
         >
-          <FiUser size={22} />
+          {userAvatar ? (
+            <img src={userAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <FiUser size={22} />
+          )}
         </div>
       </div>
     </header>

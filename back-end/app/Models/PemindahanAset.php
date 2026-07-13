@@ -39,6 +39,6 @@ class PemindahanAset extends Model
     {
         // Hubungannya: Pemindahan ini "Milik" (belongsTo) seorang Pengguna
         // belongsTo(ModelTujuan::class, 'foreign_key_di_tabel_ini', 'primary_key_di_tabel_tujuan')
-        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id')->withTrashed();
     }
 }

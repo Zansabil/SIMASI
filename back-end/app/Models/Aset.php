@@ -35,7 +35,7 @@ class Aset extends Model
     public function pengguna()
     {
         // Aset ini "Milik" (belongsTo) seorang Pengguna
-        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id')->withTrashed();
     }
 
     public function ruangan()

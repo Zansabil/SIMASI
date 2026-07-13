@@ -171,6 +171,8 @@ class LaporanKerusakanController extends Controller
         $laporan = LaporanKerusakan::create($data);
 
         $aset = Aset::find($request->id_aset);
+        
+        // Notifikasi untuk Pelapor
         Notifikasi::create([
             'id_pengguna'    => auth()->user()->id,
             'tipe'           => 'Laporan Kerusakan',
@@ -179,6 +181,22 @@ class LaporanKerusakanController extends Controller
             'waktu_terkirim' => now(),
             'tgl_dibuat'     => now()
         ]);
+
+        // Notifikasi untuk semua Petugas Perbaikan
+        $petugasList = Pengguna::whereHas('peran', function($q) {
+            $q->where('nama', 'Petugas Perbaikan');
+        })->get();
+
+        foreach ($petugasList as $petugas) {
+            Notifikasi::create([
+                'id_pengguna'    => $petugas->id,
+                'tipe'           => 'Laporan Kerusakan Baru',
+                'pesan'          => auth()->user()->nama . ' melaporkan kerusakan pada aset: ' . ($aset ? $aset->nama_aset : ''),
+                'terbaca'        => 0,
+                'waktu_terkirim' => now(),
+                'tgl_dibuat'     => now()
+            ]);
+        }
 
         $pengguna = auth()->user();
         if ($pengguna && $pengguna->email) {

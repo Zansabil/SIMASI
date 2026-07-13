@@ -121,8 +121,8 @@ export default function NotificationBell({ role }) {
     window.addEventListener('notifications-updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
 
-    // Poll setiap 30 detik untuk notifikasi baru
-    const interval = setInterval(loadNotifications, 30000);
+    // Poll setiap 5 detik untuk notifikasi baru agar terasa realtime
+    const interval = setInterval(loadNotifications, 5000);
 
     return () => {
       window.removeEventListener('notifications-updated', handleUpdate);

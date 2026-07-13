@@ -35,7 +35,7 @@ class PengadaanAset extends Model
     // 5. Relasi: Panggil data pemohon (pengguna)
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'idpengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'idpengguna', 'id')->withTrashed();
     }
 
     public function lokasiUnit()

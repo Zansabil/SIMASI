@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
+import ResetPassword from './pages/auth/ResetPassword';
 import Dashboard from './pages/admin/Dashboard';
 import DaftarAset from './pages/admin/DaftarAset';
 import PerbaikanAset from './pages/admin/PerbaikanAset';
@@ -45,6 +46,7 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         {/* Guru Routes */}
         <Route element={<ProtectedRoute allowedRoles={['guru']} />}>

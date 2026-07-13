@@ -15,12 +15,12 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   
   // Login form state
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   
   // Recovery form state
-  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryIdentifier, setRecoveryIdentifier] = useState('');
   
   // Feedback states
   const [errorMsg, setErrorMsg] = useState('');
@@ -55,7 +55,7 @@ export default function Login() {
     try {
       // Connect to Laravel endpoint serve URL
       const response = await axios.post(`${API_BASE_URL}/api/login`, {
-        email: email,
+        identifier: identifier,
         password: password,
       });
 
@@ -72,7 +72,10 @@ export default function Login() {
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_jabatan', user.jabatan || role);
         localStorage.setItem('user_name', name);
+        localStorage.setItem('user_email', user.email);
+        localStorage.setItem('user_username', user.nama_pengguna);
         localStorage.setItem('user_id', user.id);
+        localStorage.setItem('user_avatar', user.foto_profil_url || '');
         
         // Redirect based on role immediately
         if (role === 'super-admin') navigate('/super-admin/dashboard');
@@ -102,22 +105,32 @@ export default function Login() {
   };
 
   // Handle Recovery submission
-  const handleRecoverySubmit = (e) => {
+  const handleRecoverySubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
     setIsLoading(true);
 
-    // Mock send password reset email since it is frontend mock flow
-    setTimeout(() => {
-      setIsLoading(false);
-      if (!recoveryEmail.includes('@')) {
-        setErrorMsg('Masukkan alamat email yang valid.');
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/forgot-password`, {
+        identifier: recoveryIdentifier
+      });
+
+      if (response.data && response.data.success) {
+        setSuccessMsg(response.data.message);
+        setRecoveryIdentifier('');
       } else {
-        setSuccessMsg(`Instruksi pemulihan kata sandi telah dikirim ke email: ${recoveryEmail}`);
-        setRecoveryEmail('');
+        setErrorMsg(response.data.message || 'Gagal mengirim instruksi pemulihan.');
       }
-    }, 1200);
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setErrorMsg(err.response.data.message);
+      } else {
+        setErrorMsg('Terjadi kesalahan jaringan atau server tidak merespons.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -149,21 +162,20 @@ export default function Login() {
             <h2 className="section-title">Pemulihan Akun</h2>
             
             <div className="info-alert">
-              Masukkan alamat email resmi yang terdaftar pada akun <strong>SIMAS</strong> 
-              Anda. Kami akan mengirimkan tautan berisi instruksi pemulihan kata sandi secara instan.
+              Masukkan <strong>Email, Username, atau No. HP</strong> yang terdaftar pada akun <strong>SIMAS</strong> Anda. Kami akan mengirimkan tautan pemulihan ke alamat email Anda.
             </div>
 
             <form className="login-form" onSubmit={handleRecoverySubmit}>
               <div className="form-group">
-                <label className="form-label" htmlFor="recovery-email">Alamat Email <span style={{ color: '#EF4444' }}>*</span></label>
+                <label className="form-label" htmlFor="recovery-identifier">Email / Username / No. HP <span style={{ color: '#EF4444' }}>*</span></label>
                 <input
-                  id="recovery-email"
-                  type="email"
+                  id="recovery-identifier"
+                  type="text"
                   className="form-input"
-                  placeholder="contoh: user@simas.com"
+                  placeholder="Masukkan salah satu data di atas"
                   required
-                  value={recoveryEmail}
-                  onChange={(e) => setRecoveryEmail(e.target.value)}
+                  value={recoveryIdentifier}
+                  onChange={(e) => setRecoveryIdentifier(e.target.value)}
                 />
               </div>
 
@@ -181,15 +193,15 @@ export default function Login() {
           /* Condition State: Default Login Mode */
           <form className="login-form" onSubmit={handleLoginSubmit}>
             <div className="form-group">
-              <label className="form-label" htmlFor="email">Email</label>
+              <label className="form-label" htmlFor="identifier">Email / Username / No. HP</label>
               <input
-                id="email"
-                type="email"
+                id="identifier"
+                type="text"
                 className="form-input"
-                placeholder="Masukkan email Anda"
+                placeholder="Masukkan email, username, atau No. HP Anda"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
               />
             </div>
 

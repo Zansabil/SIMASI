@@ -43,12 +43,14 @@ class LaporanKerusakan extends Model
     // 2. Relasi ke tabel pengguna (sebagai Pelapor)
     public function pelapor()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pelapor');
+        // Hubungannya: 1 Laporan ini "Milik" (belongsTo) seorang Pelapor (Pengguna)
+        return $this->belongsTo(Pengguna::class, 'id_pelapor')->withTrashed();
     }
 
     // 3. Relasi ke tabel pengguna (sebagai Pemvalidasi/Admin)
     public function validator()
     {
-        return $this->belongsTo(Pengguna::class, 'id_validasi');
+        // Hubungannya: 1 Laporan ini divalidasi oleh (belongsTo) seorang Validator (Admin Unit)
+        return $this->belongsTo(Pengguna::class, 'id_validasi')->withTrashed();
     }
 }

@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens; // <-- 1. Tambahkan pemanggil Sanctum API Token di sini
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pengguna extends Authenticatable
 {
     // 2. Tambahkan HasApiTokens ke dalam trait yang digunakan oleh class ini
-    use HasApiTokens, HasFactory, Notifiable; 
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes; 
 
     // 1. Beritahu Laravel nama tabel yang benar di database
     protected $table = 'pengguna';
@@ -20,11 +21,13 @@ class Pengguna extends Authenticatable
         'nama',
         'nama_pengguna',
         'email',
+        'no_telepon',
         'password',
+        'foto_profil',
         'area',
         'status_aktif',
         'id_peran',
-        'id_kode_registrasi',
+        'id_kode_registrasi'
     ];
 
     // 2.5 Tambahkan attribute virtual 'jabatan' ke output JSON

@@ -43,6 +43,6 @@ class Notifikasi extends Model
      */
     public function pengguna()
     {
-        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id');
+        return $this->belongsTo(Pengguna::class, 'id_pengguna', 'id')->withTrashed();
     }
 }

@@ -102,6 +102,12 @@ class PenggunaController extends Controller
         // Gate::authorize('kelola-user');
         
         $pengguna = Pengguna::findOrFail($id);
+        
+        // Tambahkan suffix timestamp agar email dan username bisa dipakai lagi
+        $pengguna->email = $pengguna->email . '-deleted-' . time();
+        $pengguna->nama_pengguna = $pengguna->nama_pengguna . '-deleted-' . time();
+        $pengguna->save();
+
         $pengguna->delete();
 
         return response()->json([

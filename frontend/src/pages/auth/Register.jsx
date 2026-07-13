@@ -65,6 +65,7 @@ export default function Register() {
         nama: namaLengkap,
         nama_pengguna: username,
         email: email,
+        no_telepon: noTelepon,
         password: password,
         area: unitKerja,
         kode_registrasi: kodeRegistrasi,

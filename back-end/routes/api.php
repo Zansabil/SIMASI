@@ -16,6 +16,7 @@ use App\Http\Controllers\KategoriAsetController;
 use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\LokasiUnitController;
 use App\Http\Controllers\KodeRegistrasiController;
+use App\Http\Controllers\ProfileController;
 
 // Rute awal (Opsional: Biasanya di API hanya digunakan untuk mengecek apakah server hidup)
 Route::get('/', function () {
@@ -29,6 +30,8 @@ Route::get('/', function () {
 // API hanya butuh rute POST untuk menerima datanya.
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::post('/register', [AuthController::class, 'storeRegister']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Data Master Publik
 Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
@@ -48,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'index']);
+    
+    // Rute Profile
+    Route::post('/profile', [ProfileController::class, 'updateProfile']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
     
     // Route khusus Kelola Pengguna (Super Admin)
     Route::get('/pengguna', [PenggunaController::class, 'index']);

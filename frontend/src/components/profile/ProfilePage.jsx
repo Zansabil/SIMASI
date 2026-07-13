@@ -6,6 +6,34 @@ import DashboardLayout from '../layout/DashboardLayout';
 import StatusModal from '../ui/StatusModal';
 import './Profile.css';
 
+/* ── Password input helper ── */
+const PwInput = ({ label, value, onChange, show, onToggle }) => (
+  <div className="profile-form-group">
+    <label className="profile-form-label">{label}</label>
+    <div style={{ position: 'relative' }}>
+      <input
+        className="profile-form-input"
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={onChange}
+        style={{ paddingRight: '42px' }}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          position: 'absolute', right: '12px', top: '50%',
+          transform: 'translateY(-50%)', background: 'none',
+          border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0',
+          display: 'flex', alignItems: 'center'
+        }}
+      >
+        {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+      </button>
+    </div>
+  </div>
+);
+
 export default function ProfilePage({ role, defaultRoleName, currentPath }) {
   const fileInputRef = useRef(null);
 
@@ -14,6 +42,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
   const [profileUsername, setProfileUsername] = useState('');
   const [profileEmail, setProfileEmail]       = useState('');
   const [avatarSrc, setAvatarSrc]             = useState('');
+  const [avatarFile, setAvatarFile]           = useState(null);
   const [isSaving, setIsSaving]               = useState(false);
   const [showToast, setShowToast]             = useState(false);
   const [toastMsg, setToastMsg]               = useState('');
@@ -53,29 +82,50 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
       setStatusModal({ isOpen: true, type: 'error', title: 'Gagal Mengunggah', message: 'Ukuran foto maksimal 2 MB.' });
       return;
     }
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setAvatarSrc(ev.target.result);
     reader.readAsDataURL(file);
   };
 
-  // Save profile info
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.put(`${API_BASE_URL}/api/profile`, {
-        name: profileName,
-        email: profileEmail,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      const formData = new FormData();
+      formData.append('name', profileName);
+      formData.append('email', profileEmail);
+      if (avatarFile) {
+        formData.append('avatar', avatarFile);
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/api/profile`, formData, { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      });
+
+      if (response.data && response.data.success) {
+        localStorage.setItem('user_name', response.data.data.nama);
+        localStorage.setItem('user_email', response.data.data.email);
+        
+        if (response.data.data.foto_profil) {
+          localStorage.setItem('user_avatar', response.data.data.foto_profil);
+          setAvatarSrc(response.data.data.foto_profil);
+          setAvatarFile(null); // Reset file
+        }
+        
+        triggerToast('Profil berhasil diperbarui');
+      }
     } catch (err) {
-      console.warn('Backend offline — saving locally.', err);
+      console.warn('Gagal menyimpan ke backend:', err);
+      const errorMsg = err.response?.data?.message || 'Terjadi kesalahan jaringan atau validasi gagal.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal Menyimpan', message: errorMsg });
     }
-    localStorage.setItem('user_name', profileName);
-    localStorage.setItem('user_email', profileEmail);
-    if (avatarSrc) localStorage.setItem('user_avatar', avatarSrc);
     setIsSaving(false);
-    triggerToast('Profil berhasil diperbarui');
   };
 
   // Save password
@@ -93,19 +143,26 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     setIsSavingPw(true);
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.put(`${API_BASE_URL}/api/profile/password`, {
+      const response = await axios.put(`${API_BASE_URL}/api/profile/password`, {
         current_password: currentPassword,
         new_password: newPassword,
         new_password_confirmation: confirmPassword,
       }, { headers: { Authorization: `Bearer ${token}` } });
+
+      if (response.data && response.data.success) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        triggerToast(response.data.message || 'Kata sandi berhasil diperbarui');
+      } else {
+        setPwError(response.data.message || 'Gagal memperbarui kata sandi.');
+      }
     } catch (err) {
-      console.warn('Backend offline — password change skipped locally.', err);
+      console.error('Gagal memperbarui kata sandi:', err);
+      const errorMsg = err.response?.data?.message || 'Terjadi kesalahan jaringan atau validasi gagal.';
+      setPwError(errorMsg);
     }
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
     setIsSavingPw(false);
-    triggerToast('Kata sandi berhasil diperbarui');
   };
 
   const triggerToast = (msg) => {
@@ -113,34 +170,6 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2500);
   };
-
-  /* ── Password input helper ── */
-  const PwInput = ({ label, value, onChange, show, onToggle }) => (
-    <div className="profile-form-group">
-      <label className="profile-form-label">{label}</label>
-      <div style={{ position: 'relative' }}>
-        <input
-          className="profile-form-input"
-          type={show ? 'text' : 'password'}
-          value={value}
-          onChange={onChange}
-          style={{ paddingRight: '42px' }}
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          style={{
-            position: 'absolute', right: '12px', top: '50%',
-            transform: 'translateY(-50%)', background: 'none',
-            border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '0',
-            display: 'flex', alignItems: 'center'
-          }}
-        >
-          {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <DashboardLayout role={role} currentPath={currentPath}>
