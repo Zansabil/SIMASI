@@ -4,15 +4,17 @@
 export const mapAssetResponse = (item) => {
   if (!item) return null;
   return {
+    ...item,
     id: item.id,
     name: item.nama_aset,
     asset_code: item.kode_inventaris,
-    location: item.lokasi_aset,
+    location: item.ruangan?.nama_ruangan || item.lokasi_aset || '-',
+    unit: item.lokasi_unit?.nama_unit || item.lokasiUnit?.nama_unit || '-',
     quantity: item.jumlah_aset,
     condition: item.kondisi_aset,
-    source_of_funds: item.source_of_funds || 'Dana Yayasan',
-    price: item.price || 0,
-    image_path: item.image_path
+    source_of_funds: item.sumber_dana || item.source_of_funds || 'Dana Yayasan',
+    price: item.harga_aset || item.price || 0,
+    image_path: item.foto || item.image_path
   };
 };
 
@@ -37,12 +39,15 @@ export const mapAssetForRequest = (formData, existingAssetCode = null) => {
   return {
     kode_inventaris: formData.code || existingAssetCode,
     nama_aset: formData.name,
-    jenis_aset: 'Umum',
-    lokasi_aset: formData.location,
+    jenis_aset: formData.category || 'Umum',
+    id_unit: formData.unit,
+    id_ruangan: formData.room,
+    lokasi_aset: formData.location, // still passing location just in case
     jumlah_aset: Number(formData.quantity) || 1,
     kondisi_aset: formData.condition,
     tgl_diperoleh: resolvedDate,
-    price: parsedPrice,
-    source_of_funds: formData.source,
+    harga_aset: parsedPrice,
+    sumber_dana: formData.source,
+    foto: formData.image,
   };
 };

@@ -21,6 +21,10 @@ export default function KelolaKodeRegistrasi() {
   const [selectedKodeName, setSelectedKodeName] = useState('');
   const [isLogLoading, setIsLogLoading] = useState(false);
 
+  // Delete Modal states
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [kodeToDelete, setKodeToDelete] = useState(null);
+
   // Fetch data on mount
   useEffect(() => {
     fetchKodes();
@@ -79,19 +83,27 @@ export default function KelolaKodeRegistrasi() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus kode ini?')) return;
+  const handleDelete = (id) => {
+    setKodeToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!kodeToDelete) return;
     setErrorMsg('');
     setSuccessMsg('');
+    setIsDeleteModalOpen(false);
     try {
       const token = localStorage.getItem('auth_token');
-      await axios.delete(`${API_BASE_URL}/api/kode-registrasi/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/kode-registrasi/${kodeToDelete}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccessMsg('Kode berhasil dihapus.');
       fetchKodes();
     } catch (err) {
       setErrorMsg(err.response?.data?.message || 'Gagal menghapus kode.');
+    } finally {
+      setKodeToDelete(null);
     }
   };
 
@@ -273,6 +285,37 @@ export default function KelolaKodeRegistrasi() {
             
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button onClick={() => setIsLogModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #d1d5db', background: 'white', cursor: 'pointer' }}>Tutup</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus */}
+      {isDeleteModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', width: '400px', textAlign: 'center' }}>
+            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg width="24" height="24" fill="none" stroke="#ef4444" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+            </div>
+            <h3 style={{ marginTop: 0, fontSize: '18px', fontWeight: 'bold', color: '#111827' }}>Konfirmasi Hapus</h3>
+            <p style={{ color: '#4b5563', marginBottom: '24px' }}>Apakah Anda yakin ingin menghapus kode ini? Tindakan ini tidak dapat dibatalkan.</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button 
+                onClick={() => { setIsDeleteModalOpen(false); setKodeToDelete(null); }} 
+                style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #d1d5db', background: 'white', cursor: 'pointer', fontWeight: '500', color: '#374151' }}
+              >
+                Batal
+              </button>
+              <button 
+                onClick={confirmDelete} 
+                style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: '500' }}
+              >
+                Hapus
+              </button>
             </div>
           </div>
         </div>
