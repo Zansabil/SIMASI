@@ -363,3 +363,8 @@
   background-color: #fff7ed;
   color: #ea580c;
 }
+
+.status-sedang-diperbaiki {
+  background-color: #fef2f2;
+  color: #ef4444;
+}

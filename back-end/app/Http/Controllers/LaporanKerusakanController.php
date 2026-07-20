@@ -307,7 +307,8 @@ class LaporanKerusakanController extends Controller
             'keterangan_perbaikan' => 'nullable|string'
         ]);
 
-        $laporan = LaporanKerusakan::with('aset')->findOrFail($id);
+        $laporan = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $laporan = LaporanKerusakan::with('aset')->where('id', $id)->lockForUpdate()->firstOrFail();
         
         $updateData = [
             'status_kerusakan' => $request->status_kerusakan,
@@ -319,9 +320,25 @@ class LaporanKerusakanController extends Controller
         }
         if ($request->status_kerusakan === 'Selesai' && !$laporan->tgl_selesai_perbaikan) {
             $updateData['tgl_selesai_perbaikan'] = now();
+            
+            // Ekstrak kode_sub_aset dari deskripsi (Format: "(Unit: KODE_UNIT)")
+            if ($laporan->deskripsi) {
+                if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                    $kodeSubAset = trim($matches[1]);
+                    $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
+                    if ($subAset) {
+                        $subAset->update([
+                            'kondisi_aset' => 'Baik'
+                        ]);
+                    }
+                }
+            }
         }
 
         $laporan->update($updateData);
+        
+        return $laporan;
+    }, 3);
 
         Notifikasi::create([
             'id_pengguna'    => $laporan->id_pelapor,

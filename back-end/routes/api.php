@@ -17,6 +17,7 @@ use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\LokasiUnitController;
 use App\Http\Controllers\KodeRegistrasiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubAsetController;
 
 // Rute awal (Opsional: Biasanya di API hanya digunakan untuk mengecek apakah server hidup)
 Route::get('/', function () {
@@ -69,6 +70,9 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Rute untuk tabel Aset (Menggunakan apiResource)
     Route::apiResource('aset', AsetController::class);
+    
+    // Route Edit Sub-Aset Kondisi
+    Route::patch('/sub_aset/{id}/kondisi', [SubAsetController::class, 'updateKondisi']);
     
     // Route Pemindahan Aset
     Route::apiResource('pemindahan_aset', PemindahanAsetController::class);

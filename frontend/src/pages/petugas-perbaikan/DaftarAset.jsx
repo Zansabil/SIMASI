@@ -5,7 +5,7 @@ export default function DaftarAset() {
   return (
     <AssetListPage
       role="petugas-perbaikan"
-      hasWriteAccess={true}
+      hasWriteAccess={false}
       currentPath="/petugas-perbaikan/daftar-aset"
     />
   );

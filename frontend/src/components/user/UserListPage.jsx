@@ -74,7 +74,7 @@ const initialMockUsers = [
     name: 'Administrator Sistem',
     email: 'admin@simas.sch.id',
     role: 'Administrator',
-    unit: '-',
+    unit: 'Yayasan / Global',
     status: 'Aktif',
     is_current: true,
     access: getRoleDefaultAccess('Administrator')
@@ -85,7 +85,7 @@ const initialMockUsers = [
     name: 'Dr. H. Muhammad Rizki, M.Pd',
     email: 'kepala.yayasan@simas.sch.id',
     role: 'Kepala Yayasan',
-    unit: '-',
+    unit: 'Yayasan / Global',
     status: 'Aktif',
     is_current: false,
     access: getRoleDefaultAccess('Kepala Yayasan')
@@ -107,7 +107,7 @@ const initialMockUsers = [
     name: 'Joko Susilo',
     email: 'teknisi.sd@simas.sch.id',
     role: 'Petugas Perbaikan',
-    unit: '-',
+    unit: 'Yayasan / Global',
     status: 'Aktif',
     is_current: false,
     access: getRoleDefaultAccess('Petugas Perbaikan')
@@ -198,7 +198,7 @@ export default function UserListPage({ role, currentPath }) {
               name: u.nama || 'Tanpa Nama',
               email: u.email || '-',
               role: mappedRole,
-              unit: u.area || '-',
+              unit: u.area || 'Yayasan / Global',
               status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
               is_current: u.nama === userName,
               access: mappedAccess
@@ -270,7 +270,7 @@ export default function UserListPage({ role, currentPath }) {
       email: formData.email,
       nama_pengguna: formData.username,
       id_peran: id_peran,
-      area: formData.unit && formData.unit !== '-' ? formData.unit : null,
+      area: formData.unit && formData.unit !== 'Yayasan / Global' ? formData.unit : null,
       status_aktif: formData.status === 'Aktif' ? 1 : 0
     };
     if (formData.password) {
@@ -309,7 +309,7 @@ export default function UserListPage({ role, currentPath }) {
             name: u.nama,
             email: u.email,
             role: mappedRole,
-            unit: u.area || '-',
+            unit: u.area || 'Yayasan / Global',
             status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: editingUser.is_current,
             access: { ...formData.access }
@@ -330,7 +330,7 @@ export default function UserListPage({ role, currentPath }) {
         name: formData.name,
         email: formData.email,
         role: formData.role || 'Administrator',
-        unit: formData.unit || '-',
+        unit: formData.unit || 'Yayasan / Global',
         status: formData.status,
         is_current: false,
         access: { ...formData.access }
@@ -355,7 +355,7 @@ export default function UserListPage({ role, currentPath }) {
             name: u.nama,
             email: u.email,
             role: mappedRole,
-            unit: u.area || '-',
+            unit: u.area || 'Yayasan / Global',
             status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: false,
             access: { ...formData.access }
