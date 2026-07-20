@@ -30,7 +30,7 @@ class AsetController extends Controller
                   });
         }
 
-        $asets = $query->with(['ruangan', 'lokasiUnit'])->orderBy('tgl_dibuat', 'desc')->get();
+        $asets = $query->with(['ruangan', 'lokasiUnit', 'subAset.ruangan'])->orderBy('tgl_dibuat', 'desc')->get();
 
         return response()->json([
             'success' => true,
@@ -133,7 +133,20 @@ class AsetController extends Controller
             $kodeInventaris = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
             $dataAset['kode_inventaris'] = $kodeInventaris;
 
-            return Aset::create($dataAset);
+            $createdAset = Aset::create($dataAset);
+
+            // Generate otomatis sub-kategori
+            for ($i = 1; $i <= $createdAset->jumlah_aset; $i++) {
+                \App\Models\SubAset::create([
+                    'id_aset' => $createdAset->id,
+                    'kode_sub_aset' => "{$kodeInventaris}-{$i}",
+                    'id_ruangan' => $createdAset->id_ruangan,
+                    'kondisi_aset' => $createdAset->kondisi_aset,
+                    'status_penggunaan' => 'Tersedia'
+                ]);
+            }
+
+            return $createdAset;
         });
 
         RiwayatAset::create([
@@ -156,7 +169,7 @@ class AsetController extends Controller
     // 3. DETAIL: Menampilkan satu data spesifik berdasarkan ID
     public function show($id)
     {
-        $aset = Aset::with(['ruangan', 'lokasiUnit'])->findOrFail($id);
+        $aset = Aset::with(['ruangan', 'lokasiUnit', 'subAset.ruangan'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -201,6 +214,8 @@ class AsetController extends Controller
         ]);
 
         $aset = Aset::findOrFail($id);
+        $oldJumlah = $aset->jumlah_aset;
+        
         $aset->fill($request->except(['_token', '_method']));
         $perubahan = $aset->getDirty();
 
@@ -218,6 +233,36 @@ class AsetController extends Controller
             $keterangan_final = "Aset telah diedit. Detail: " . implode(', ', $teksPerubahan);
             $aset->save();
 
+            // Sync sub_aset if jumlah_aset, id_ruangan, or kondisi_aset changed
+            if (isset($perubahan['jumlah_aset'])) {
+                $newJumlah = $aset->jumlah_aset;
+                if ($newJumlah > $oldJumlah) {
+                    for ($i = $oldJumlah + 1; $i <= $newJumlah; $i++) {
+                        \App\Models\SubAset::create([
+                            'id_aset' => $aset->id,
+                            'kode_sub_aset' => "{$aset->kode_inventaris}-{$i}",
+                            'id_ruangan' => $aset->id_ruangan,
+                            'kondisi_aset' => $aset->kondisi_aset,
+                            'status_penggunaan' => 'Tersedia'
+                        ]);
+                    }
+                } elseif ($newJumlah < $oldJumlah) {
+                    // Delete excess sub_asets from the end
+                    \App\Models\SubAset::where('id_aset', $aset->id)
+                        ->orderBy('kode_sub_aset', 'desc')
+                        ->limit($oldJumlah - $newJumlah)
+                        ->delete();
+                }
+            }
+
+            if (isset($perubahan['id_ruangan']) || isset($perubahan['kondisi_aset'])) {
+                $syncFields = [];
+                if (isset($perubahan['id_ruangan'])) $syncFields['id_ruangan'] = $aset->id_ruangan;
+                if (isset($perubahan['kondisi_aset'])) $syncFields['kondisi_aset'] = $aset->kondisi_aset;
+                
+                \App\Models\SubAset::where('id_aset', $aset->id)->update($syncFields);
+            }
+
             RiwayatAset::create([
                 'id_aset'     => $id,
                 'aksi'        => 'Perubahan',
@@ -226,7 +271,7 @@ class AsetController extends Controller
                 'waktu'       => now()
             ]);
             
-            $aset->load(['ruangan', 'lokasiUnit']);
+            $aset->load(['ruangan', 'lokasiUnit', 'subAset.ruangan']);
             
             return response()->json([
                 'success' => true,
@@ -235,7 +280,7 @@ class AsetController extends Controller
             ], 200);
         }
 
-        $aset->load(['ruangan', 'lokasiUnit']);
+        $aset->load(['ruangan', 'lokasiUnit', 'subAset.ruangan']);
 
         return response()->json([
             'success' => true,

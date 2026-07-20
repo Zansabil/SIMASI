@@ -380,6 +380,8 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
               onPageChange={setCurrentPage}
               onItemsPerPageChange={setItemsPerPage}
               hasMore={(currentPage * itemsPerPage) < repairs.length}
+              totalPages={Math.ceil(repairs.length / itemsPerPage)}
+              totalItems={repairs.length}
             />
           </>
         )}

@@ -79,6 +79,8 @@ export default function ActivityList({ activities }) {
             setCurrentPage(1);
           }}
           hasMore={hasMore}
+          totalPages={Math.ceil(filteredActivities.length / itemsPerPage)}
+          totalItems={filteredActivities.length}
         />
       )}
     </section>

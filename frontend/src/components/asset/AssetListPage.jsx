@@ -109,6 +109,8 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               onPageChange={setCurrentPage}
               onItemsPerPageChange={setItemsPerPage}
               hasMore={hasMore}
+              totalPages={Math.ceil(allAssets.length / itemsPerPage)}
+              totalItems={allAssets.length}
             />
           </>
         ) : (

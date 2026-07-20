@@ -48,4 +48,9 @@ class Aset extends Model
     {
         return $this->belongsTo(LokasiUnit::class, 'id_unit', 'id');
     }
+
+    public function subAset()
+    {
+        return $this->hasMany(SubAset::class, 'id_aset', 'id');
+    }
 }
