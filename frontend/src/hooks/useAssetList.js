@@ -38,6 +38,7 @@ export default function useAssetList() {
   // Status & Confirm Modals
   const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, asset: null });
+  const [confirmSubAssetDelete, setConfirmSubAssetDelete] = useState({ isOpen: false, subAsset: null, parentAssetId: null });
 
   const [allAssets, setAllAssets] = useState([]);
   const [availableUnits, setAvailableUnits] = useState(DEFAULT_UNITS);
@@ -196,7 +197,8 @@ export default function useAssetList() {
       setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Aset berhasil dihapus.' });
     } catch (err) {
       console.error("Backend API error, deleting asset failed.", err);
-      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: 'Gagal menghapus aset dari server.' });
+      const errorMsg = err.response?.data?.message || 'Gagal menghapus aset dari server.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
     }
   };
 
@@ -313,6 +315,39 @@ export default function useAssetList() {
     }
   };
 
+  const handleDeleteSubAssetClick = (subAsset, parentAssetId) => {
+    setConfirmSubAssetDelete({ isOpen: true, subAsset, parentAssetId });
+  };
+
+  const processDeleteSubAsset = async () => {
+    const { subAsset, parentAssetId } = confirmSubAssetDelete;
+    setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null });
+    if (!subAsset) return;
+
+    try {
+      const response = await assetService.deleteSubAsset(subAsset.id);
+      if (response && response.success) {
+        setAllAssets(prevAssets => prevAssets.map(asset => {
+          if (asset.id === parentAssetId) {
+            const currentSubAssets = asset.sub_aset || asset.subAset || asset.sub_assets || [];
+            return {
+              ...asset,
+              quantity: (asset.quantity || asset.jumlah_aset || 0) - 1,
+              jumlah_aset: (asset.jumlah_aset || asset.quantity || 0) - 1,
+              sub_aset: currentSubAssets.filter(sub => sub.id !== subAsset.id)
+            };
+          }
+          return asset;
+        }));
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: `Unit ${subAsset.kode_sub_aset} berhasil dihapus.` });
+      }
+    } catch (err) {
+      console.error("Gagal menghapus unit:", err);
+      const errorMsg = err.response?.data?.message || 'Gagal menghapus unit dari server.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+    }
+  };
+
   return {
     searchQuery,
     setSearchQuery,
@@ -355,6 +390,10 @@ export default function useAssetList() {
     handleReportDamageClick,
     handleReportDamageSubmit,
     activeRepairCodes,
-    inProgressRepairCodes
+    inProgressRepairCodes,
+    handleDeleteSubAssetClick,
+    processDeleteSubAsset,
+    confirmSubAssetDelete,
+    setConfirmSubAssetDelete
   };
 }

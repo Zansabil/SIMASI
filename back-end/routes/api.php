@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Route Edit Sub-Aset Kondisi
     Route::patch('/sub_aset/{id}/kondisi', [SubAsetController::class, 'updateKondisi']);
+    Route::delete('/sub_aset/{id}', [SubAsetController::class, 'destroy']);
     
     // Route Pemindahan Aset
     Route::apiResource('pemindahan_aset', PemindahanAsetController::class);

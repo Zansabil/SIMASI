@@ -340,24 +340,27 @@ class LaporanKerusakanController extends Controller
         return $laporan;
     }, 3);
 
-        Notifikasi::create([
-            'id_pengguna'    => $laporan->id_pelapor,
-            'tipe'           => 'Progress Perbaikan',
-            'pesan'          => 'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
-            'terbaca'        => 0,
-            'waktu_terkirim' => now(),
-            'tgl_dibuat'     => now()
-        ]);
+        if ($request->status_kerusakan !== 'Selesai') {
+            Notifikasi::create([
+                'id_pengguna'    => $laporan->id_pelapor,
+                'tipe'           => 'Progress Perbaikan',
+                'pesan'          => 'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
+                'terbaca'        => 0,
+                'waktu_terkirim' => now(),
+                'tgl_dibuat'     => now()
+            ]);
 
-        if ($laporan->pelapor && $laporan->pelapor->email) {
-            try {
-                Mail::to($laporan->pelapor->email)->send(new StatusLaporanKerusakanMail(
-                    'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
-                    'Progress Perbaikan',
-                    $laporan->pelapor->nama
-                ));
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());
+            if ($laporan->pelapor && $laporan->pelapor->email) {
+                try {
+                    Mail::to($laporan->pelapor->email)->send(new StatusLaporanKerusakanMail(
+                        'Status perbaikan aset ' . ($laporan->aset ? $laporan->aset->nama_aset : '') . ' telah diperbarui menjadi: ' . $request->status_kerusakan . '.',
+                        'Progress Perbaikan',
+                        $laporan->pelapor->nama,
+                        $laporan->keterangan_perbaikan
+                    ));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());
+                }
             }
         }
 

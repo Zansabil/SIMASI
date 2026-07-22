@@ -16,17 +16,23 @@ class StatusLaporanKerusakanMail extends Mailable
     public $pesan;
     public $tipe;
     public $nama_pengguna;
+    public $keterangan;
+    public $hasil;
+    public $biaya;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($pesan, $tipe, $nama_pengguna)
+    public function __construct($pesan, $tipe, $nama_pengguna, $keterangan = null, $hasil = null, $biaya = null)
     {
         $this->pesan = $pesan;
         $this->tipe = $tipe;
         $this->nama_pengguna = $nama_pengguna;
+        $this->keterangan = $keterangan;
+        $this->hasil = $hasil;
+        $this->biaya = $biaya;
     }
 
     /**

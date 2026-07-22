@@ -5,7 +5,7 @@ import { FiChevronDown, FiChevronRight, FiMapPin } from 'react-icons/fi';
 import { groupAssetsByLocation } from '../../utils/groupAssetsByLocation';
 import './GroupedAssetView.css';
 
-export default function GroupedAssetView({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onUpdateSubAssetCondition, onReportDamage, activeRepairCodes = [], inProgressRepairCodes = [] }) {
+export default function GroupedAssetView({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onUpdateSubAssetCondition, onReportDamage, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
 
   const [expandedGroups, setExpandedGroups] = useState({});
 
@@ -63,6 +63,7 @@ export default function GroupedAssetView({ assets = [], isLoading, onView, onEdi
                   onDelete={onDelete}
                   onUpdateSubAssetCondition={onUpdateSubAssetCondition}
                   onReportDamage={onReportDamage}
+                  onDeleteSubAsset={onDeleteSubAsset}
                   activeRepairCodes={activeRepairCodes}
                   inProgressRepairCodes={inProgressRepairCodes}
                 />

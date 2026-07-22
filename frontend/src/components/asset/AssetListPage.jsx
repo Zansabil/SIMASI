@@ -52,7 +52,11 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     handleReportDamageClick,
     handleReportDamageSubmit,
     activeRepairCodes,
-    inProgressRepairCodes
+    inProgressRepairCodes,
+    handleDeleteSubAssetClick,
+    processDeleteSubAsset,
+    confirmSubAssetDelete,
+    setConfirmSubAssetDelete
   } = useAssetList();
 
   return (
@@ -118,6 +122,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               onDelete={handleDeleteClick}
               onUpdateSubAssetCondition={handleUpdateSubAssetCondition}
               onReportDamage={handleReportDamageClick}
+              onDeleteSubAsset={handleDeleteSubAssetClick}
               activeRepairCodes={activeRepairCodes}
               inProgressRepairCodes={inProgressRepairCodes}
             />
@@ -141,6 +146,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onDelete={handleDeleteClick}
             onUpdateSubAssetCondition={handleUpdateSubAssetCondition}
             onReportDamage={handleReportDamageClick}
+            onDeleteSubAsset={handleDeleteSubAssetClick}
             activeRepairCodes={activeRepairCodes}
             inProgressRepairCodes={inProgressRepairCodes}
           />
@@ -196,6 +202,17 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           cancelText="Batal"
           onConfirm={processDelete}
           onCancel={() => setConfirmModal({ isOpen: false, asset: null })}
+        />
+
+        <StatusModal
+          isOpen={confirmSubAssetDelete.isOpen}
+          type="confirm"
+          title="Konfirmasi Hapus Unit"
+          message={`Apakah Anda yakin ingin menghapus unit "${confirmSubAssetDelete.subAsset?.kode_sub_aset}"? Jumlah barang pada aset induk akan otomatis berkurang.`}
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          onConfirm={processDeleteSubAsset}
+          onCancel={() => setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null })}
         />
       </main>
     </DashboardLayout>

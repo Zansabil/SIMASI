@@ -11,7 +11,7 @@ const formatCondition = (condition) => {
   return condition.charAt(0).toUpperCase() + condition.slice(1);
 };
 
-function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onUpdateSubAssetCondition, onReportDamage, activeRepairCodes = [], inProgressRepairCodes = [] }) {
+function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onUpdateSubAssetCondition, onReportDamage, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
   const [expandedAssetId, setExpandedAssetId] = useState(null);
   const [editingSubAssetId, setEditingSubAssetId] = useState(null);
   const [editingCondition, setEditingCondition] = useState('');
@@ -151,6 +151,7 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
                                   <th>Kondisi Unit</th>
                                   <th>Lokasi Ruangan</th>
                                   <th>Status Penggunaan</th>
+                                  {showActions && <th style={{ width: '60px' }}>Aksi</th>}
                                 </tr>
                               </thead>
                               <tbody>
@@ -277,6 +278,36 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
                                         {displayStatus}
                                       </span>
                                     </td>
+                                    {showActions && (
+                                      <td className="text-center">
+                                        <button 
+                                          type="button" 
+                                          disabled={isCurrentlyUnderRepair || isRepairInProgress}
+                                          style={{ 
+                                            background: 'none', 
+                                            border: 'none', 
+                                            cursor: (isCurrentlyUnderRepair || isRepairInProgress) ? 'not-allowed' : 'pointer', 
+                                            color: (isCurrentlyUnderRepair || isRepairInProgress) ? '#cbd5e1' : '#ef4444', 
+                                            padding: '2px', 
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            borderRadius: '4px',
+                                            opacity: (isCurrentlyUnderRepair || isRepairInProgress) ? 0.5 : 1
+                                          }}
+                                          onClick={() => {
+                                            if (!(isCurrentlyUnderRepair || isRepairInProgress) && onDeleteSubAsset) {
+                                              onDeleteSubAsset(sub, asset.id);
+                                            }
+                                          }}
+                                          title={(isCurrentlyUnderRepair || isRepairInProgress) ? "Tidak dapat menghapus unit yang sedang diperbaiki" : "Hapus Unit"}
+                                          onMouseOver={(e) => { if (!(isCurrentlyUnderRepair || isRepairInProgress)) e.currentTarget.style.color = '#dc2626'; }}
+                                          onMouseOut={(e) => { if (!(isCurrentlyUnderRepair || isRepairInProgress)) e.currentTarget.style.color = '#ef4444'; }}
+                                        >
+                                          <FiTrash2 size={14} />
+                                        </button>
+                                      </td>
+                                    )}
                                   </tr>
                                   );
                                 })}

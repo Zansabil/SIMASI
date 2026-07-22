@@ -64,3 +64,11 @@ export const updateSubAssetCondition = async (id, payload) => {
   const response = await api.patch(`/api/sub_aset/${id}/kondisi`, payload);
   return response.data;
 };
+
+/**
+ * Menghapus satu unit spesifik (sub-aset) dari server
+ */
+export const deleteSubAsset = async (id) => {
+  const response = await api.delete(`/api/sub_aset/${id}`);
+  return response.data;
+};

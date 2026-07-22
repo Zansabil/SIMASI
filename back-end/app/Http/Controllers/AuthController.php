@@ -173,7 +173,8 @@ class AuthController extends Controller
         ]);
 
         // Kirim email
-        $resetUrl = url('http://localhost:5173/reset-password?token=' . $token . '&email=' . urlencode($user->email));
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $resetUrl = $frontendUrl . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
         Mail::to($user->email)->send(new ResetPasswordMail($resetUrl, $user->nama));
 
         // Buat email tersamarkan (masked email)
