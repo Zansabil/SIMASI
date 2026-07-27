@@ -206,6 +206,19 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   // ============================================================
   // FETCH DATA: Dari API backend, fallback ke data dummy
   // ============================================================
+
+  // Mencegah background scroll saat modal terbuka (mengatasi bug pada screenshot)
+  useEffect(() => {
+    if (isDecisionOpen || isDetailOpen || statusModal.isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isDecisionOpen, isDetailOpen, statusModal.isOpen]);
+  
   const loadProcurements = useCallback(async () => {
     setIsLoading(true);
     try {

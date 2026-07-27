@@ -32,6 +32,7 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
     source_of_funds: asset.source_of_funds ?? asset.sumber_dana ?? 'Dana Yayasan',
     price: asset.price ?? asset.harga_aset ?? 0,
     image_path: asset.image_path ?? asset.foto_aset,
+    purchase_date: asset.purchase_date ?? asset.tgl_diperoleh ?? null,
     sub_assets: asset.sub_aset ?? asset.subAset ?? []
   }));
 
