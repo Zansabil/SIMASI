@@ -53,9 +53,23 @@ class ProfileController extends Controller
             'data' => [
                 'nama' => $pengguna->nama,
                 'email' => $pengguna->email,
-                'foto_profil' => $pengguna->foto_profil ? asset('storage/avatars/' . $pengguna->foto_profil) : null
+                'foto_profil' => $pengguna->foto_profil ? url('api/avatars/' . $pengguna->foto_profil) : null
             ]
         ], 200);
+    }
+
+    /**
+     * Mengambil foto profil secara langsung (menghindari masalah symlink di shared hosting)
+     */
+    public function getAvatar($filename)
+    {
+        $path = storage_path('app/public/avatars/' . $filename);
+        
+        if (!file_exists($path)) {
+            abort(404);
+        }
+        
+        return response()->file($path);
     }
 
     /**

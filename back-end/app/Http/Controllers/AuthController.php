@@ -42,7 +42,7 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         // Tambahkan URL foto profil ke data_user
-        $user->foto_profil_url = $user->foto_profil ? asset('storage/avatars/' . $user->foto_profil) : null;
+        $user->foto_profil_url = $user->foto_profil ? url('api/avatars/' . $user->foto_profil) : null;
 
         return response()->json([
             'success'      => true,
