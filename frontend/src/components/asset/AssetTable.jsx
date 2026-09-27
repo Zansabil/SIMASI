@@ -2,7 +2,7 @@ import React, { memo, useState } from 'react';
 import './AssetTable.css';
 import { formatPrice } from '../../utils/currency';
 import { resolveImageUrl } from '../../utils/imageHelper';
-import { FiEye, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiAlertTriangle } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiExternalLink } from 'react-icons/fi';
 
 const BASE_COLUMNS = 11;
 
@@ -11,10 +11,8 @@ const formatCondition = (condition) => {
   return condition.charAt(0).toUpperCase() + condition.slice(1);
 };
 
-function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onUpdateSubAssetCondition, onReportDamage, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
+function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onNavigateToRepair, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
   const [expandedAssetId, setExpandedAssetId] = useState(null);
-  const [editingSubAssetId, setEditingSubAssetId] = useState(null);
-  const [editingCondition, setEditingCondition] = useState('');
 
   const toggleExpand = (id) => {
     setExpandedAssetId(prev => prev === id ? null : id);
@@ -159,119 +157,18 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
                                 {asset.sub_assets.map((sub, sIdx) => {
                                   const isCurrentlyUnderRepair = activeRepairCodes.includes(sub.kode_sub_aset);
                                   const isRepairInProgress = inProgressRepairCodes.includes(sub.kode_sub_aset);
-                                  const displayStatus = isRepairInProgress ? 'Sedang Diperbaiki' : (sub.status_penggunaan || 'Tersedia');
+                                  const isRusak = (sub.kondisi_aset || '').toLowerCase() === 'rusak';
+                                  const displayStatus = (isRepairInProgress || isRusak) ? 'Sedang Diperbaiki' : (sub.status_penggunaan || 'Tersedia');
+                                   const displayCondition = isRepairInProgress ? 'Rusak' : (sub.kondisi_aset || 'Baik');
                                   
                                   return (
                                   <tr key={sub.id}>
                                     <td className="text-center">{sIdx + 1}.</td>
                                     <td className="font-mono text-bold">{sub.kode_sub_aset}</td>
                                     <td>
-                                      {editingSubAssetId === sub.id ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <select 
-                                            value={editingCondition} 
-                                            onChange={(e) => setEditingCondition(e.target.value)}
-                                            style={{ minWidth: '120px', padding: '4px 8px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '13px' }}
-                                          >
-                                            <option value="Baik">Baik</option>
-                                            <option value="Rusak ringan">Rusak ringan</option>
-                                            <option value="Rusak berat">Rusak berat</option>
-                                          </select>
-                                          <button 
-                                            type="button"
-                                            onClick={() => {
-                                              if (onUpdateSubAssetCondition) {
-                                                onUpdateSubAssetCondition(sub.id, editingCondition, asset.id);
-                                              }
-                                              setEditingSubAssetId(null);
-                                            }}
-                                            style={{ background: '#10b981', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                                          >Simpan</button>
-                                          <button 
-                                            type="button"
-                                            onClick={() => setEditingSubAssetId(null)}
-                                            style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                                          >Batal</button>
-                                        </div>
-                                      ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                          <span className={`badge-cond badge-${(sub.kondisi_aset || '').toLowerCase().replace(/\s+/g, '-')}`}>
-                                            {formatCondition(sub.kondisi_aset)}
-                                          </span>
-                                          {(() => {
-                                            const conditionLower = (sub.kondisi_aset || '').toLowerCase();
-                                            const isConditionGood = conditionLower === 'baik' || conditionLower === '';
-                                            
-                                            const disableReportBtn = isConditionGood || isCurrentlyUnderRepair;
-                                            const disableEditBtn = isRepairInProgress;
-                                            
-                                            let reportTooltip = "Laporkan Kerusakan";
-                                            if (isCurrentlyUnderRepair) {
-                                              reportTooltip = "Unit ini sedang dalam proses perbaikan/menunggu perbaikan";
-                                            } else if (isConditionGood) {
-                                              reportTooltip = "Ubah status kondisi menjadi rusak terlebih dahulu";
-                                            }
-
-                                            return (
-                                            <>
-                                              <button 
-                                                type="button" 
-                                                disabled={disableEditBtn}
-                                                style={{ 
-                                                  background: 'none', 
-                                                  border: 'none', 
-                                                  cursor: disableEditBtn ? 'not-allowed' : 'pointer', 
-                                                  color: disableEditBtn ? '#cbd5e1' : '#64748b', 
-                                                  padding: '2px', 
-                                                  display: 'flex', 
-                                                  alignItems: 'center', 
-                                                  justifyContent: 'center', 
-                                                  borderRadius: '4px',
-                                                  opacity: disableEditBtn ? 0.5 : 1
-                                                }}
-                                                onClick={() => {
-                                                  if (!disableEditBtn) {
-                                                    setEditingSubAssetId(sub.id);
-                                                    setEditingCondition(sub.kondisi_aset || 'Baik');
-                                                  }
-                                                }}
-                                                title={disableEditBtn ? "Tidak dapat mengubah kondisi saat unit sedang diperbaiki" : "Edit Kondisi Unit"}
-                                                onMouseOver={(e) => { if (!disableEditBtn) e.currentTarget.style.color = '#3b82f6'; }}
-                                                onMouseOut={(e) => { if (!disableEditBtn) e.currentTarget.style.color = '#64748b'; }}
-                                              >
-                                                <FiEdit2 size={14} />
-                                              </button>
-                                              <button 
-                                                type="button" 
-                                                disabled={disableReportBtn}
-                                                style={{ 
-                                                  background: 'none', 
-                                                  border: 'none', 
-                                                  cursor: disableReportBtn ? 'not-allowed' : 'pointer', 
-                                                  color: disableReportBtn ? '#cbd5e1' : '#64748b', 
-                                                  padding: '2px', 
-                                                  display: 'flex', 
-                                                  alignItems: 'center', 
-                                                  justifyContent: 'center', 
-                                                  borderRadius: '4px',
-                                                  opacity: disableReportBtn ? 0.5 : 1
-                                                }}
-                                                onClick={() => {
-                                                  if (!disableReportBtn && onReportDamage) {
-                                                    onReportDamage(sub, asset);
-                                                  }
-                                                }}
-                                                title={reportTooltip}
-                                                onMouseOver={(e) => { if (!disableReportBtn) e.currentTarget.style.color = '#f59e0b'; }}
-                                                onMouseOut={(e) => { if (!disableReportBtn) e.currentTarget.style.color = '#64748b'; }}
-                                              >
-                                                <FiAlertTriangle size={14} />
-                                              </button>
-                                            </>
-                                            );
-                                          })()}
-                                        </div>
-                                      )}
+                                      <span className={`badge-cond badge-${(displayCondition).toLowerCase().replace(/\s+/g, '-')}`}>
+                                        {formatCondition(displayCondition)}
+                                      </span>
                                     </td>
                                     <td>{sub.ruangan?.nama_ruangan || '-'}</td>
                                     <td>

@@ -441,7 +441,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       localStorage.setItem('simas_procurements', JSON.stringify(updated));
       setProcurements(updated);
       setView('list');
-      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dibuat dan disimpan (offline).' });
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dibuat dan disimpan.' });
       setIsSubmitting(false);
     }
   };

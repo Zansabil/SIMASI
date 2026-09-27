@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DEFAULT_UNITS, DEFAULT_CATEGORIES } from '../config';
 import { mapAssetListResponse, mapAssetForRequest, mapAssetResponse } from '../utils/assetMapper';
 import * as assetService from '../services/assetService';
-import { createRepair, fetchRepairs } from '../services/repairService';
+import { fetchRepairs } from '../services/repairService';
 
 const FILTER_FIELD_MAP = {
   all: 'all',
@@ -13,6 +14,7 @@ const FILTER_FIELD_MAP = {
 };
 
 export default function useAssetList() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedFilterField, setSelectedFilterField] = useState('all'); // all, name, code, location
@@ -24,10 +26,7 @@ export default function useAssetList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [assetToEdit, setAssetToEdit] = useState(null);
   
-  // Report Damage Modal state
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [reportSubAsset, setReportSubAsset] = useState(null);
-  const [reportParentAsset, setReportParentAsset] = useState(null);
+  // Active repair codes (to prevent duplicate reporting)
   const [activeRepairCodes, setActiveRepairCodes] = useState([]);
   const [inProgressRepairCodes, setInProgressRepairCodes] = useState([]);
   
@@ -159,7 +158,7 @@ export default function useAssetList() {
     };
     
     loadActiveRepairs();
-  }, [isReportModalOpen]); // Reload when report modal closes (so new reports are immediately blocked)
+  }, [allAssets]); // Reload when asset list changes
 
   // Reset Halaman ke 1 saat melakukan pencarian atau mengganti kategori filter
   useEffect(() => {
@@ -259,60 +258,15 @@ export default function useAssetList() {
     });
   };
 
-  const handleUpdateSubAssetCondition = async (subAssetId, newCondition, parentAssetId) => {
-    try {
-      const response = await assetService.updateSubAssetCondition(subAssetId, { kondisi_aset: newCondition });
-      if (response && response.success) {
-        setAllAssets(prevAssets => prevAssets.map(asset => {
-          if (asset.id === parentAssetId) {
-            const currentSubAssets = asset.sub_aset || asset.subAset || asset.sub_assets || [];
-            return {
-              ...asset,
-              sub_aset: currentSubAssets.map(sub => {
-                if (sub.id === subAssetId) {
-                  return { ...sub, kondisi_aset: newCondition };
-                }
-                return sub;
-              })
-            };
-          }
-          return asset;
-        }));
-        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Kondisi unit berhasil diperbarui.' });
-      }
-    } catch (err) {
-      console.error("Gagal update kondisi unit:", err);
-      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: 'Gagal memperbarui kondisi unit.' });
-    }
-  };
-
-  const handleReportDamageClick = (subAsset, parentAsset) => {
-    setReportSubAsset(subAsset);
-    setReportParentAsset(parentAsset);
-    setIsReportModalOpen(true);
-  };
-
-  const handleReportDamageSubmit = async (formData) => {
-    try {
-      const formDataObj = new FormData();
-      formDataObj.append('id_aset', formData.asset_id);
-      formDataObj.append('kategori_aset', 'Lainnya');
-      formDataObj.append('deskripsi', formData.description);
-      formDataObj.append('lokasi_baru', formData.location);
-      
-      if (formData.image_file) {
-        formDataObj.append('lampiran', formData.image_file);
-      }
-
-      await createRepair(formDataObj);
-      
-      setIsReportModalOpen(false);
-      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Laporan kerusakan unit berhasil dikirim ke sistem.' });
-    } catch (err) {
-      console.error("Gagal buat laporan", err);
-      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: 'Gagal mengirim laporan kerusakan.' });
-      setIsReportModalOpen(false);
-    }
+  const handleNavigateToRepair = (subAsset, parentAsset) => {
+    const role = localStorage.getItem('user_role') || 'admin';
+    const repairPath = `/${role}/perbaikan`;
+    const params = new URLSearchParams({
+      prefill_asset_id: parentAsset.id,
+      prefill_sub_asset: subAsset.kode_sub_aset,
+      auto_open: 'true'
+    });
+    navigate(`${repairPath}?${params.toString()}`);
   };
 
   const handleDeleteSubAssetClick = (subAsset, parentAssetId) => {
@@ -382,13 +336,7 @@ export default function useAssetList() {
     processDelete,
     handleTambahAsetClick,
     handleFormSubmit,
-    handleUpdateSubAssetCondition,
-    isReportModalOpen,
-    setIsReportModalOpen,
-    reportSubAsset,
-    reportParentAsset,
-    handleReportDamageClick,
-    handleReportDamageSubmit,
+    handleNavigateToRepair,
     activeRepairCodes,
     inProgressRepairCodes,
     handleDeleteSubAssetClick,

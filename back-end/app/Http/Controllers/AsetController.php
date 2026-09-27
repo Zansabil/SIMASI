@@ -221,13 +221,38 @@ class AsetController extends Controller
 
         if (count($perubahan) > 0) {
             $teksPerubahan = [];
+            
+            $labelKolom = [
+                'nama_aset' => 'Nama Aset',
+                'jenis_aset' => 'Jenis Aset',
+                'id_unit' => 'Unit',
+                'id_ruangan' => 'Ruangan',
+                'jumlah_aset' => 'Jumlah',
+                'kondisi_aset' => 'Kondisi',
+                'tgl_diperoleh' => 'Tanggal Diperoleh',
+                'harga_aset' => 'Harga',
+                'sumber_dana' => 'Sumber Dana',
+                'kode_inventaris' => 'Kode Inventaris'
+            ];
+
             foreach ($perubahan as $kolom => $nilaiBaru) {
-                if ($kolom != 'updated_at') {
-                    if ($kolom == 'foto') {
-                        $teksPerubahan[] = "foto diperbarui";
-                    } else {
-                        $teksPerubahan[] = "kolom '$kolom' menjadi '$nilaiBaru'";
-                    }
+                if ($kolom == 'updated_at' || $kolom == 'tgl_diperbaharui') continue;
+
+                $nilaiLama = $aset->getOriginal($kolom);
+                $namaLabel = $labelKolom[$kolom] ?? $kolom;
+
+                if ($kolom == 'foto') {
+                    $teksPerubahan[] = "Foto diperbarui";
+                } elseif ($kolom == 'id_unit') {
+                    $unitLama = \App\Models\LokasiUnit::find($nilaiLama)?->nama_unit ?? 'Tidak ada';
+                    $unitBaru = \App\Models\LokasiUnit::find($nilaiBaru)?->nama_unit ?? 'Tidak ada';
+                    $teksPerubahan[] = "Unit diubah dari '$unitLama' menjadi '$unitBaru'";
+                } elseif ($kolom == 'id_ruangan') {
+                    $ruangLama = \App\Models\Ruangan::find($nilaiLama)?->nama_ruangan ?? 'Tidak ada';
+                    $ruangBaru = \App\Models\Ruangan::find($nilaiBaru)?->nama_ruangan ?? 'Tidak ada';
+                    $teksPerubahan[] = "Ruangan diubah dari '$ruangLama' menjadi '$ruangBaru'";
+                } else {
+                    $teksPerubahan[] = "$namaLabel diubah dari '$nilaiLama' menjadi '$nilaiBaru'";
                 }
             }
             $keterangan_final = "Aset telah diedit. Detail: " . implode(', ', $teksPerubahan);

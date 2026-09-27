@@ -18,7 +18,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [konfirmasiPassword, setKonfirmasiPassword] = useState('');
   const [kodeRegistrasi, setKodeRegistrasi] = useState('');
-  const [agreeTerms, setAgreeTerms] = useState(false);
+
   const [lokasiUnits, setLokasiUnits] = useState([]);
 
   useEffect(() => {
@@ -52,10 +52,7 @@ export default function Register() {
       return;
     }
 
-    if (!agreeTerms) {
-      setErrorMsg('Anda harus menyetujui Syarat & Ketentuan serta Kebijakan Privasi.');
-      return;
-    }
+
 
     setIsLoading(true);
 
@@ -84,7 +81,7 @@ export default function Register() {
       setPassword('');
       setKonfirmasiPassword('');
       setKodeRegistrasi('');
-      setAgreeTerms(false);
+
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -292,18 +289,7 @@ export default function Register() {
 
           {/* Form Footer */}
           <div className="form-footer">
-            {/* Checkbox agreement */}
-            <label className="terms-checkbox">
-              <input
-                type="checkbox"
-                checked={agreeTerms}
-                onChange={(e) => setAgreeTerms(e.target.checked)}
-                required
-              />
-              <span>
-                Saya menyetujui <a href="#terms" className="terms-link">Syarat & Ketentuan</a> dan <a href="#privacy" className="terms-link">Kebijakan Privasi</a> yang berlaku
-              </span>
-            </label>
+
 
             <button type="submit" className="btn-primary" disabled={isLoading}>
               {isLoading ? 'Mendaftarkan...' : 'Daftar Sekarang'}

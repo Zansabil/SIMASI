@@ -47,8 +47,6 @@ class SubAsetController extends Controller
 
                         foreach ($laporans as $laporan) {
                             $laporan->update([
-                                'id_validasi'      => auth()->user()->id, 
-                                'tgl_validasi'     => now(),
                                 'status_kerusakan' => 'Ditolak',           
                                 'alasan_penolakan' => 'Dibatalkan otomatis oleh sistem karena pengguna telah mengubah kondisi unit menjadi Baik.'
                             ]);

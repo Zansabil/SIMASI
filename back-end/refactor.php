@@ -1,5 +1,5 @@
 <?php
-$models = ['aset', 'laporan_kerusakan', 'notifikasi', 'pemindahan_aset', 'pengadaan_aset', 'pengguna', 'perbaikan_aset', 'perizinan', 'riwayat_aset'];
+$models = ['aset', 'laporan_kerusakan', 'notifikasi', 'pengadaan_aset', 'pengguna', 'perbaikan_aset', 'perizinan', 'riwayat_aset'];
 
 foreach ($models as $m) {
    $pascal = str_replace(' ', '', ucwords(str_replace('_', ' ', $m)));

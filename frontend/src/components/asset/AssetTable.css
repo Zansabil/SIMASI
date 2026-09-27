@@ -330,6 +330,11 @@
   color: #059669;
 }
 
+.badge-rusak {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 .badge-rusak-ringan {
   background-color: #fffbeb;
   color: #d97706;

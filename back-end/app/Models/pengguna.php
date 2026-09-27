@@ -79,11 +79,7 @@ class Pengguna extends Authenticatable
         return $this->hasMany(LaporanKerusakan::class, 'id_validasi');
     }
 
-    public function pemindahan_aset()
-    {
-        // Hubungannya: 1 Pengguna "Memiliki Banyak" (hasMany) catatan pemindahan
-        return $this->hasMany(PemindahanAset::class, 'id_pengguna', 'id');
-    }
+
 
     public function aset()
     {

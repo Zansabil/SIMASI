@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\AsetController;
 use App\Http\Controllers\LaporanKerusakanController;
-use App\Http\Controllers\PemindahanAsetController;
+
 use App\Http\Controllers\PerbaikanAsetController;
 use App\Http\Controllers\PerizinanController;
 use App\Http\Controllers\PengadaanAsetController;
@@ -78,8 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/sub_aset/{id}/kondisi', [SubAsetController::class, 'updateKondisi']);
     Route::delete('/sub_aset/{id}', [SubAsetController::class, 'destroy']);
     
-    // Route Pemindahan Aset
-    Route::apiResource('pemindahan_aset', PemindahanAsetController::class);
+
 
     // Rute untuk tabel Laporan Kerusakan
     Route::apiResource('laporan_kerusakan', LaporanKerusakanController::class);

@@ -57,7 +57,8 @@ export default function Sidebar({ role, currentPath, isMobileOpen, onCloseMobile
   const menus = MENU_CONFIG[normalizedRole] || MENU_CONFIG['admin'];
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
     navigate('/login');
   };
 

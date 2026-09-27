@@ -17,7 +17,7 @@ class LaporanKerusakanController extends Controller
     public function index()
     {
         // Eager Loading untuk efisiensi query saat dikirim ke Frontend
-        $laporans = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'validator'])->get();
+        $laporans = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor'])->get();
         
         return response()->json([
             'success' => true,
@@ -29,7 +29,7 @@ class LaporanKerusakanController extends Controller
     // 2. Detail Data (READ SINGLE) - Berguna jika React ingin melihat detail 1 laporan
     public function show($id)
     {
-        $laporan = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'validator'])->findOrFail($id);
+        $laporan = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -44,8 +44,6 @@ class LaporanKerusakanController extends Controller
         $laporan = LaporanKerusakan::with('aset')->findOrFail($id);
 
         $laporan->update([
-            'id_validasi'      => auth()->user()->id, // Mencatat ID Super Admin/Admin dari token Sanctum
-            'tgl_validasi'     => now(),              
             'status_kerusakan' => 'Diproses'          
         ]);
 
@@ -93,8 +91,6 @@ class LaporanKerusakanController extends Controller
         $laporan = LaporanKerusakan::with('aset')->findOrFail($id);
 
         $laporan->update([
-            'id_validasi'      => auth()->user()->id, 
-            'tgl_validasi'     => now(),
             'status_kerusakan' => 'Ditolak',           
             'alasan_penolakan' => $request->alasan_penolakan 
         ]);
@@ -161,6 +157,7 @@ class LaporanKerusakanController extends Controller
 
         // Otomatisasi ID Pelapor dan Tanggal agar lebih aman dan tidak perlu diinput manual dari Frontend
         $data['id_pelapor'] = auth()->user()->id;
+        $data['nama_pelapor'] = $request->has('nama_pelapor') && !empty($request->nama_pelapor) ? strip_tags($request->nama_pelapor) : auth()->user()->nama;
         $data['tgl_laporan'] = now();
         $data['status_kerusakan'] = 'Menunggu'; // Set default status
 
@@ -317,6 +314,19 @@ class LaporanKerusakanController extends Controller
 
         if ($request->status_kerusakan === 'Diproses' && !$laporan->tgl_mulai_perbaikan) {
             $updateData['tgl_mulai_perbaikan'] = now();
+
+            // Update kondisi sub-aset menjadi 'Rusak' saat petugas memproses perbaikan
+            if ($laporan->deskripsi) {
+                if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                    $kodeSubAset = trim($matches[1]);
+                    $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
+                    if ($subAset) {
+                        $subAset->update([
+                            'kondisi_aset' => 'Rusak'
+                        ]);
+                    }
+                }
+            }
         }
         if ($request->status_kerusakan === 'Selesai' && !$laporan->tgl_selesai_perbaikan) {
             $updateData['tgl_selesai_perbaikan'] = now();

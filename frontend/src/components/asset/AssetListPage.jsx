@@ -5,7 +5,6 @@ import DashboardLayout from '../layout/DashboardLayout';
 import StatusModal from '../ui/StatusModal';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
-import SubAssetReportModal from './SubAssetReportModal';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
 import FilterSelect from '../ui/FilterSelect';
@@ -44,13 +43,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     handleDeleteClick,
     processDelete,
     handleTambahAsetClick,
-    handleUpdateSubAssetCondition,
-    isReportModalOpen,
-    setIsReportModalOpen,
-    reportSubAsset,
-    reportParentAsset,
-    handleReportDamageClick,
-    handleReportDamageSubmit,
+    handleNavigateToRepair,
     activeRepairCodes,
     inProgressRepairCodes,
     handleDeleteSubAssetClick,
@@ -120,8 +113,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
-              onUpdateSubAssetCondition={handleUpdateSubAssetCondition}
-              onReportDamage={handleReportDamageClick}
+              onNavigateToRepair={handleNavigateToRepair}
               onDeleteSubAsset={handleDeleteSubAssetClick}
               activeRepairCodes={activeRepairCodes}
               inProgressRepairCodes={inProgressRepairCodes}
@@ -144,8 +136,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
-            onUpdateSubAssetCondition={handleUpdateSubAssetCondition}
-            onReportDamage={handleReportDamageClick}
+            onNavigateToRepair={handleNavigateToRepair}
             onDeleteSubAsset={handleDeleteSubAssetClick}
             activeRepairCodes={activeRepairCodes}
             inProgressRepairCodes={inProgressRepairCodes}
@@ -175,14 +166,6 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           isOpen={isDetailOpen}
           onClose={() => setIsDetailOpen(false)}
           asset={assetToView}
-        />
-
-        <SubAssetReportModal
-          isOpen={isReportModalOpen}
-          onClose={() => setIsReportModalOpen(false)}
-          onSubmit={handleReportDamageSubmit}
-          selectedSubAsset={reportSubAsset}
-          parentAsset={reportParentAsset}
         />
 
         <StatusModal
