@@ -206,6 +206,19 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   // ============================================================
   // FETCH DATA: Dari API backend, fallback ke data dummy
   // ============================================================
+
+  // Mencegah background scroll saat modal terbuka (mengatasi bug pada screenshot)
+  useEffect(() => {
+    if (isDecisionOpen || isDetailOpen || statusModal.isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isDecisionOpen, isDetailOpen, statusModal.isOpen]);
+  
   const loadProcurements = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -428,7 +441,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       localStorage.setItem('simas_procurements', JSON.stringify(updated));
       setProcurements(updated);
       setView('list');
-      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dibuat dan disimpan (offline).' });
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Surat pengajuan pengadaan aset berhasil dibuat dan disimpan.' });
       setIsSubmitting(false);
     }
   };

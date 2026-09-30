@@ -1,4 +1,5 @@
-    import api from './api';
+import api from './api';
+console.log("Asset service loaded!");
 
 /**
  * Mengambil daftar aset dari server dengan filter pencarian opsional
@@ -53,5 +54,21 @@ export const fetchCategories = async () => {
  */
 export const fetchRooms = async () => {
   const response = await api.get('/api/ruangan');
+  return response.data;
+};
+
+/**
+ * Memperbarui kondisi spesifik untuk sub-aset
+ */
+export const updateSubAssetCondition = async (id, payload) => {
+  const response = await api.patch(`/api/sub_aset/${id}/kondisi`, payload);
+  return response.data;
+};
+
+/**
+ * Menghapus satu unit spesifik (sub-aset) dari server
+ */
+export const deleteSubAsset = async (id) => {
+  const response = await api.delete(`/api/sub_aset/${id}`);
   return response.data;
 };

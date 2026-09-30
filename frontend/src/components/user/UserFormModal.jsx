@@ -98,7 +98,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         setFormName(editingUser.name);
         setFormEmail(editingUser.email);
         setFormRole(editingUser.role);
-        setFormUnit(editingUser.unit || '-');
+        setFormUnit(editingUser.unit || 'Yayasan / Global');
         setFormPassword(''); // optional on edit
         setFormStatus(editingUser.status || 'Aktif');
         setFormAccess(editingUser.access ? { ...editingUser.access } : getRoleDefaultAccess(editingUser.role));
@@ -107,7 +107,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         setFormName('');
         setFormEmail('');
         setFormRole('');
-        setFormUnit('-');
+        setFormUnit('Yayasan / Global');
         setFormPassword('');
         setFormStatus('Aktif');
         setFormAccess({
@@ -333,7 +333,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
               value={formUnit}
               onChange={(e) => setFormUnit(e.target.value)}
             >
-              <option value="-">- (Yayasan / Global)</option>
+              <option value="Yayasan / Global">Yayasan / Global</option>
               <option value="SD">SD</option>
               <option value="SMP">SMP</option>
               <option value="SMA">SMA</option>

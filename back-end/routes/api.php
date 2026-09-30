@@ -6,7 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\AsetController;
 use App\Http\Controllers\LaporanKerusakanController;
-use App\Http\Controllers\PemindahanAsetController;
+
 use App\Http\Controllers\PerbaikanAsetController;
 use App\Http\Controllers\PerizinanController;
 use App\Http\Controllers\PengadaanAsetController;
@@ -17,6 +17,7 @@ use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\LokasiUnitController;
 use App\Http\Controllers\KodeRegistrasiController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SubAsetController;
 
 // Rute awal (Opsional: Biasanya di API hanya digunakan untuk mengecek apakah server hidup)
 Route::get('/', function () {
@@ -35,6 +36,9 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Data Master Publik
 Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
+
+// Route untuk mengambil foto profil secara langsung
+Route::get('/avatars/{filename}', [ProfileController::class, 'getAvatar']);
 
 // Trik cepat untuk membuat password acak (Bcrypt)
 Route::get('/buat-password', function() {
@@ -70,8 +74,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute untuk tabel Aset (Menggunakan apiResource)
     Route::apiResource('aset', AsetController::class);
     
-    // Route Pemindahan Aset
-    Route::apiResource('pemindahan_aset', PemindahanAsetController::class);
+    // Route Edit Sub-Aset Kondisi
+    Route::patch('/sub_aset/{id}/kondisi', [SubAsetController::class, 'updateKondisi']);
+    Route::delete('/sub_aset/{id}', [SubAsetController::class, 'destroy']);
+    
+
 
     // Rute untuk tabel Laporan Kerusakan
     Route::apiResource('laporan_kerusakan', LaporanKerusakanController::class);

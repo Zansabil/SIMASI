@@ -2,7 +2,7 @@ import React, { memo, useState } from 'react';
 import './AssetTable.css';
 import { formatPrice } from '../../utils/currency';
 import { resolveImageUrl } from '../../utils/imageHelper';
-import { FiEye, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight } from 'react-icons/fi';
+import { FiEye, FiEdit2, FiTrash2, FiChevronDown, FiChevronRight, FiExternalLink } from 'react-icons/fi';
 
 const BASE_COLUMNS = 11;
 
@@ -11,7 +11,7 @@ const formatCondition = (condition) => {
   return condition.charAt(0).toUpperCase() + condition.slice(1);
 };
 
-function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true }) {
+function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onNavigateToRepair, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
   const [expandedAssetId, setExpandedAssetId] = useState(null);
 
   const toggleExpand = (id) => {
@@ -30,6 +30,7 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
     source_of_funds: asset.source_of_funds ?? asset.sumber_dana ?? 'Dana Yayasan',
     price: asset.price ?? asset.harga_aset ?? 0,
     image_path: asset.image_path ?? asset.foto_aset,
+    purchase_date: asset.purchase_date ?? asset.tgl_diperoleh ?? null,
     sub_assets: asset.sub_aset ?? asset.subAset ?? []
   }));
 
@@ -149,26 +150,65 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
                                   <th>Kondisi Unit</th>
                                   <th>Lokasi Ruangan</th>
                                   <th>Status Penggunaan</th>
+                                  {showActions && <th style={{ width: '60px' }}>Aksi</th>}
                                 </tr>
                               </thead>
                               <tbody>
-                                {asset.sub_assets.map((sub, sIdx) => (
+                                {asset.sub_assets.map((sub, sIdx) => {
+                                  const isCurrentlyUnderRepair = activeRepairCodes.includes(sub.kode_sub_aset);
+                                  const isRepairInProgress = inProgressRepairCodes.includes(sub.kode_sub_aset);
+                                  const isRusak = (sub.kondisi_aset || '').toLowerCase() === 'rusak';
+                                  const displayStatus = (isRepairInProgress || isRusak) ? 'Sedang Diperbaiki' : (sub.status_penggunaan || 'Tersedia');
+                                   const displayCondition = isRepairInProgress ? 'Rusak' : (sub.kondisi_aset || 'Baik');
+                                  
+                                  return (
                                   <tr key={sub.id}>
                                     <td className="text-center">{sIdx + 1}.</td>
                                     <td className="font-mono text-bold">{sub.kode_sub_aset}</td>
                                     <td>
-                                      <span className={`badge-cond badge-${(sub.kondisi_aset || '').toLowerCase().replace(/\s+/g, '-')}`}>
-                                        {formatCondition(sub.kondisi_aset)}
+                                      <span className={`badge-cond badge-${(displayCondition).toLowerCase().replace(/\s+/g, '-')}`}>
+                                        {formatCondition(displayCondition)}
                                       </span>
                                     </td>
                                     <td>{sub.ruangan?.nama_ruangan || '-'}</td>
                                     <td>
-                                      <span className={`badge-status status-${(sub.status_penggunaan || '').toLowerCase()}`}>
-                                        {sub.status_penggunaan || 'Tersedia'}
+                                      <span className={`badge-status status-${displayStatus.toLowerCase().replace(/\s+/g, '-')}`}>
+                                        {displayStatus}
                                       </span>
                                     </td>
+                                    {showActions && (
+                                      <td className="text-center">
+                                        <button 
+                                          type="button" 
+                                          disabled={isCurrentlyUnderRepair || isRepairInProgress}
+                                          style={{ 
+                                            background: 'none', 
+                                            border: 'none', 
+                                            cursor: (isCurrentlyUnderRepair || isRepairInProgress) ? 'not-allowed' : 'pointer', 
+                                            color: (isCurrentlyUnderRepair || isRepairInProgress) ? '#cbd5e1' : '#ef4444', 
+                                            padding: '2px', 
+                                            display: 'inline-flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center', 
+                                            borderRadius: '4px',
+                                            opacity: (isCurrentlyUnderRepair || isRepairInProgress) ? 0.5 : 1
+                                          }}
+                                          onClick={() => {
+                                            if (!(isCurrentlyUnderRepair || isRepairInProgress) && onDeleteSubAsset) {
+                                              onDeleteSubAsset(sub, asset.id);
+                                            }
+                                          }}
+                                          title={(isCurrentlyUnderRepair || isRepairInProgress) ? "Tidak dapat menghapus unit yang sedang diperbaiki" : "Hapus Unit"}
+                                          onMouseOver={(e) => { if (!(isCurrentlyUnderRepair || isRepairInProgress)) e.currentTarget.style.color = '#dc2626'; }}
+                                          onMouseOut={(e) => { if (!(isCurrentlyUnderRepair || isRepairInProgress)) e.currentTarget.style.color = '#ef4444'; }}
+                                        >
+                                          <FiTrash2 size={14} />
+                                        </button>
+                                      </td>
+                                    )}
                                   </tr>
-                                ))}
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>

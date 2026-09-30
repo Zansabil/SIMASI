@@ -328,6 +328,11 @@
   color: #059669;
 }
 
+.badge-rusak {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 .badge-rusak-ringan {
   background-color: #fffbeb;
   color: #d97706;
@@ -360,4 +365,9 @@
 .status-rusak {
   background-color: #fff7ed;
   color: #ea580c;
+}
+
+.status-sedang-diperbaiki {
+  background-color: #fef2f2;
+  color: #ef4444;
 }

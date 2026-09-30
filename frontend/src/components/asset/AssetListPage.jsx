@@ -38,7 +38,18 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     confirmModal, setConfirmModal,
 
     // ⚡ Tombol Aksi Tambah, Detail, Edit, Hapus
-    handleView, handleEdit, handleDeleteClick, processDelete, handleTambahAsetClick
+    handleView,
+    handleEdit,
+    handleDeleteClick,
+    processDelete,
+    handleTambahAsetClick,
+    handleNavigateToRepair,
+    activeRepairCodes,
+    inProgressRepairCodes,
+    handleDeleteSubAssetClick,
+    processDeleteSubAsset,
+    confirmSubAssetDelete,
+    setConfirmSubAssetDelete
   } = useAssetList();
 
   return (
@@ -102,6 +113,10 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               onView={handleView}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
+              onNavigateToRepair={handleNavigateToRepair}
+              onDeleteSubAsset={handleDeleteSubAssetClick}
+              activeRepairCodes={activeRepairCodes}
+              inProgressRepairCodes={inProgressRepairCodes}
             />
             <Pagination
               currentPage={currentPage}
@@ -121,6 +136,10 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onView={handleView}
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
+            onNavigateToRepair={handleNavigateToRepair}
+            onDeleteSubAsset={handleDeleteSubAssetClick}
+            activeRepairCodes={activeRepairCodes}
+            inProgressRepairCodes={inProgressRepairCodes}
           />
         )}
 
@@ -166,6 +185,17 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           cancelText="Batal"
           onConfirm={processDelete}
           onCancel={() => setConfirmModal({ isOpen: false, asset: null })}
+        />
+
+        <StatusModal
+          isOpen={confirmSubAssetDelete.isOpen}
+          type="confirm"
+          title="Konfirmasi Hapus Unit"
+          message={`Apakah Anda yakin ingin menghapus unit "${confirmSubAssetDelete.subAsset?.kode_sub_aset}"? Jumlah barang pada aset induk akan otomatis berkurang.`}
+          confirmText="Ya, Hapus"
+          cancelText="Batal"
+          onConfirm={processDeleteSubAsset}
+          onCancel={() => setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null })}
         />
       </main>
     </DashboardLayout>

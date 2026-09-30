@@ -199,8 +199,6 @@ export default function KelolaKodeRegistrasi() {
                         <button 
                           onClick={() => handleDelete(kode.id)}
                           style={{ padding: '4px 8px', background: '#ef4444', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                          disabled={kode.pengguna_count > 0}
-                          title={kode.pengguna_count > 0 ? "Tidak bisa dihapus karena sudah digunakan" : ""}
                         >
                           Hapus
                         </button>

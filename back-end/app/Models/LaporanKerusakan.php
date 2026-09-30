@@ -20,12 +20,12 @@ class LaporanKerusakan extends Model
     protected $fillable = [
         'id_aset',
         'id_pelapor',
+        'nama_pelapor',
         'deskripsi',
         'kategori_aset',
         'tgl_laporan',
         'status_kerusakan',
-        'id_validasi',
-        'tgl_validasi',
+
         'lampiran',
         'alasan_penolakan',
         'keterangan_perbaikan',
@@ -47,10 +47,5 @@ class LaporanKerusakan extends Model
         return $this->belongsTo(Pengguna::class, 'id_pelapor')->withTrashed();
     }
 
-    // 3. Relasi ke tabel pengguna (sebagai Pemvalidasi/Admin)
-    public function validator()
-    {
-        // Hubungannya: 1 Laporan ini divalidasi oleh (belongsTo) seorang Validator (Admin Unit)
-        return $this->belongsTo(Pengguna::class, 'id_validasi')->withTrashed();
-    }
+
 }

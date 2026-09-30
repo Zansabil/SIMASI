@@ -64,9 +64,37 @@ class PerbaikanAsetController extends Controller
             
             $laporan->update($updateData);
             
-            // B. Kembalikan status kondisi aset utama menjadi "Baik"
-            $aset = Aset::findOrFail($laporan->id_aset);
-            $aset->update(['kondisi_aset' => 'Baik']);
+            // B. Kembalikan status kondisi aset utama menjadi "Baik" (jika aset belum dihapus)
+            $aset = Aset::find($laporan->id_aset);
+            if ($aset) {
+                $aset->update(['kondisi_aset' => 'Baik']);
+            }
+
+            // C. Kirim Notifikasi dan Email Selesai beserta Keterangan Lapangan & Hasil Perbaikan
+            $laporan->load('pelapor'); // Pastikan relasi pelapor di-load
+            \App\Models\Notifikasi::create([
+                'id_pengguna'    => $laporan->id_pelapor,
+                'tipe'           => 'Perbaikan Selesai',
+                'pesan'          => 'Perbaikan aset ' . ($aset ? $aset->nama_aset : '') . ' telah Selesai.',
+                'terbaca'        => 0,
+                'waktu_terkirim' => now(),
+                'tgl_dibuat'     => now()
+            ]);
+
+            if ($laporan->pelapor && $laporan->pelapor->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($laporan->pelapor->email)->send(new \App\Mail\StatusLaporanKerusakanMail(
+                        'Perbaikan aset ' . ($aset ? $aset->nama_aset : '') . ' telah selesai dikerjakan.',
+                        'Perbaikan Selesai',
+                        $laporan->pelapor->nama,
+                        $laporan->keterangan_perbaikan, // Keterangan Lapangan
+                        $request->hasil,               // Hasil Perbaikan
+                        $request->biaya                // Total Biaya
+                    ));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());
+                }
+            }
         }
 
         return response()->json([

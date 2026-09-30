@@ -48,6 +48,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
   const [toastMsg, setToastMsg]               = useState('');
   
   const [statusModal, setStatusModal]         = useState({ isOpen: false, type: 'error', title: '', message: '' });
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   // Password states
   const [currentPassword, setCurrentPassword]   = useState('');
@@ -198,7 +199,11 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
               {/* Avatar */}
               <p className="profile-avatar-label">Avatar</p>
               <div className="profile-avatar-section">
-                <div className="profile-avatar-circle">
+                <div 
+                  className={`profile-avatar-circle ${avatarSrc ? 'clickable' : ''}`}
+                  onClick={() => avatarSrc && setIsImageModalOpen(true)}
+                  title={avatarSrc ? "Klik untuk memperbesar" : ""}
+                >
                   {avatarSrc ? <img src={avatarSrc} alt="avatar" /> : getInitials(profileName)}
                 </div>
                 <div className="profile-avatar-upload-group">
@@ -305,6 +310,18 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
         message={statusModal.message}
         onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
       />
+
+      {/* Image Zoom Modal */}
+      {isImageModalOpen && (
+        <div className="profile-image-modal-overlay" onClick={() => setIsImageModalOpen(false)}>
+          <div className="profile-image-modal-content" onClick={(e) => e.stopPropagation()}>
+            <img src={avatarSrc} alt="Enlarged avatar" className="profile-image-modal-img" />
+            <button className="profile-image-modal-close" onClick={() => setIsImageModalOpen(false)}>
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

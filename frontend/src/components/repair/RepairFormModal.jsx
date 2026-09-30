@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import StatusModal from '../ui/StatusModal';
 import { API_BASE_URL } from '../../config';
+import { fetchRepairs } from '../../services/repairService';
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -18,14 +19,17 @@ const UploadIcon = () => (
   </svg>
 );
 
-export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
+export default function RepairFormModal({ isOpen, onClose, onSubmit, prefillAssetId = '', prefillSubAsset = '' }) {
   const [formReporter, setFormReporter] = useState('');
   const [formUnit, setFormUnit] = useState('');
   const [formDate, setFormDate] = useState('');
+  const [formSubAsset, setFormSubAsset] = useState('');
+
   
   // Data aset dari database
   const [assets, setAssets] = useState([]);
   const [selectedAssetId, setSelectedAssetId] = useState('');
+  const [activeRepairCodes, setActiveRepairCodes] = useState([]);
   
   const [formLocation, setFormLocation] = useState('');
   const [formDesc, setFormDesc] = useState('');
@@ -43,7 +47,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
   useEffect(() => {
     if (isOpen) {
       setSubmitError('');
-      const fetchAssets = async () => {
+      const fetchData = async () => {
         try {
           const token = localStorage.getItem('auth_token');
           const response = await axios.get(`${API_BASE_URL}/api/aset`, {
@@ -52,11 +56,24 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
           if (response.data && response.data.data) {
             setAssets(response.data.data);
           }
+          
+          // Load active repairs to prevent selecting units currently under repair
+          const repairs = await fetchRepairs();
+          const active = repairs.filter(r => r.status_kerusakan !== 'Selesai' && r.status_kerusakan !== 'Ditolak');
+          const codes = active.map(r => {
+            if (r.deskripsi) {
+              const match = r.deskripsi.match(/\(Unit:\s*(.*?)\)/);
+              if (match) return match[1].trim();
+            }
+            return null;
+          }).filter(Boolean);
+          setActiveRepairCodes(codes);
+          
         } catch (error) {
-          console.error("Gagal mengambil daftar aset:", error);
+          console.error("Gagal mengambil daftar aset atau laporan:", error);
         }
       };
-      fetchAssets();
+      fetchData();
 
       // Reset form
       setFormReporter('');
@@ -64,12 +81,38 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
       const today = new Date().toISOString().split('T')[0];
       setFormDate(today);
       setSelectedAssetId('');
+      setFormSubAsset('');
       setFormLocation('');
       setFormDesc('');
       setFormImage('');
       setFormImageFile(null);
     }
   }, [isOpen]);
+
+  // Prefill aset dan sub aset dari query params (navigasi dari Daftar Aset)
+  const [hasPrefilled, setHasPrefilled] = useState(false);
+  useEffect(() => {
+    if (isOpen && assets.length > 0 && prefillAssetId && !hasPrefilled) {
+      const prefillId = prefillAssetId.toString();
+      const assetExists = assets.find(a => a.id.toString() === prefillId);
+      if (assetExists) {
+        setSelectedAssetId(prefillId);
+        // Auto-fill lokasi
+        const roomName = assetExists.ruangan ? assetExists.ruangan.nama_ruangan : '';
+        const unitName = assetExists.lokasi_unit ? assetExists.lokasi_unit.nama_unit : '';
+        const combinedLocation = unitName && roomName ? `${unitName} - ${roomName}` : (unitName || roomName || '');
+        setFormLocation(combinedLocation);
+        
+        if (prefillSubAsset) {
+          setFormSubAsset(prefillSubAsset);
+        }
+        setHasPrefilled(true);
+      }
+    }
+    if (!isOpen) {
+      setHasPrefilled(false);
+    }
+  }, [isOpen, assets, prefillAssetId, prefillSubAsset, hasPrefilled]);
 
   // Efek untuk menyesuaikan tinggi modal secara dinamis saat ukuran layar berubah (resize/rotate)
   useEffect(() => {
@@ -122,12 +165,13 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
         formUnit,
         formDate,
         selectedAssetId,
+        formSubAsset,
         formLocation,
         formDesc
       };
       
       const todayStr = new Date().toISOString().split('T')[0];
-      const hasContent = formReporter || formUnit || (formDate && formDate !== todayStr) || selectedAssetId || formLocation || formDesc;
+      const hasContent = formReporter || formUnit || (formDate && formDate !== todayStr) || selectedAssetId || formSubAsset || formLocation || formDesc;
       
       if (hasContent) {
         localStorage.setItem('simasi_draft_repair', JSON.stringify(draftData));
@@ -143,6 +187,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
       setFormUnit(tempDraft.formUnit || '');
       setFormDate(tempDraft.formDate || '');
       setSelectedAssetId(tempDraft.selectedAssetId || '');
+      setFormSubAsset(tempDraft.formSubAsset || '');
       setFormLocation(tempDraft.formLocation || '');
       setFormDesc(tempDraft.formDesc || '');
     }
@@ -162,6 +207,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
   const handleAssetSelect = (e) => {
     const id = e.target.value;
     setSelectedAssetId(id);
+    setFormSubAsset(''); // Reset sub asset when asset changes
     
     // Auto fill lokasi berdasarkan aset yang dipilih
     const selectedAsset = assets.find(a => a.id.toString() === id.toString());
@@ -218,20 +264,28 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
     // Cari nama aset untuk dikirim sebagai text (opsional untuk display fallback)
     const selectedAsset = assets.find(a => a.id.toString() === selectedAssetId.toString());
     const assetName = selectedAsset ? selectedAsset.nama_aset : 'Aset Tidak Diketahui';
+    
+    let finalDescription = formDesc;
+    if (formSubAsset) {
+      finalDescription = `(Unit: ${formSubAsset})\n${formDesc}`;
+    }
 
     try {
       await onSubmit({
+        nama_pelapor: formReporter,
         reporter_name: formReporter,
         unit: formUnit,
         date: formDate,
         asset_id: selectedAssetId,
         asset_name: assetName,
         location: formLocation,
-        description: formDesc,
+        description: finalDescription,
         image_file: formImageFile, 
         image_path: formImage 
       });
       localStorage.removeItem('simasi_draft_repair');
+
+
     } catch (err) {
       console.error("Error submitting repair form:", err);
       const errMsg = err.response?.data?.message || err.message || 'Gagal menyimpan data laporan. Silakan coba lagi.';
@@ -265,7 +319,7 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
               required
               value={formReporter}
               onChange={(e) => setFormReporter(e.target.value)}
-              placeholder="Masukkan nama pelapor"
+              placeholder="Nama pelapor"
             />
           </div>
 
@@ -315,6 +369,76 @@ export default function RepairFormModal({ isOpen, onClose, onSubmit }) {
               ))}
             </select>
           </div>
+
+          {(() => {
+            const selectedAssetObj = assets.find(a => a.id.toString() === selectedAssetId.toString());
+            const rawSubAssets = selectedAssetObj ? (selectedAssetObj.sub_aset || selectedAssetObj.subAset || []) : [];
+            
+            if (rawSubAssets.length > 0) {
+              // Jika prefillSubAsset ada (navigasi dari Daftar Aset), tampilkan sebagai read-only
+              if (prefillSubAsset && formSubAsset) {
+                const matchedSub = rawSubAssets.find(s => s.kode_sub_aset === formSubAsset);
+                const kondisi = matchedSub ? (matchedSub.kondisi_aset || 'Baik') : '';
+                return (
+                  <div className="modal-form-group">
+                    <label className="modal-form-label">Unit Spesifik <span className="req-star">*</span></label>
+                    <input 
+                      type="text"
+                      className="modal-form-input"
+                      value={kondisi ? `${formSubAsset} (Kondisi: ${kondisi})` : formSubAsset}
+                      readOnly
+                      style={{ backgroundColor: '#f1f5f9', cursor: 'not-allowed', color: '#475569' }}
+                    />
+                    <input type="hidden" name="sub_asset" value={formSubAsset} />
+                  </div>
+                );
+              }
+
+              // Tampilkan semua sub aset yang tidak sedang diperbaiki (bukan hanya yang sudah rusak)
+              const availableSubAssets = rawSubAssets.filter(sub => {
+                const isUnderRepair = activeRepairCodes.includes(sub.kode_sub_aset);
+                return !isUnderRepair;
+              });
+
+              if (availableSubAssets.length === 0) {
+                return (
+                  <div className="modal-form-group">
+                    <label className="modal-form-label">Pilih Unit Spesifik <span className="req-star">*</span></label>
+                    <select className="modal-form-select" disabled>
+                      <option value="">-- Tidak ada unit yang tersedia --</option>
+                    </select>
+                    <small style={{ color: '#ef4444', marginTop: '4px', fontSize: '12px' }}>
+                      Semua unit sedang dalam proses perbaikan.
+                    </small>
+                  </div>
+                );
+              }
+
+              return (
+                <>
+                  <div className="modal-form-group">
+                    <label className="modal-form-label">Pilih Unit Spesifik <span className="req-star">*</span></label>
+                    <select 
+                      className="modal-form-select"
+                      required
+                      value={formSubAsset}
+                      onChange={(e) => setFormSubAsset(e.target.value)}
+                    >
+                      <option value="" disabled hidden>-- Pilih Unit --</option>
+                      {availableSubAssets.map(sub => (
+                        <option key={sub.id} value={sub.kode_sub_aset}>
+                          {sub.kode_sub_aset} (Kondisi: {sub.kondisi_aset || 'Baik'})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+
+                </>
+              );
+            }
+            return null;
+          })()}
 
           <div className="modal-form-group">
             <label className="modal-form-label">Lokasi Aset <span className="req-star">*</span></label>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { DEFAULT_UNITS, DEFAULT_CATEGORIES } from '../config';
 import { mapAssetListResponse, mapAssetForRequest, mapAssetResponse } from '../utils/assetMapper';
 import * as assetService from '../services/assetService';
+import { fetchRepairs } from '../services/repairService';
 
 const FILTER_FIELD_MAP = {
   all: 'all',
@@ -12,6 +14,7 @@ const FILTER_FIELD_MAP = {
 };
 
 export default function useAssetList() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedFilterField, setSelectedFilterField] = useState('all'); // all, name, code, location
@@ -23,6 +26,10 @@ export default function useAssetList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [assetToEdit, setAssetToEdit] = useState(null);
   
+  // Active repair codes (to prevent duplicate reporting)
+  const [activeRepairCodes, setActiveRepairCodes] = useState([]);
+  const [inProgressRepairCodes, setInProgressRepairCodes] = useState([]);
+  
   // Detail Modal state
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [assetToView, setAssetToView] = useState(null);
@@ -30,6 +37,7 @@ export default function useAssetList() {
   // Status & Confirm Modals
   const [statusModal, setStatusModal] = useState({ isOpen: false, type: 'success', title: '', message: '' });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, asset: null });
+  const [confirmSubAssetDelete, setConfirmSubAssetDelete] = useState({ isOpen: false, subAsset: null, parentAssetId: null });
 
   const [allAssets, setAllAssets] = useState([]);
   const [availableUnits, setAvailableUnits] = useState(DEFAULT_UNITS);
@@ -117,6 +125,41 @@ export default function useAssetList() {
     fetchStaticData();
   }, []);
 
+  // Fetch active repairs to prevent duplicate reporting on the same sub-asset
+  useEffect(() => {
+    const loadActiveRepairs = async () => {
+      try {
+        const repairs = await fetchRepairs();
+        // Hanya ambil laporan yang belum Selesai atau Ditolak
+        const active = repairs.filter(r => r.status_kerusakan !== 'Selesai' && r.status_kerusakan !== 'Ditolak');
+        
+        const activeCodes = [];
+        const inProgressCodes = [];
+        
+        active.forEach(r => {
+          if (r.deskripsi) {
+            const match = r.deskripsi.match(/\(Unit:\s*(.*?)\)/);
+            if (match) {
+              const code = match[1].trim();
+              activeCodes.push(code);
+              
+              if (r.status_kerusakan === 'Diproses') {
+                inProgressCodes.push(code);
+              }
+            }
+          }
+        });
+        
+        setActiveRepairCodes(activeCodes);
+        setInProgressRepairCodes(inProgressCodes);
+      } catch (err) {
+        console.warn("Could not fetch active repairs for duplicate prevention.", err);
+      }
+    };
+    
+    loadActiveRepairs();
+  }, [allAssets]); // Reload when asset list changes
+
   // Reset Halaman ke 1 saat melakukan pencarian atau mengganti kategori filter
   useEffect(() => {
     setCurrentPage(1);
@@ -153,7 +196,8 @@ export default function useAssetList() {
       setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Aset berhasil dihapus.' });
     } catch (err) {
       console.error("Backend API error, deleting asset failed.", err);
-      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: 'Gagal menghapus aset dari server.' });
+      const errorMsg = err.response?.data?.message || 'Gagal menghapus aset dari server.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
     }
   };
 
@@ -214,6 +258,50 @@ export default function useAssetList() {
     });
   };
 
+  const handleNavigateToRepair = (subAsset, parentAsset) => {
+    const role = localStorage.getItem('user_role') || 'admin';
+    const repairPath = `/${role}/perbaikan`;
+    const params = new URLSearchParams({
+      prefill_asset_id: parentAsset.id,
+      prefill_sub_asset: subAsset.kode_sub_aset,
+      auto_open: 'true'
+    });
+    navigate(`${repairPath}?${params.toString()}`);
+  };
+
+  const handleDeleteSubAssetClick = (subAsset, parentAssetId) => {
+    setConfirmSubAssetDelete({ isOpen: true, subAsset, parentAssetId });
+  };
+
+  const processDeleteSubAsset = async () => {
+    const { subAsset, parentAssetId } = confirmSubAssetDelete;
+    setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null });
+    if (!subAsset) return;
+
+    try {
+      const response = await assetService.deleteSubAsset(subAsset.id);
+      if (response && response.success) {
+        setAllAssets(prevAssets => prevAssets.map(asset => {
+          if (asset.id === parentAssetId) {
+            const currentSubAssets = asset.sub_aset || asset.subAset || asset.sub_assets || [];
+            return {
+              ...asset,
+              quantity: (asset.quantity || asset.jumlah_aset || 0) - 1,
+              jumlah_aset: (asset.jumlah_aset || asset.quantity || 0) - 1,
+              sub_aset: currentSubAssets.filter(sub => sub.id !== subAsset.id)
+            };
+          }
+          return asset;
+        }));
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: `Unit ${subAsset.kode_sub_aset} berhasil dihapus.` });
+      }
+    } catch (err) {
+      console.error("Gagal menghapus unit:", err);
+      const errorMsg = err.response?.data?.message || 'Gagal menghapus unit dari server.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+    }
+  };
+
   return {
     searchQuery,
     setSearchQuery,
@@ -247,6 +335,13 @@ export default function useAssetList() {
     handleDeleteClick,
     processDelete,
     handleTambahAsetClick,
-    handleFormSubmit
+    handleFormSubmit,
+    handleNavigateToRepair,
+    activeRepairCodes,
+    inProgressRepairCodes,
+    handleDeleteSubAssetClick,
+    processDeleteSubAsset,
+    confirmSubAssetDelete,
+    setConfirmSubAssetDelete
   };
 }

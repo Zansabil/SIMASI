@@ -221,55 +221,105 @@ class AsetController extends Controller
 
         if (count($perubahan) > 0) {
             $teksPerubahan = [];
+            
+            $labelKolom = [
+                'nama_aset' => 'Nama Aset',
+                'jenis_aset' => 'Jenis Aset',
+                'id_unit' => 'Unit',
+                'id_ruangan' => 'Ruangan',
+                'jumlah_aset' => 'Jumlah',
+                'kondisi_aset' => 'Kondisi',
+                'tgl_diperoleh' => 'Tanggal Diperoleh',
+                'harga_aset' => 'Harga',
+                'sumber_dana' => 'Sumber Dana',
+                'kode_inventaris' => 'Kode Inventaris'
+            ];
+
             foreach ($perubahan as $kolom => $nilaiBaru) {
-                if ($kolom != 'updated_at') {
-                    if ($kolom == 'foto') {
-                        $teksPerubahan[] = "foto diperbarui";
-                    } else {
-                        $teksPerubahan[] = "kolom '$kolom' menjadi '$nilaiBaru'";
-                    }
+                if ($kolom == 'updated_at' || $kolom == 'tgl_diperbaharui') continue;
+
+                $nilaiLama = $aset->getOriginal($kolom);
+                $namaLabel = $labelKolom[$kolom] ?? $kolom;
+
+                if ($kolom == 'foto') {
+                    $teksPerubahan[] = "Foto diperbarui";
+                } elseif ($kolom == 'id_unit') {
+                    $unitLama = \App\Models\LokasiUnit::find($nilaiLama)?->nama_unit ?? 'Tidak ada';
+                    $unitBaru = \App\Models\LokasiUnit::find($nilaiBaru)?->nama_unit ?? 'Tidak ada';
+                    $teksPerubahan[] = "Unit diubah dari '$unitLama' menjadi '$unitBaru'";
+                } elseif ($kolom == 'id_ruangan') {
+                    $ruangLama = \App\Models\Ruangan::find($nilaiLama)?->nama_ruangan ?? 'Tidak ada';
+                    $ruangBaru = \App\Models\Ruangan::find($nilaiBaru)?->nama_ruangan ?? 'Tidak ada';
+                    $teksPerubahan[] = "Ruangan diubah dari '$ruangLama' menjadi '$ruangBaru'";
+                } else {
+                    $teksPerubahan[] = "$namaLabel diubah dari '$nilaiLama' menjadi '$nilaiBaru'";
                 }
             }
             $keterangan_final = "Aset telah diedit. Detail: " . implode(', ', $teksPerubahan);
-            $aset->save();
+            
+            // Wrap semua operasi dalam transaction agar atomic (all-or-nothing)
+            \Illuminate\Support\Facades\DB::transaction(function () use ($aset, $oldJumlah, $perubahan, $keterangan_final, $id) {
+                $aset->save();
 
-            // Sync sub_aset if jumlah_aset, id_ruangan, or kondisi_aset changed
-            if (isset($perubahan['jumlah_aset'])) {
-                $newJumlah = $aset->jumlah_aset;
-                if ($newJumlah > $oldJumlah) {
-                    for ($i = $oldJumlah + 1; $i <= $newJumlah; $i++) {
-                        \App\Models\SubAset::create([
-                            'id_aset' => $aset->id,
-                            'kode_sub_aset' => "{$aset->kode_inventaris}-{$i}",
-                            'id_ruangan' => $aset->id_ruangan,
-                            'kondisi_aset' => $aset->kondisi_aset,
-                            'status_penggunaan' => 'Tersedia'
-                        ]);
+                // Sync sub_aset if jumlah_aset changed
+                if (isset($perubahan['jumlah_aset'])) {
+                    $newJumlah = $aset->jumlah_aset;
+                    $actualCount = \App\Models\SubAset::where('id_aset', $aset->id)->count();
+
+                    if ($newJumlah > $actualCount) {
+                        // Cari nomor urut tertinggi dari sub-aset yang sudah ada
+                        // untuk menghindari duplikat kode setelah penghapusan unit individu
+                        $existingCodes = \App\Models\SubAset::where('id_aset', $aset->id)
+                            ->pluck('kode_sub_aset')
+                            ->toArray();
+                        
+                        $maxSeq = 0;
+                        $prefix = $aset->kode_inventaris . '-';
+                        foreach ($existingCodes as $code) {
+                            if (str_starts_with($code, $prefix)) {
+                                $seq = (int) substr($code, strlen($prefix));
+                                if ($seq > $maxSeq) {
+                                    $maxSeq = $seq;
+                                }
+                            }
+                        }
+
+                        $toAdd = $newJumlah - $actualCount;
+                        for ($i = 1; $i <= $toAdd; $i++) {
+                            $nextSeq = $maxSeq + $i;
+                            \App\Models\SubAset::create([
+                                'id_aset' => $aset->id,
+                                'kode_sub_aset' => "{$aset->kode_inventaris}-{$nextSeq}",
+                                'id_ruangan' => $aset->id_ruangan,
+                                'kondisi_aset' => $aset->kondisi_aset,
+                                'status_penggunaan' => 'Tersedia'
+                            ]);
+                        }
+                    } elseif ($newJumlah < $actualCount) {
+                        // Delete excess sub_asets from the end
+                        \App\Models\SubAset::where('id_aset', $aset->id)
+                            ->orderBy('kode_sub_aset', 'desc')
+                            ->limit($actualCount - $newJumlah)
+                            ->delete();
                     }
-                } elseif ($newJumlah < $oldJumlah) {
-                    // Delete excess sub_asets from the end
-                    \App\Models\SubAset::where('id_aset', $aset->id)
-                        ->orderBy('kode_sub_aset', 'desc')
-                        ->limit($oldJumlah - $newJumlah)
-                        ->delete();
                 }
-            }
 
-            if (isset($perubahan['id_ruangan']) || isset($perubahan['kondisi_aset'])) {
-                $syncFields = [];
-                if (isset($perubahan['id_ruangan'])) $syncFields['id_ruangan'] = $aset->id_ruangan;
-                if (isset($perubahan['kondisi_aset'])) $syncFields['kondisi_aset'] = $aset->kondisi_aset;
-                
-                \App\Models\SubAset::where('id_aset', $aset->id)->update($syncFields);
-            }
+                if (isset($perubahan['id_ruangan']) || isset($perubahan['kondisi_aset'])) {
+                    $syncFields = [];
+                    if (isset($perubahan['id_ruangan'])) $syncFields['id_ruangan'] = $aset->id_ruangan;
+                    if (isset($perubahan['kondisi_aset'])) $syncFields['kondisi_aset'] = $aset->kondisi_aset;
+                    
+                    \App\Models\SubAset::where('id_aset', $aset->id)->update($syncFields);
+                }
 
-            RiwayatAset::create([
-                'id_aset'     => $id,
-                'aksi'        => 'Perubahan',
-                'id_pengguna' => auth()->user()->id,
-                'keterangan'  => $keterangan_final,
-                'waktu'       => now()
-            ]);
+                RiwayatAset::create([
+                    'id_aset'     => $id,
+                    'aksi'        => 'Perubahan',
+                    'id_pengguna' => auth()->user()->id,
+                    'keterangan'  => $keterangan_final,
+                    'waktu'       => now()
+                ]);
+            });
             
             $aset->load(['ruangan', 'lokasiUnit', 'subAset.ruangan']);
             
@@ -280,11 +330,47 @@ class AsetController extends Controller
             ], 200);
         }
 
+        // Tidak ada perubahan field, tapi cek apakah sub-aset perlu di-reconcile
+        // (kasus: edit sebelumnya gagal setengah jalan, jumlah_aset sudah tersimpan tapi sub-aset belum dibuat)
+        $actualCount = \App\Models\SubAset::where('id_aset', $aset->id)->count();
+        if ($actualCount < $aset->jumlah_aset) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($aset, $actualCount) {
+                $existingCodes = \App\Models\SubAset::where('id_aset', $aset->id)
+                    ->pluck('kode_sub_aset')
+                    ->toArray();
+                
+                $maxSeq = 0;
+                $prefix = $aset->kode_inventaris . '-';
+                foreach ($existingCodes as $code) {
+                    if (str_starts_with($code, $prefix)) {
+                        $seq = (int) substr($code, strlen($prefix));
+                        if ($seq > $maxSeq) {
+                            $maxSeq = $seq;
+                        }
+                    }
+                }
+
+                $toAdd = $aset->jumlah_aset - $actualCount;
+                for ($i = 1; $i <= $toAdd; $i++) {
+                    $nextSeq = $maxSeq + $i;
+                    \App\Models\SubAset::create([
+                        'id_aset' => $aset->id,
+                        'kode_sub_aset' => "{$aset->kode_inventaris}-{$nextSeq}",
+                        'id_ruangan' => $aset->id_ruangan,
+                        'kondisi_aset' => $aset->kondisi_aset,
+                        'status_penggunaan' => 'Tersedia'
+                    ]);
+                }
+            });
+        }
+
         $aset->load(['ruangan', 'lokasiUnit', 'subAset.ruangan']);
 
         return response()->json([
             'success' => true,
-            'message' => 'Tidak ada perubahan data yang dilakukan.',
+            'message' => $actualCount < $aset->jumlah_aset 
+                ? 'Sub-aset yang hilang berhasil dipulihkan.' 
+                : 'Tidak ada perubahan data yang dilakukan.',
             'data'    => $aset
         ], 200);
     }
@@ -297,6 +383,18 @@ class AsetController extends Controller
         } 
 
         $aset = Aset::findOrFail($id);
+
+        // Cek apakah aset utama atau salah satu unit sub-asetnya sedang dalam proses perbaikan
+        $activeRepair = \App\Models\LaporanKerusakan::where('id_aset', $id)
+            ->whereNotIn('status_kerusakan', ['Selesai', 'Ditolak'])
+            ->exists();
+
+        if ($activeRepair) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Aset ini tidak dapat dihapus karena masih dalam proses perbaikan.'
+            ], 422);
+        }
         
         RiwayatAset::create([
             'id_aset'     => $id,

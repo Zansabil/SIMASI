@@ -5,7 +5,8 @@ import { FiChevronDown, FiChevronRight, FiMapPin } from 'react-icons/fi';
 import { groupAssetsByLocation } from '../../utils/groupAssetsByLocation';
 import './GroupedAssetView.css';
 
-export default function GroupedAssetView({ assets, isLoading, showActions, onView, onEdit, onDelete }) {
+export default function GroupedAssetView({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onNavigateToRepair, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
+
   const [expandedGroups, setExpandedGroups] = useState({});
 
   // Reset status expand ketika data assets berubah (misal karena filter atau refetch)
@@ -60,6 +61,11 @@ export default function GroupedAssetView({ assets, isLoading, showActions, onVie
                   onView={onView}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onUpdateSubAssetCondition={null}
+                  onNavigateToRepair={onNavigateToRepair}
+                  onDeleteSubAsset={onDeleteSubAsset}
+                  activeRepairCodes={activeRepairCodes}
+                  inProgressRepairCodes={inProgressRepairCodes}
                 />
               </div>
             )}

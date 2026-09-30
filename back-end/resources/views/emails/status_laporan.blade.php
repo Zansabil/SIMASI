@@ -26,6 +26,21 @@
             <div style="background-color: #f1f5f9; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
                 <strong>Tipe:</strong> {{ $tipe }}<br>
                 <strong>Pesan:</strong> {{ $pesan }}
+                @if(!empty($keterangan))
+                <br><br>
+                <strong>Keterangan Lapangan:</strong><br>
+                {{ $keterangan }}
+                @endif
+                @if(!empty($hasil))
+                <br><br>
+                <strong>Hasil Perbaikan:</strong><br>
+                {{ $hasil }}
+                @endif
+                @if(isset($biaya) && $biaya > 0)
+                <br><br>
+                <strong>Total Biaya:</strong><br>
+                Rp {{ number_format($biaya, 0, ',', '.') }}
+                @endif
             </div>
             
             <p>Silakan masuk ke aplikasi SIMASI untuk melihat rincian lebih lanjut.</p>

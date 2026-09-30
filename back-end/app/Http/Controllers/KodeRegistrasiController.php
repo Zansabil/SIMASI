@@ -76,13 +76,7 @@ class KodeRegistrasiController extends Controller
             ], 404);
         }
 
-        // Jika sudah ada yang memakai kode ini, mungkin sebaiknya tidak dihapus
-        if ($kode->pengguna_count > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kode tidak dapat dihapus karena sudah pernah digunakan oleh pengguna.'
-            ], 400);
-        }
+        // Soft delete will handle it now
 
         $kode->delete();
 

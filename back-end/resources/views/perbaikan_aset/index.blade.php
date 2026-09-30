@@ -16,9 +16,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('aset.index') }}">Data Aset</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white" href="{{ route('pemindahan_aset.index') }}">Pemindahan</a>
-                    </li>
+
                     <li class="nav-item">
                         <a class="nav-link text-white" href="{{ route('laporan_kerusakan.index') }}">Laporan Kerusakan</a>
                     </li>
