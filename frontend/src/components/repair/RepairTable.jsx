@@ -77,7 +77,7 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                         onClick={() => onOpenView(item)}
                         aria-label="Detail Perbaikan"
                       >
-                        <FiEye size={18} />
+                        <FiEye size={16} color="#3b82f6" strokeWidth={2.5} />
                       </button>
                       <button
                         className="action-icon-btn edit-btn"
@@ -85,16 +85,15 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                         onClick={() => onOpenEdit(item)}
                         aria-label="Edit Perbaikan"
                       >
-                        <FiEdit2 size={18} />
+                        <FiEdit2 size={16} color="#f59e0b" strokeWidth={2.5} />
                       </button>
                       <button
                         className="action-icon-btn delete-btn"
                         title="Hapus"
                         onClick={() => onDelete(item)}
                         aria-label="Hapus Perbaikan"
-                        style={{ color: '#ef4444' }}
                       >
-                        <FiTrash2 size={18} />
+                        <FiTrash2 size={16} color="#ef4444" strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>

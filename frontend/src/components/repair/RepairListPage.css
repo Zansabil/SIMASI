@@ -245,31 +245,39 @@
 }
 
 .action-icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
   align-items: center;
-  justify-content: center;
+  background-color: #ffffff;
+  border: 1.5px solid #e2e8f0;
   border-radius: 6px;
-  transition: background-color 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  width: 32px;
+  transition: all 0.2s ease;
 }
 
-.action-icon-btn.view-btn {
-  color: #2563eb; /* Blue */
+.action-icon-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-icon-btn:active {
+  transform: translateY(0);
 }
 
 .action-icon-btn.view-btn:hover {
   background-color: #eff6ff;
-}
-
-.action-icon-btn.edit-btn {
-  color: #10b981; /* Green */
+  border-color: #3b82f6;
 }
 
 .action-icon-btn.edit-btn:hover {
-  background-color: #ecfdf5;
+  background-color: #fffbeb;
+  border-color: #f59e0b;
+}
+
+.action-icon-btn.delete-btn:hover {
+  background-color: #fef2f2;
+  border-color: #ef4444;
 }
 
 /* Detail Laporan Kerusakan Aset Modal Styling */

@@ -1,18 +1,5 @@
 import React from 'react';
-
-const EditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 20h9" />
-    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-  </svg>
-);
-
-const DeleteIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  </svg>
-);
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const getRoleBadgeClass = (role) => {
   switch (role) {
@@ -98,7 +85,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete }) {
                       title="Edit Pengguna"
                       aria-label="Edit Pengguna"
                     >
-                      <EditIcon />
+                      <FiEdit2 size={16} color="#f59e0b" strokeWidth={2.5} />
                     </button>
                     <button 
                       className={`btn-action-delete ${user.is_current ? 'disabled' : ''}`} 
@@ -107,7 +94,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete }) {
                       aria-label="Hapus Pengguna"
                       disabled={user.is_current}
                     >
-                      <DeleteIcon />
+                      <FiTrash2 size={16} color={user.is_current ? '#cbd5e1' : '#ef4444'} strokeWidth={2.5} />
                     </button>
                   </div>
                 </td>
