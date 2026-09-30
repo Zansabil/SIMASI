@@ -1,0 +1,366 @@
+/* ===== RESET & BASE ===== */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+  color: #1a1a1a;
+  background-color: #ffffff;
+}
+
+.landing-page * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== MAIN CONTENT ===== */
+.landing-main {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 64px;
+  animation: fadeIn 0.6s ease forwards;
+}
+
+/* ===== GRID LAYOUT (Desktop) ===== */
+.landing-content {
+  display: grid;
+  grid-template-columns: 1fr 480px;
+  grid-template-areas:
+    "header   image"
+    "infobox  image"
+    "cta      image"
+    "about    image"
+    "features image";
+  column-gap: 56px;
+  row-gap: 0;
+  max-width: 1200px;
+  width: 100%;
+  align-items: start;
+}
+
+/* Grid area assignments */
+.landing-header   { grid-area: header;   padding-bottom: 28px; }
+.landing-right    { grid-area: image;    align-self: stretch; }
+.landing-info-box { grid-area: infobox;  margin-bottom: 24px; }
+.landing-cta-btn  { grid-area: cta;      margin-bottom: 36px; }
+.landing-about    { grid-area: about;    margin-bottom: 32px; }
+.landing-features { grid-area: features; }
+
+/* ===== LOGO ===== */
+.landing-logo-wide {
+  height: 72px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ===== INFO BOX ===== */
+.landing-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f7faf8;
+  border: 1px solid #d4e8da;
+  border-radius: 12px;
+  padding: 18px 20px;
+  max-width: 520px;
+  width: 100%;
+}
+
+.info-box-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-box-text h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.info-box-text p {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* ===== CTA BUTTON ===== */
+.landing-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #0E6538;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 32px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  width: fit-content;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(14, 101, 56, 0.3);
+}
+
+.landing-cta-btn:hover {
+  background: #0a4f2b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(14, 101, 56, 0.4);
+}
+
+.landing-cta-btn:active {
+  transform: translateY(0);
+}
+
+/* ===== ABOUT SECTION ===== */
+.about-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.about-description {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #444;
+  max-width: 520px;
+  text-align: justify;
+}
+
+/* ===== FEATURES ===== */
+.landing-features {
+  display: flex;
+  gap: 36px;
+  padding-left: 24px;
+}
+
+.feature-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.feature-icon {
+  color: #1e6b3a;
+}
+
+.feature-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  max-width: 140px;
+  line-height: 1.4;
+}
+
+/* ===== RIGHT COLUMN — HERO IMAGE ===== */
+.landing-right {
+  display: flex;
+  align-items: center;
+}
+
+.hero-image-wrapper {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+/* ===== FOOTER ===== */
+.landing-footer {
+  background: linear-gradient(135deg, #0E6538 0%, #1a8a4a 50%, #22a85c 100%);
+  color: #ffffff;
+  padding: 32px 64px;
+}
+
+.footer-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 32px;
+}
+
+/* Footer Brand */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.footer-logo {
+  height: 80px;
+  object-fit: contain;
+}
+
+/* Footer Sections */
+.footer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 2px;
+}
+
+/* Social Icons */
+.footer-socials {
+  display: flex;
+  gap: 10px;
+}
+
+.social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transition: background 0.2s ease;
+  text-decoration: none;
+}
+
+.social-icon:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Address */
+.footer-address {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.footer-address p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d1fae5;
+}
+
+.footer-icon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: #d1fae5;
+}
+
+/* Contact List */
+.footer-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #d1fae5;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== RESPONSIVE — TABLET ===== */
+@media (max-width: 992px) {
+  .landing-main {
+    padding: 36px 32px;
+  }
+
+  /* Reorder: header → image → infobox → cta → about → features */
+  .landing-content {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "image"
+      "infobox"
+      "cta"
+      "about"
+      "features";
+    row-gap: 0;
+  }
+
+  .landing-header   { padding-bottom: 20px; }
+  .landing-right    { margin-bottom: 24px; }
+  .landing-info-box { max-width: 100%; }
+  .about-description { max-width: 100%; }
+
+  /* Hero image: biarkan auto mengikuti aspect-ratio */
+  .hero-image {
+    aspect-ratio: 16 / 9;
+  }
+
+  /* Footer — tablet juga susun ke bawah */
+  .footer-content {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .landing-footer {
+    padding: 32px;
+  }
+}
+
+/* ===== RESPONSIVE — MOBILE ===== */
+@media (max-width: 640px) {
+  .landing-main {
+    padding: 24px 20px;
+  }
+
+  /* Hero image natural di mobile */
+  .hero-image {
+    aspect-ratio: 4 / 3;
+  }
+
+  .landing-features {
+    gap: 20px;
+    padding-left: 0;
+    justify-content: space-around;
+  }
+
+  /* Footer mobile — susun vertikal: brand → socials → address → contact */
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Reset semua grid-area */
+  .footer-brand,
+  .footer-section--socials,
+  .footer-section--address,
+  .footer-section--contact {
+    grid-area: unset;
+    width: 100%;
+  }
+
+  .landing-footer {
+    padding: 28px 20px;
+  }
+}

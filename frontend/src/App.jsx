@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ResetPassword from './pages/auth/ResetPassword';
+import LandingPage from './pages/landing/LandingPage';
 import Dashboard from './pages/admin/Dashboard';
 import DaftarAset from './pages/admin/DaftarAset';
 import PerbaikanAset from './pages/admin/PerbaikanAset';
@@ -100,8 +101,8 @@ export default function App() {
           <Route path="/super-admin/notifikasi" element={<SuperNotifikasi />} />
         </Route>
 
-        {/* Redirect Root to /login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Landing Page (Root) */}
+        <Route path="/" element={<LandingPage />} />
         
         {/* Catch-all Route redirects to /login */}
         <Route path="*" element={<Navigate to="/login" replace />} />
