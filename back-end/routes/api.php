@@ -29,9 +29,9 @@ Route::get('/', function () {
 // =========================================================
 // Rute GET /login & /register dihapus karena React yang akan membuat formnya.
 // API hanya butuh rute POST untuk menerima datanya.
-Route::post('/login', [AuthController::class, 'authenticate']);
+Route::post('/login', [AuthController::class, 'authenticate'])->middleware('throttle:5,1');
 Route::post('/register', [AuthController::class, 'storeRegister']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Data Master Publik
@@ -40,10 +40,7 @@ Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
 // Route untuk mengambil foto profil secara langsung
 Route::get('/avatars/{filename}', [ProfileController::class, 'getAvatar']);
 
-// Trik cepat untuk membuat password acak (Bcrypt)
-Route::get('/buat-password', function() {
-    return \Illuminate\Support\Facades\Hash::make('12345678');
-});
+
 
 // =========================================================
 // JALUR TERTUTUP (WAJIB MENYERTAKAN TOKEN API / SANCTUM)
@@ -84,7 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('laporan_kerusakan', LaporanKerusakanController::class);
     // Rute khusus untuk memvalidasi/menolak laporan
     Route::patch('/laporan_kerusakan/{id}/validasi', [LaporanKerusakanController::class, 'validasi']);
-    Route::patch('/laporan-kerusakan/{id}/tolak', [LaporanKerusakanController::class, 'tolak']);
+    Route::patch('/laporan_kerusakan/{id}/tolak', [LaporanKerusakanController::class, 'tolak']);
     Route::patch('/laporan_kerusakan/{id}/progress', [LaporanKerusakanController::class, 'updateProgress']);
     
     // Route Perbaikan Aset

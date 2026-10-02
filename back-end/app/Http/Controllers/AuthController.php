@@ -41,15 +41,21 @@ class AuthController extends Controller
         // Jika benar, buatkan Token API (Kunci Masuk) menggunakan Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Tambahkan URL foto profil ke data_user
-        $user->foto_profil_url = $user->foto_profil ? url('api/avatars/' . $user->foto_profil) : null;
-
         return response()->json([
             'success'      => true,
             'message'      => 'Login berhasil!',
             'access_token' => $token,
             'token_type'   => 'Bearer',
-            'data_user'    => $user // Mengirim data user agar bisa ditampilkan namanya di frontend
+            'data_user'    => [
+                'id'              => $user->id,
+                'nama'            => $user->nama,
+                'nama_pengguna'   => $user->nama_pengguna,
+                'email'           => $user->email,
+                'id_peran'        => $user->id_peran,
+                'area'            => $user->area,
+                'jabatan'         => $user->jabatan,
+                'foto_profil_url' => $user->foto_profil ? url('api/avatars/' . $user->foto_profil) : null,
+            ]
         ], 200);
     }
 

@@ -63,6 +63,8 @@ class ProfileController extends Controller
      */
     public function getAvatar($filename)
     {
+        // Sanitasi: hapus karakter path traversal untuk mencegah akses file arbitrer
+        $filename = basename($filename);
         $path = storage_path('app/public/avatars/' . $filename);
         
         if (!file_exists($path)) {

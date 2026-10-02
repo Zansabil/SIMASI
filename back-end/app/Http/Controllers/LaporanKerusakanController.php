@@ -10,6 +10,7 @@ use App\Mail\StatusLaporanKerusakanMail;
 use App\Models\Pengguna;
 use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class LaporanKerusakanController extends Controller
 {
@@ -300,7 +301,7 @@ class LaporanKerusakanController extends Controller
         }
 
         $request->validate([
-            'status_kerusakan' => 'required|string',
+            'status_kerusakan' => ['required', 'string', Rule::in(['Menunggu', 'Diproses', 'Selesai', 'Ditolak'])],
             'keterangan_perbaikan' => 'nullable|string'
         ]);
 
@@ -315,19 +316,37 @@ class LaporanKerusakanController extends Controller
         if ($request->status_kerusakan === 'Diproses' && !$laporan->tgl_mulai_perbaikan) {
             $updateData['tgl_mulai_perbaikan'] = now();
 
-            // Update kondisi sub-aset menjadi 'Rusak' saat petugas memproses perbaikan
+            // Update kondisi sub-aset menjadi 'Rusak' dan status penggunaan 'Sedang Diperbaiki'
             if ($laporan->deskripsi) {
                 if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
                     $kodeSubAset = trim($matches[1]);
                     $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
                     if ($subAset) {
                         $subAset->update([
-                            'kondisi_aset' => 'Rusak'
+                            'kondisi_aset' => 'Rusak',
+                            'status_penggunaan' => 'Sedang Diperbaiki'
                         ]);
                     }
                 }
             }
         }
+
+        // Saat status diubah ke 'Menunggu', kembalikan kondisi unit ke 'Baik' dan status ke 'Tersedia'
+        if ($request->status_kerusakan === 'Menunggu') {
+            if ($laporan->deskripsi) {
+                if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                    $kodeSubAset = trim($matches[1]);
+                    $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
+                    if ($subAset) {
+                        $subAset->update([
+                            'kondisi_aset' => 'Baik',
+                            'status_penggunaan' => 'Tersedia'
+                        ]);
+                    }
+                }
+            }
+        }
+
         if ($request->status_kerusakan === 'Selesai' && !$laporan->tgl_selesai_perbaikan) {
             $updateData['tgl_selesai_perbaikan'] = now();
             
@@ -338,7 +357,8 @@ class LaporanKerusakanController extends Controller
                     $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
                     if ($subAset) {
                         $subAset->update([
-                            'kondisi_aset' => 'Baik'
+                            'kondisi_aset' => 'Baik',
+                            'status_penggunaan' => 'Tersedia'
                         ]);
                     }
                 }

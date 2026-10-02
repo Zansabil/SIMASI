@@ -43,7 +43,7 @@ export const validateRepair = async (id) => {
 };
 
 export const rejectRepair = async (id, reason = 'Ditolak oleh petugas') => {
-  const response = await api.patch(`/api/laporan-kerusakan/${id}/tolak`, { alasan_penolakan: reason });
+  const response = await api.patch(`/api/laporan_kerusakan/${id}/tolak`, { alasan_penolakan: reason });
   return response.data;
 };
 

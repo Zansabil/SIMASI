@@ -70,6 +70,20 @@ class PerbaikanAsetController extends Controller
                 $aset->update(['kondisi_aset' => 'Baik']);
             }
 
+            // C. Kembalikan kondisi sub-aset (unit spesifik) menjadi 'Baik' dan status 'Tersedia'
+            if ($laporan->deskripsi) {
+                if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                    $kodeSubAset = trim($matches[1]);
+                    $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->first();
+                    if ($subAset) {
+                        $subAset->update([
+                            'kondisi_aset' => 'Baik',
+                            'status_penggunaan' => 'Tersedia'
+                        ]);
+                    }
+                }
+            }
+
             // C. Kirim Notifikasi dan Email Selesai beserta Keterangan Lapangan & Hasil Perbaikan
             $laporan->load('pelapor'); // Pastikan relasi pelapor di-load
             \App\Models\Notifikasi::create([

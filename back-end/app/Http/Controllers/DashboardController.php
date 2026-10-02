@@ -13,37 +13,25 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. Total Seluruh Aset (jumlah dari kolom jumlah_aset)
-        $total_aset = Aset::sum('jumlah_aset');
+        // Optimasi: 1 query untuk semua statistik alih-alih 4+ query terpisah
+        $stats = Aset::selectRaw("
+            SUM(jumlah_aset) as total_aset,
+            SUM(CASE WHEN kondisi_aset = 'Baik' THEN jumlah_aset ELSE 0 END) as aset_aktif,
+            SUM(CASE WHEN jenis_aset LIKE '%elektronik%' OR jenis_aset LIKE '%komputer%' THEN jumlah_aset ELSE 0 END) as elektronik,
+            SUM(CASE WHEN jenis_aset LIKE '%furnitur%' OR jenis_aset LIKE '%furniture%' OR jenis_aset LIKE '%meja%' OR jenis_aset LIKE '%kursi%' THEN jumlah_aset ELSE 0 END) as furnitur
+        ")->first();
 
-        // 2. Aset Aktif (kondisi Baik)
-        $aset_aktif = Aset::where('kondisi_aset', 'Baik')->sum('jumlah_aset');
-
-        // 3. Aset dalam Perbaikan (Sedang dikerjakan / status Diproses di Laporan Kerusakan)
+        // Aset dalam Perbaikan (Sedang dikerjakan / status Diproses di Laporan Kerusakan)
         $perbaikan = LaporanKerusakan::where('status_kerusakan', 'Diproses')->count();
 
-        // 4. Kategori Spesifik: Elektronik
-        $elektronik = Aset::where(function($q) {
-            $q->where('jenis_aset', 'like', '%elektronik%')
-              ->orWhere('jenis_aset', 'like', '%komputer%');
-        })->sum('jumlah_aset');
-
-        // 5. Kategori Spesifik: Furnitur
-        $furnitur = Aset::where(function($q) {
-            $q->where('jenis_aset', 'like', '%furnitur%')
-              ->orWhere('jenis_aset', 'like', '%furniture%')
-              ->orWhere('jenis_aset', 'like', '%meja%')
-              ->orWhere('jenis_aset', 'like', '%kursi%');
-        })->sum('jumlah_aset');
-
-        // 6. Mengambil Aktivitas Terbaru dari Pengadaan Aset dan Perbaikan Aset
+        // 6. Mengambil Aktivitas Terbaru (7 hari terakhir, maks 10 item)
         $activities = [];
+        $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
 
-        $today = date('Y-m-d');
-
-        // Ambil pengadaan hari ini
-        $pengadaans = PengadaanAset::whereDate('tgl_pengajuan', $today)
+        // Ambil pengadaan 7 hari terakhir
+        $pengadaans = PengadaanAset::whereDate('tgl_pengajuan', '>=', $sevenDaysAgo)
             ->orderBy('tgl_pengajuan', 'desc')
+            ->limit(10)
             ->get();
         foreach ($pengadaans as $p) {
             $status_mapped = 'pending';
@@ -60,10 +48,11 @@ class DashboardController extends Controller
             ];
         }
 
-        // Ambil perbaikan hari ini
+        // Ambil perbaikan 7 hari terakhir
         $perbaikans = PerbaikanAset::with('laporan.aset')
-            ->whereDate('tgl_dibuat', $today)
+            ->whereDate('tgl_dibuat', '>=', $sevenDaysAgo)
             ->orderBy('tgl_dibuat', 'desc')
+            ->limit(10)
             ->get();
         foreach ($perbaikans as $pb) {
             $status_mapped = 'in_progress';
@@ -81,21 +70,22 @@ class DashboardController extends Controller
             ];
         }
 
-        // Urutkan semua aktivitas gabungan berdasarkan tanggal terbaru (raw_date desc)
+        // Urutkan semua aktivitas gabungan berdasarkan tanggal terbaru dan batasi 10
         usort($activities, function($a, $b) {
             return strcmp($b['raw_date'], $a['raw_date']);
         });
+        $activities = array_slice($activities, 0, 10);
 
         // Mengirim data hitungan tersebut dalam bentuk JSON sesuai format frontend
         return response()->json([
             'success'    => true,
             'message'    => 'Data statistik dashboard berhasil diambil.',
             'stats'      => [
-                'total_aset' => (int)$total_aset,
-                'aset_aktif' => (int)$aset_aktif,
+                'total_aset' => (int)($stats->total_aset ?? 0),
+                'aset_aktif' => (int)($stats->aset_aktif ?? 0),
                 'perbaikan'  => (int)$perbaikan,
-                'elektronik' => (int)$elektronik,
-                'furnitur'   => (int)$furnitur,
+                'elektronik' => (int)($stats->elektronik ?? 0),
+                'furnitur'   => (int)($stats->furnitur ?? 0),
             ],
             'activities' => $activities
         ], 200);

@@ -104,7 +104,11 @@ class AsetController extends Controller
             'tgl_diperoleh'   => 'required|date'
         ]);
 
-        $dataAset = $request->all();
+        $dataAset = $request->only([
+            'nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan',
+            'jumlah_aset', 'kondisi_aset', 'tgl_diperoleh',
+            'harga_aset', 'sumber_dana', 'foto'
+        ]);
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
         $aset = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $dataAset) {
@@ -296,11 +300,32 @@ class AsetController extends Controller
                             ]);
                         }
                     } elseif ($newJumlah < $actualCount) {
-                        // Delete excess sub_asets from the end
-                        \App\Models\SubAset::where('id_aset', $aset->id)
+                        // Hapus sub-aset dari urutan belakang, tapi lewati unit yang sedang diperbaiki
+                        $toRemove = $actualCount - $newJumlah;
+                        $candidates = \App\Models\SubAset::where('id_aset', $aset->id)
                             ->orderBy('kode_sub_aset', 'desc')
-                            ->limit($actualCount - $newJumlah)
-                            ->delete();
+                            ->get();
+                        
+                        $removed = 0;
+                        foreach ($candidates as $candidate) {
+                            if ($removed >= $toRemove) break;
+                            
+                            // Cek apakah unit ini sedang dalam proses perbaikan
+                            $hasActiveRepair = \App\Models\LaporanKerusakan::whereNotIn('status_kerusakan', ['Selesai', 'Ditolak'])
+                                ->where('deskripsi', 'LIKE', '%(Unit: ' . $candidate->kode_sub_aset . ')%')
+                                ->exists();
+                            
+                            if (!$hasActiveRepair) {
+                                $candidate->delete();
+                                $removed++;
+                            }
+                        }
+                        
+                        // Jika tidak semua bisa dihapus karena sedang diperbaiki, sesuaikan jumlah
+                        if ($removed < $toRemove) {
+                            $aset->jumlah_aset = $aset->jumlah_aset + ($toRemove - $removed);
+                            $aset->save();
+                        }
                     }
                 }
 
@@ -403,8 +428,11 @@ class AsetController extends Controller
             'keterangan'  => 'Menghapus aset bernama: ' . $aset->nama_aset,
             'waktu'       => now()
         ]);
+
+        // Hapus semua sub-aset terkait sebelum menghapus aset induk
+        \App\Models\SubAset::where('id_aset', $id)->delete();
         
-        $aset->forceDelete();
+        $aset->delete(); // Soft delete agar data masih bisa di-recover
 
         return response()->json([
             'success' => true,
