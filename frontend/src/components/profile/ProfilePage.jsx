@@ -289,10 +289,6 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
           </div>
 
         </div>{/* end cards-center-wrap */}
-
-        <footer className="footer-copyright-text" style={{ marginTop: '40px' }}>
-          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
-        </footer>
       </main>
 
       {/* Toast Notification */}

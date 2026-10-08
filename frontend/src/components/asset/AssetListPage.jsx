@@ -143,11 +143,6 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           />
         )}
 
-        {/* Footer copyright */}
-        <footer className="footer-copyright-text">
-          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
-        </footer>
-
         {/* MODAL 1: TAMBAH / EDIT ASET FORM (Only for write access roles) */}
         {hasWriteAccess && (
           <AssetFormModal

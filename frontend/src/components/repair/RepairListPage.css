@@ -649,16 +649,6 @@
   border-color: #2563eb;
 }
 
-/* Footer copyright styling */
-.footer-copyright-text {
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-  margin-top: 48px;
-  text-align: center;
-  width: 100%;
-}
-
 /* Responsive Styles overrides */
 @media (max-width: 768px) {
   .pagination-footer-row {
@@ -695,9 +685,5 @@
     padding: 4px 20px 4px 8px;
     height: 28px;
     border-radius: 4px;
-  }
-
-  .footer-copyright-text {
-    margin-top: 32px;
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { FiChevronLeft, FiChevronRight, FiChevronDown } from 'react-icons/fi';
 import PropTypes from 'prop-types';
+import './Pagination.css';
 
 export default function Pagination({
   currentPage,
@@ -11,6 +12,14 @@ export default function Pagination({
   totalPages,
   totalItems
 }) {
+  // Hanya tampilkan pagination jika data lebih dari 5
+  if (totalItems !== undefined && totalItems <= 5) {
+    return null;
+  }
+  if (totalItems === undefined && totalPages !== undefined && totalPages <= 1 && !hasMore) {
+    return null;
+  }
+
   const getPageNumbers = () => {
     if (!totalPages) return [currentPage];
     

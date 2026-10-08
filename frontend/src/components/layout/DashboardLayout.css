@@ -34,18 +34,24 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  justify-content: space-between;
   left: 0;
   position: fixed;
   top: 0;
   width: 260px;
   z-index: 100;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
+/* Area logo + menu: flex-grow mengisi ruang sisa, overflow-y auto agar
+   scroll terjadi DI DALAM sidebar (bukan halaman) jika menu terlalu banyak */
 .sidebar-top {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  /* kunci: izinkan flex child menyusut di bawah kontennya */
+  overflow-y: auto;
 }
 
 .sidebar-logo-container {
@@ -114,6 +120,8 @@
 .logout-container {
   padding: 16px;
   border-top: 1.5px solid #f1f5f9;
+  flex-shrink: 0;
+  /* selalu ter-pin di bawah, tidak pernah terdesak konten menu */
 }
 
 .logout-link {
@@ -213,6 +221,8 @@
   width: 100%;
   z-index: 95;
   transition: opacity 0.3s ease;
+  touch-action: none;
+  /* blokir scroll/swipe menembus overlay di mobile */
 }
 
 /* Badges for roles in Manajemen Pengguna */
@@ -234,18 +244,39 @@
   display: inline-block;
 }
 
-.role-admin { background-color: #eff6ff; color: #1e40af; }
-.role-yayasan { background-color: #f3e8ff; color: #6b21a8; }
-.role-adminsd { background-color: #ecfdf5; color: #065f46; }
-.role-petugas { background-color: #fef9c3; color: #854d0e; }
-.role-guru { background-color: #fff7ed; color: #9a3412; }
+.role-admin {
+  background-color: #eff6ff;
+  color: #1e40af;
+}
+
+.role-yayasan {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.role-adminsd {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.role-petugas {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+
+.role-guru {
+  background-color: #fff7ed;
+  color: #9a3412;
+}
 
 /* Responsive Layout Breakpoints */
 @media (max-width: 768px) {
   .sidebar {
     transform: translateX(-100%);
+    overflow: hidden;
+    /* pastikan sidebar tidak overflow di mobile */
   }
-  
+
   .sidebar.mobile-open {
     transform: translateX(0);
   }

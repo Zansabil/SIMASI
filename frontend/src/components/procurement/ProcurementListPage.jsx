@@ -12,6 +12,8 @@ import ProcurementTable from './ProcurementTable';
 import ProcurementForm from './ProcurementForm';
 import ProcurementLetterPreview from './ProcurementLetterPreview';
 import ProcurementDetailModal from './ProcurementDetailModal';
+import logo from '../../assets/logo.png';
+import Pagination from '../asset/Pagination';
 import './Procurement.css';
 
 // ============================================================
@@ -186,6 +188,13 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUsingBackend, setIsUsingBackend] = useState(false);
   const [availableUnits, setAvailableUnits] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset pagination saat pencarian atau filter status berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -649,7 +658,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
               </div>
             ) : (
               <ProcurementTable
-                procurements={filteredProcurements}
+                procurements={filteredProcurements.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
                 onViewDetail={handleOpenDetailModal}
                 onPreviewLetter={handleOpenPreviewFromList}
                 statusFilter={statusFilter}
@@ -660,12 +669,18 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
                 onUpdateRejectNotes={handleUpdateRejectNotes}
               />
             )}
-
-            {/* Footer copyright */}
-            <footer className="footer-copyright-text">
-              © 2025 SIMAS - Sistem Informasi Manajemen Aset
-            </footer>
           </>
+        )}
+        {!isLoading && view === 'list' && (
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}
+            hasMore={(currentPage * itemsPerPage) < filteredProcurements.length}
+            totalPages={Math.ceil(filteredProcurements.length / itemsPerPage)}
+            totalItems={filteredProcurements.length}
+          />
         )}
 
         {view === 'create' && (
@@ -701,6 +716,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
 
               <div className="official-letter-paper">
                 <div className="letterhead-container">
+                  <img src={logo} alt="Logo Pesantren" className="letterhead-logo" />
                   <div className="letterhead-text">
                     <h1 className="letterhead-title">Yayasan Amir Ash-Shiddiiqi</h1>
                     <h2 className="letterhead-school">Pesantren Modern Amir Ash-Shiddiiqi</h2>

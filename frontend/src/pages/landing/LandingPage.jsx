@@ -4,7 +4,7 @@ import { FiCheckSquare, FiShoppingCart, FiTool, FiPhone, FiMail, FiGlobe, FiMapP
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
 import logoWide from '../../assets/logo-wide.png';
 import logoWhite from '../../assets/Simas Putih.png';
-import gedung from '../../assets/Pondok-Pesantren-Ash-Shiddiiqi-Jambi-Hadirkan-Program-Tahfiz-hingga-Boarding-School.jpg';
+import gedung from '../../assets/BgPesantren.png';
 import './LandingPage.css';
 
 export default function LandingPage() {

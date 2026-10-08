@@ -8,6 +8,7 @@ import SearchBar from '../ui/SearchBar';
 import StatusModal from '../ui/StatusModal';
 import UserTable from './UserTable';
 import UserFormModal from './UserFormModal';
+import Pagination from '../asset/Pagination';
 import './UserListPage.css';
 
 const getRoleDefaultAccess = (role) => {
@@ -128,6 +129,8 @@ export default function UserListPage({ role, currentPath }) {
 
   const [allUsers, setAllUsers] = useState(initialMockUsers);
   const [users, setUsers] = useState(initialMockUsers);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Check login authentication
   useEffect(() => {
@@ -136,6 +139,11 @@ export default function UserListPage({ role, currentPath }) {
       setUserName(storedName);
     }
   }, []);
+
+  // Reset pagination saat pencarian berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Local filtering helper for offline demo
   const filterMockData = () => {
@@ -404,16 +412,22 @@ export default function UserListPage({ role, currentPath }) {
 
         {/* Users List Table Card */}
         <UserTable
-          users={users}
+          users={users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)}
           isLoading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-
-        {/* Footer copyright */}
-        <footer className="footer-copyright-text" style={{ marginTop: '40px' }}>
-          © {new Date().getFullYear()} SIMAS - Sistem Informasi Manajemen Aset
-        </footer>
+        {!isLoading && (
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}
+            hasMore={(currentPage * itemsPerPage) < users.length}
+            totalPages={Math.ceil(users.length / itemsPerPage)}
+            totalItems={users.length}
+          />
+        )}
 
         {/* Form Modal */}
         <UserFormModal

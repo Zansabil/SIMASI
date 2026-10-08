@@ -161,6 +161,9 @@
   box-shadow: 0 4px 6px rgba(15, 23, 42, 0.015);
   padding: 32px;
   width: 100%;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
   box-sizing: border-box;
 }
 
@@ -426,11 +429,17 @@
   min-height: 1130px; /* Standard A4 height proportion */
   padding: 50px 70px; /* Large print margins */
   box-sizing: border-box;
-  font-family: 'Times New Roman', Times, serif; /* Formal serif typography */
-  color: #000000;
+  font-family: 'Times New Roman', Times, Georgia, serif !important; /* Formal serif typography */
+  color: #000000 !important;
   text-align: justify;
   font-size: 14px;
-  line-height: 1.15;
+  line-height: 1.25;
+}
+
+.official-letter-paper,
+.official-letter-paper * {
+  font-family: 'Times New Roman', Times, Georgia, serif !important;
+  color: #000000 !important;
 }
 
 /* Kop Surat (Letterhead) Styles */
@@ -586,6 +595,11 @@
 /* ======================================================== */
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important; /* HILANGKAN header (tanggal/judul) dan footer (URL/halaman) default browser */
+  }
+
   /* Hide all elements that are NOT part of the letter */
   body * {
     visibility: hidden;
@@ -606,118 +620,167 @@
     width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: none !important;
+    background: #ffffff !important;
   }
   
   .official-letter-paper {
     box-shadow: none !important;
     border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-height: auto !important;
-    font-size: 12px !important;
-    line-height: 1.15 !important;
+    padding: 20mm 25mm 15mm 25mm !important; /* Margin resmi kertas surat A4 */
+    margin: 0 auto !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-height: 297mm !important;
+    box-sizing: border-box !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+    font-family: 'Times New Roman', Times, Georgia, serif !important;
+    color: #000000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Reset container scrollbars & table min-width on print */
+  .official-letter-paper * {
+    font-family: 'Times New Roman', Times, Georgia, serif !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    text-shadow: none !important;
+  }
+
+  /* Logo Kop Surat tajam / tidak buram */
+  .letterhead-logo {
+    height: 75px !important;
+    width: auto !important;
+    margin-right: 18px !important;
+    object-fit: contain !important;
+    image-rendering: -webkit-optimize-contrast !important;
+    image-rendering: crisp-edges !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Kop Surat (Letterhead) */
+  .letterhead-container {
+    display: flex !important;
+    align-items: center !important;
+    margin-top: 0 !important;
+    margin-bottom: 24px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 3px double #000000 !important;
+  }
+
+  .letterhead-text {
+    text-align: center !important;
+  }
+
+  .letterhead-title {
+    font-size: 15pt !important;
+    margin-bottom: 2px !important;
+    font-weight: bold !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .letterhead-school {
+    font-size: 15pt !important;
+    margin-bottom: 3px !important;
+    font-weight: bold !important;
+  }
+
+  .letterhead-address {
+    font-size: 9.5pt !important;
+    line-height: 1.25 !important;
+    font-style: italic !important;
+  }
+  
+  .letter-meta-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-bottom: 16px !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+  
+  .letter-recipient-block {
+    margin-bottom: 22px !important;
+    font-size: 11pt !important;
+    line-height: 1.3 !important;
+  }
+
+  .letter-body-paragraph {
+    font-size: 11pt !important;
+    margin-bottom: 14px !important;
+    line-height: 1.35 !important;
+    text-indent: 32px !important;
+    text-align: justify !important;
+  }
+
+  /* Tabel Rincian Barang */
   .letter-table-container {
     overflow: visible !important;
     width: 100% !important;
     border: none !important;
-    margin: 10px 0 !important;
+    margin: 14px 0 !important;
   }
 
   .letter-items-table {
     min-width: auto !important;
     width: 100% !important;
     margin: 0 !important;
-    font-size: 12px !important;
-    line-height: 1.15 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.2 !important;
+    border-collapse: collapse !important;
   }
 
-  /* Make sure background colors are printed correctly */
-  .letter-items-table th {
-    background-color: #f1f5f9 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Compact layout for print to fit on 1 page */
-  .letterhead-container {
-    margin-top: 0 !important;
-    margin-bottom: 32px !important; /* 2 enters equivalent */
-    padding-bottom: 8px !important;
-  }
-
-  .letterhead-title {
-    font-size: 18px !important;
-    margin-bottom: 1px !important;
-  }
-
-  .letterhead-school {
-    font-size: 18px !important;
-    margin-bottom: 2px !important;
-  }
-
-  .letterhead-address {
-    font-size: 14px !important;
-    line-height: 1.15 !important;
-  }
-  
-  .letter-meta-row {
-    margin-bottom: 12px !important;
-    font-size: 14px !important;
-    line-height: 1.15 !important;
-  }
-  
-  .letter-recipient-block {
-    margin-bottom: 32px !important; /* 2 enters equivalent */
-    font-size: 14px !important;
-    line-height: 1.15 !important;
-  }
-
-  .letter-body-paragraph {
-    font-size: 14px !important;
-    margin-bottom: 12px !important;
-    line-height: 1.15 !important;
-    text-indent: 30px !important;
-  }
-  
   .letter-items-table th,
   .letter-items-table td {
     padding: 6px 8px !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+  }
+
+  .letter-items-table th {
+    background-color: #f1f5f9 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
+  /* Tanda Tangan */
   .letter-signatures-block {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Force side-by-side signature boxes */
-    gap: 40px !important;
-    margin-top: 64px !important; /* 4 enters equivalent from closing paragraph */
-    font-size: 14px !important;
-    line-height: 1.15 !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 36px !important;
+    margin-top: 36px !important;
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
   }
 
   .sig-col {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
+    text-align: center !important;
   }
   
   .sig-spacer {
-    height: 45px !important; /* Compact signature area */
+    height: 48px !important;
+  }
+
+  .sig-name {
+    font-weight: bold !important;
+    text-decoration: underline !important;
   }
   
   .letter-approval-row {
-    margin-top: 30px !important; /* Added space between signature blocks */
-    font-size: 14px !important;
-    line-height: 1.15 !important;
-  }
-  
-  @page {
-    size: A4;
-    margin: 1cm 1.5cm 1cm 1.5cm !important; /* Tight margin on top/bottom, good margin on left/right */
+    margin-top: 24px !important;
+    display: flex !important;
+    justify-content: center !important;
+    font-size: 11pt !important;
+    line-height: 1.25 !important;
   }
 }
 
@@ -981,16 +1044,6 @@
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-/* Footer copyright styling */
-.footer-copyright-text {
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 500;
-  margin-top: 48px;
-  text-align: center;
-  width: 100%;
-}
-
 @media (max-width: 768px) {
   .card-header-clickable {
     padding: 16px 12px;
@@ -1015,10 +1068,6 @@
   .counter-label {
     font-size: 11px;
     margin-top: 2px;
-  }
-
-  .footer-copyright-text {
-    margin-top: 32px;
   }
 
   /* --- Letter Preview Mobile Responsiveness --- */
@@ -1096,6 +1145,62 @@
 
   .letter-approval-row {
     margin-top: 24px;
+  }
+
+  /* --- Procurement Form Mobile Responsiveness --- */
+  .form-panel {
+    padding: 20px 16px;
+    border-radius: 12px;
+  }
+
+  .form-meta-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .items-input-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .items-input-table {
+    min-width: 700px;
+  }
+
+  .items-input-table th,
+  .items-input-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .grand-total-row {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .grand-total-label {
+    font-size: 13px;
+  }
+
+  .grand-total-val {
+    font-size: 18px;
+  }
+
+  .form-actions-row {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+
+  .form-actions-row .btn-cancel,
+  .form-actions-row .btn-preview {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 }
 

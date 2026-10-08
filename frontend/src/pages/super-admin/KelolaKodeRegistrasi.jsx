@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import DashboardHeader from '../../components/dashboard/DashboardHeader';
 import axios from 'axios';
+import Pagination from '../../components/asset/Pagination';
 import { API_BASE_URL } from '../../config';
 
 export default function KelolaKodeRegistrasi() {
@@ -9,12 +10,15 @@ export default function KelolaKodeRegistrasi() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Form states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newKode, setNewKode] = useState('');
   const [newKeterangan, setNewKeterangan] = useState('');
 
+  const pagedKodes = kodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   // Log Modal states
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [logs, setLogs] = useState([]);
@@ -137,11 +141,11 @@ export default function KelolaKodeRegistrasi() {
           {errorMsg && <div style={{ color: 'red', marginBottom: '10px' }}>{errorMsg}</div>}
           {successMsg && <div style={{ color: 'green', marginBottom: '10px' }}>{successMsg}</div>}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 'bold' }}>Daftar Kode Registrasi</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <h2 style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b', margin: 0 }}>Daftar Kode Registrasi</h2>
             <button 
               className="btn-primary" 
-              style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer' }}
+              style={{ padding: '8px 16px', background: '#3b82f6', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap' }}
               onClick={() => setIsModalOpen(true)}
             >
               + Buat Kode Baru
@@ -151,65 +155,85 @@ export default function KelolaKodeRegistrasi() {
           {isLoading ? (
             <p>Memuat data...</p>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '10px' }}>Kode</th>
-                  <th style={{ padding: '10px' }}>Keterangan</th>
-                  <th style={{ padding: '10px' }}>Status</th>
-                  <th style={{ padding: '10px' }}>Pengguna</th>
-                  <th style={{ padding: '10px' }}>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {kodes.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
+            <div style={{
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch', /* scroll halus di iOS */
+              marginTop: '4px',
+            }}>
+              <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Kode</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Keterangan</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Status</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Pengguna</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Aksi</th>
                   </tr>
-                ) : (
-                  kodes.map(kode => (
-                    <tr key={kode.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                      <td style={{ padding: '10px', fontWeight: 'bold' }}>{kode.kode}</td>
-                      <td style={{ padding: '10px' }}>{kode.keterangan || '-'}</td>
-                      <td style={{ padding: '10px' }}>
-                        <span style={{ 
-                          padding: '4px 8px', 
-                          borderRadius: '12px', 
-                          fontSize: '12px',
-                          background: kode.status_aktif ? '#d1fae5' : '#fee2e2',
-                          color: kode.status_aktif ? '#065f46' : '#991b1b'
-                        }}>
-                          {kode.status_aktif ? 'Aktif' : 'Nonaktif'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px' }}>{kode.pengguna_count} Orang</td>
-                      <td style={{ padding: '10px', display: 'flex', gap: '8px' }}>
-                        <button 
-                          onClick={() => handleViewLogs(kode)}
-                          style={{ padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                        >
-                          Lihat Log
-                        </button>
-                        <button 
-                          onClick={() => handleToggleStatus(kode.id)}
-                          style={{ padding: '4px 8px', background: kode.status_aktif ? '#f59e0b' : '#3b82f6', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                        >
-                          {kode.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(kode.id)}
-                          style={{ padding: '4px 8px', background: '#ef4444', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                        >
-                          Hapus
-                        </button>
-                      </td>
+                </thead>
+                <tbody>
+                  {kodes.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    pagedKodes.map(kode => (
+                      <tr key={kode.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{kode.kode}</td>
+                        <td style={{ padding: '10px' }}>{kode.keterangan || '-'}</td>
+                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
+                          <span style={{ 
+                            padding: '4px 8px', 
+                            borderRadius: '12px', 
+                            fontSize: '12px',
+                            background: kode.status_aktif ? '#d1fae5' : '#fee2e2',
+                            color: kode.status_aktif ? '#065f46' : '#991b1b'
+                          }}>
+                            {kode.status_aktif ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{kode.pengguna_count} Orang</td>
+                        <td style={{ padding: '10px' }}>
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                            <button 
+                              onClick={() => handleViewLogs(kode)}
+                              style={{ padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                            >
+                              Lihat Log
+                            </button>
+                            <button 
+                              onClick={() => handleToggleStatus(kode.id)}
+                              style={{ padding: '4px 8px', background: kode.status_aktif ? '#f59e0b' : '#3b82f6', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                            >
+                              {kode.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(kode.id)}
+                              style={{ padding: '4px 8px', background: '#ef4444', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
+
+        {!isLoading && kodes.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={kodes.length}
+            totalPages={Math.ceil(kodes.length / itemsPerPage)}
+            hasMore={currentPage * itemsPerPage < kodes.length}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={setItemsPerPage}
+          />
+        )}
       </main>
 
       {/* Modal Tambah Kode */}

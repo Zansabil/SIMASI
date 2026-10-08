@@ -335,11 +335,6 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           </>
         )}
 
-        {/* Footer copyright */}
-        <footer className="footer-copyright-text">
-          © 2025 SIMAS - Sistem Informasi Manajemen Aset
-        </footer>
-
         {/* Form Modal for Admin / Guru */}
         {hasWriteAccess && (
           <RepairFormModal

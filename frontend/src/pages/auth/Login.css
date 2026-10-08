@@ -15,7 +15,7 @@ input::-ms-clear {
 /* Page Container with Background */
 .login-container {
   align-items: center;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/src/assets/bg-pesantren.png');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/src/assets/BgPesantren.png');
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -219,7 +219,8 @@ input::-ms-clear {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px; /* Tighter gap as requested */
+  gap: 8px;
+  /* Tighter gap as requested */
   margin-top: 12px;
   width: 100%;
 }
@@ -265,6 +266,7 @@ input::-ms-clear {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -276,7 +278,7 @@ input::-ms-clear {
   .login-container {
     padding: 0;
   }
-  
+
   .login-card {
     border-radius: 0;
     box-shadow: none;
