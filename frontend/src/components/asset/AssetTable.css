@@ -371,3 +371,8 @@
   background-color: #fef2f2;
   color: #ef4444;
 }
+
+.status-maintenance {
+  background-color: #ffedd5;
+  color: #f97316;
+}

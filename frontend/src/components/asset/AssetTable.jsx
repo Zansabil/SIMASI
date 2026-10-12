@@ -158,8 +158,8 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
                                   const isCurrentlyUnderRepair = activeRepairCodes.includes(sub.kode_sub_aset);
                                   const isRepairInProgress = inProgressRepairCodes.includes(sub.kode_sub_aset);
                                   const isRusak = (sub.kondisi_aset || '').toLowerCase() === 'rusak';
-                                  const displayStatus = (isRepairInProgress || isRusak) ? 'Sedang Diperbaiki' : (sub.status_penggunaan || 'Tersedia');
-                                   const displayCondition = isRepairInProgress ? 'Rusak' : (sub.kondisi_aset || 'Baik');
+                                  const displayStatus = sub.status_penggunaan || 'Tersedia';
+                                  const displayCondition = sub.kondisi_aset || 'Baik';
                                   
                                   return (
                                   <tr key={sub.id}>

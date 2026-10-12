@@ -96,6 +96,20 @@ class LaporanKerusakanController extends Controller
             'alasan_penolakan' => $request->alasan_penolakan 
         ]);
 
+        // Kembalikan kondisi sub-aset menjadi 'Baik' dan status 'Tersedia' jika ditolak
+        if ($laporan->deskripsi) {
+            if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                $kodeSubAset = trim($matches[1]);
+                $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->first();
+                if ($subAset) {
+                    $subAset->update([
+                        'kondisi_aset' => 'Baik',
+                        'status_penggunaan' => 'Tersedia'
+                    ]);
+                }
+            }
+        }
+
         Notifikasi::create([
             'id_pengguna'    => $laporan->id_pelapor,
             'tipe'           => 'Status Laporan',
@@ -167,6 +181,20 @@ class LaporanKerusakanController extends Controller
         }
 
         $laporan = LaporanKerusakan::create($data);
+
+        // Update kondisi sub-aset menjadi 'Rusak' dan status penggunaan 'Maintenance'
+        if ($request->deskripsi) {
+            if (preg_match('/\(Unit:\s*(.*?)\)/', $request->deskripsi, $matches)) {
+                $kodeSubAset = trim($matches[1]);
+                $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->first();
+                if ($subAset) {
+                    $subAset->update([
+                        'kondisi_aset' => 'Rusak',
+                        'status_penggunaan' => 'Maintenance'
+                    ]);
+                }
+            }
+        }
 
         $aset = Aset::find($request->id_aset);
         
@@ -331,8 +359,24 @@ class LaporanKerusakanController extends Controller
             }
         }
 
-        // Saat status diubah ke 'Menunggu', kembalikan kondisi unit ke 'Baik' dan status ke 'Tersedia'
+        // Saat status diubah ke 'Menunggu', ubah kondisi unit ke 'Rusak' dan status ke 'Maintenance'
         if ($request->status_kerusakan === 'Menunggu') {
+            if ($laporan->deskripsi) {
+                if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
+                    $kodeSubAset = trim($matches[1]);
+                    $subAset = \App\Models\SubAset::where('kode_sub_aset', $kodeSubAset)->lockForUpdate()->first();
+                    if ($subAset) {
+                        $subAset->update([
+                            'kondisi_aset' => 'Rusak',
+                            'status_penggunaan' => 'Maintenance'
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Saat status diubah ke 'Ditolak', kembalikan kondisi unit ke 'Baik' dan status ke 'Tersedia'
+        if ($request->status_kerusakan === 'Ditolak') {
             if ($laporan->deskripsi) {
                 if (preg_match('/\(Unit:\s*(.*?)\)/', $laporan->deskripsi, $matches)) {
                     $kodeSubAset = trim($matches[1]);

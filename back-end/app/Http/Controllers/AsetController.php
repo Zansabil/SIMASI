@@ -161,7 +161,7 @@ class AsetController extends Controller
             'waktu'       => now() 
         ]);
         
-        $aset->load(['ruangan', 'lokasiUnit']);
+        $aset->load(['ruangan', 'lokasiUnit', 'subAset.ruangan']);
         
         return response()->json([
             'success' => true,

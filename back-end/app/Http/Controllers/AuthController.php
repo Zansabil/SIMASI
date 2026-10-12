@@ -25,7 +25,9 @@ class AuthController extends Controller
         $identifier = $request->identifier;
 
         // Cari pengguna berdasarkan email, nama_pengguna, atau no_telepon
-        $user = Pengguna::where('email', $identifier)
+        // Gunakan eager loading untuk relasi 'peran' agar tidak lazy-load saat akses jabatan
+        $user = Pengguna::with('peran')
+            ->where('email', $identifier)
             ->orWhere('nama_pengguna', $identifier)
             ->orWhere('no_telepon', $identifier)
             ->first();
@@ -38,8 +40,20 @@ class AuthController extends Controller
             ], 401); // 401 = Unauthorized (Tidak diizinkan)
         }
 
-        // Jika benar, buatkan Token API (Kunci Masuk) menggunakan Sanctum
+        // Hapus semua token lama milik user ini agar tabel personal_access_tokens tidak membengkak
+        $user->tokens()->delete();
+
+        // Jika benar, buatkan Token API (Kunci Masuk) baru menggunakan Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Bangun string jabatan langsung dari relasi yang sudah di-eager-load
+        $namaPeran = $user->peran ? $user->peran->nama : 'Unknown';
+        $jabatan = $namaPeran;
+        if ($user->area && $user->area !== '-') {
+            $jabatan = ($namaPeran === 'Admin Unit') 
+                ? 'Admin ' . $user->area 
+                : $namaPeran . ' ' . $user->area;
+        }
 
         return response()->json([
             'success'      => true,
@@ -53,7 +67,7 @@ class AuthController extends Controller
                 'email'           => $user->email,
                 'id_peran'        => $user->id_peran,
                 'area'            => $user->area,
-                'jabatan'         => $user->jabatan,
+                'jabatan'         => $jabatan,
                 'foto_profil_url' => $user->foto_profil ? url('api/avatars/' . $user->foto_profil) : null,
             ]
         ], 200);
