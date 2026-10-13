@@ -87,7 +87,7 @@ export default function ProcurementTable({
               <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
               <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
               <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-              {showActions && <th style={{ width: '220px', textAlign: 'center' }}>Aksi</th>}
+              {showActions && <th style={{ width: '170px', textAlign: 'center' }}>Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -181,16 +181,6 @@ export default function ProcurementTable({
                           >
                             <FiX size={14} /> Tolak
                           </button>
-                          {onDeleteItem && (
-                            <button
-                              type="button"
-                              className="btn-delete-item"
-                              onClick={() => onDeleteItem(subItem.parent.id, subItem.parent.items.indexOf(subItem), subItem)}
-                              title="Hapus barang ini"
-                            >
-                              <FiTrash2 size={13} /> Hapus
-                            </button>
-                          )}
                         </div>
                       ) : (
                         <div className="action-decision-cell">
@@ -201,16 +191,6 @@ export default function ProcurementTable({
                           >
                             <FiEdit2 size={14} /> Revisi
                           </button>
-                          {onDeleteItem && (
-                            <button
-                              type="button"
-                              className="btn-delete-item"
-                              onClick={() => onDeleteItem(subItem.parent.id, subItem.parent.items.indexOf(subItem), subItem)}
-                              title="Hapus barang ini"
-                            >
-                              <FiTrash2 size={13} /> Hapus
-                            </button>
-                          )}
                         </div>
                       )}
                     </td>
@@ -306,7 +286,7 @@ export default function ProcurementTable({
                             <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
                             <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
                             <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-                            {showActions && <th style={{ width: '220px', textAlign: 'center' }}>Aksi</th>}
+                            {showActions && <th style={{ width: '170px', textAlign: 'center' }}>Aksi</th>}
                           </tr>
                         </thead>
                         <tbody>
@@ -393,16 +373,6 @@ export default function ProcurementTable({
                                       >
                                         <FiX size={14} /> Tolak
                                       </button>
-                                      {onDeleteItem && (
-                                        <button
-                                          type="button"
-                                          className="btn-delete-item"
-                                          onClick={() => onDeleteItem(item.id, index, subItem)}
-                                          title="Hapus barang ini"
-                                        >
-                                          <FiTrash2 size={13} /> Hapus
-                                        </button>
-                                      )}
                                     </div>
                                   ) : (
                                     <div className="action-decision-cell">
@@ -413,16 +383,6 @@ export default function ProcurementTable({
                                       >
                                         <FiEdit2 size={14} /> Revisi
                                       </button>
-                                      {onDeleteItem && (
-                                        <button
-                                          type="button"
-                                          className="btn-delete-item"
-                                          onClick={() => onDeleteItem(item.id, index, subItem)}
-                                          title="Hapus barang ini"
-                                        >
-                                          <FiTrash2 size={13} /> Hapus
-                                        </button>
-                                      )}
                                     </div>
                                   )}
                                 </td>
@@ -435,16 +395,6 @@ export default function ProcurementTable({
 
                     {/* Action area: buttons aligned to bottom right */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
-                      {showActions && onDeleteReport && (
-                        <button 
-                          type="button"
-                          className="btn-delete-report"
-                          onClick={() => onDeleteReport(item)}
-                          title="Hapus Seluruh Berkas Laporan Pengadaan Ini"
-                        >
-                          <FiTrash2 size={16} /> Hapus Laporan
-                        </button>
-                      )}
                       <button 
                         type="button"
                         className="btn-view-full-letter"
