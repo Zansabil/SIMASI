@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiShoppingCart, FiTool } from 'react-icons/fi';
+import { FiShoppingCart, FiTool, FiInbox } from 'react-icons/fi';
 import { getStatusConfig } from '../../utils/statusConfig';
 import Pagination from '../asset/Pagination';
 
@@ -51,8 +51,40 @@ export default function ActivityList({ activities }) {
             );
           })
         ) : (
-          <div className="no-activities-message" style={{ padding: '32px 16px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-            Belum ada aktivitas terbaru yang tercatat.
+          <div
+            className="no-activities-message"
+            style={{
+              padding: '48px 16px',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              color: '#64748b',
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: '#f1f5f9',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#94a3b8',
+                marginBottom: '4px',
+              }}
+            >
+              <FiInbox size={24} />
+            </div>
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 600, color: '#334155' }}>
+              Tidak ada aktivitas terbaru
+            </p>
+            <p style={{ margin: 0, fontSize: '13px', color: '#94a3b8' }}>
+              Aktivitas pengadaan dan perbaikan akan muncul di sini saat tersedia.
+            </p>
           </div>
         )}
       </div>

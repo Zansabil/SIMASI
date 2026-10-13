@@ -2,51 +2,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
-// Default mock data untuk mode demo / fallback ketika backend tidak aktif
-const DEFAULT_STATS = {
-  total_aset: 1270,
-  aset_aktif: 1200,
-  perbaikan: 70,
-  elektronik: 300,
-  furnitur: 650,
-};
-
-const getTodayDateString = () => {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, '0');
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const year = today.getFullYear();
-  return `${day}-${month}-${year}`;
-};
-
-const getYesterdayDateString = () => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const day = String(yesterday.getDate()).padStart(2, '0');
-  const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-  const year = yesterday.getFullYear();
-  return `${day}-${month}-${year}`;
-};
-
-const todayStr = getTodayDateString();
-const yesterdayStr = getYesterdayDateString();
-
-const DEFAULT_ACTIVITIES = [
-  { id: 'mock-1', type: 'Pengadaan', title: 'Pengadaan - Kipas Angin',   date: todayStr, status: 'pending'     },
-  { id: 'mock-2', type: 'Perbaikan', title: 'Perbaikan - Meja Guru',      date: todayStr, status: 'in_progress' },
-  { id: 'mock-3', type: 'Perbaikan', title: 'Perbaikan - Stop Kontak Mati', date: todayStr, status: 'completed'   },
-  { id: 'mock-4', type: 'Pengadaan', title: 'Pengadaan - Proyektor Kelas',  date: todayStr, status: 'approved'    },
-  { id: 'mock-5', type: 'Perbaikan', title: 'Perbaikan - AC Kelas 10',      date: todayStr, status: 'in_progress' },
-  { id: 'mock-6', type: 'Pengadaan', title: 'Pengadaan - Papan Tulis',     date: todayStr, status: 'pending'     },
-  { id: 'mock-7', type: 'Perbaikan', title: 'Perbaikan - Pintu Toilet',     date: todayStr, status: 'completed'   },
-  { id: 'mock-8', type: 'Pengadaan', title: 'Pengadaan - Kursi Guru',      date: yesterdayStr, status: 'rejected'  },
-  { id: 'mock-9', type: 'Perbaikan', title: 'Perbaikan - Lampu Koridor',    date: yesterdayStr, status: 'completed' },
-];
-
-/**
- * Custom hook untuk mengambil data statistik aset dan aktivitas terbaru
- * dari endpoint dashboard backend Laravel.
- *
 const EMPTY_STATS = {
   total_aset: 0,
   aset_aktif: 0,
@@ -85,27 +40,24 @@ export default function useDashboardData() {
         if (response.data) {
           // Update stats dari response API
           setStats({
-            total_aset:  response.data.stats?.total_aset  ?? 0,
-            aset_aktif:  response.data.stats?.aset_aktif  ?? 0,
-            perbaikan:   response.data.stats?.perbaikan   ?? 0,
-            elektronik:  response.data.stats?.elektronik  ?? 0,
-            furnitur:    response.data.stats?.furnitur    ?? 0,
+            total_aset:  Number(response.data.stats?.total_aset)  || 0,
+            aset_aktif:  Number(response.data.stats?.aset_aktif)  || 0,
+            perbaikan:   Number(response.data.stats?.perbaikan)   || 0,
+            elektronik:  Number(response.data.stats?.elektronik)  || 0,
+            furnitur:    Number(response.data.stats?.furnitur)    || 0,
           });
 
-          // Update aktivitas dari response API (termasuk array kosong jika belum ada aktivitas)
+          // Update aktivitas dari response API jika ada
           if (Array.isArray(response.data.activities)) {
             setActivities(response.data.activities);
+          } else {
+            setActivities([]);
           }
         }
       } catch (err) {
         console.warn('Gagal memuat data statistik dashboard dari API:', err);
-        // Fallback demo hanya jika tidak login sama sekali (mode demo tanpa backend)
-        if (!localStorage.getItem('auth_token')) {
-          setStats(DEFAULT_STATS);
-          setActivities(DEFAULT_ACTIVITIES);
-        } else {
-          setActivities([]);
-        }
+        setStats(EMPTY_STATS);
+        setActivities([]);
       } finally {
         setIsLoading(false);
       }
