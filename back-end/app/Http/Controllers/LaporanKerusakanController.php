@@ -18,7 +18,7 @@ class LaporanKerusakanController extends Controller
     public function index()
     {
         // Eager Loading untuk efisiensi query saat dikirim ke Frontend
-        $laporans = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor'])->get();
+        $laporans = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'perbaikan'])->get();
         
         return response()->json([
             'success' => true,
@@ -30,7 +30,7 @@ class LaporanKerusakanController extends Controller
     // 2. Detail Data (READ SINGLE) - Berguna jika React ingin melihat detail 1 laporan
     public function show($id)
     {
-        $laporan = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor'])->findOrFail($id);
+        $laporan = LaporanKerusakan::with(['aset.ruangan', 'aset.lokasiUnit', 'pelapor', 'perbaikan'])->findOrFail($id);
         
         return response()->json([
             'success' => true,
@@ -305,6 +305,9 @@ class LaporanKerusakanController extends Controller
         if ($laporan->lampiran) {
             Storage::disk('public')->delete($laporan->lampiran);
         }
+        if ($laporan->foto_perbaikan) {
+            Storage::disk('public')->delete($laporan->foto_perbaikan);
+        }
 
         $laporan->delete();
 
@@ -330,7 +333,8 @@ class LaporanKerusakanController extends Controller
 
         $request->validate([
             'status_kerusakan' => ['required', 'string', Rule::in(['Menunggu', 'Diproses', 'Selesai', 'Ditolak'])],
-            'keterangan_perbaikan' => 'nullable|string'
+            'keterangan_perbaikan' => 'nullable|string',
+            'foto_perbaikan' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120'
         ]);
 
         $laporan = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
@@ -340,6 +344,13 @@ class LaporanKerusakanController extends Controller
             'status_kerusakan' => $request->status_kerusakan,
             'keterangan_perbaikan' => $request->keterangan_perbaikan
         ];
+
+        if ($request->hasFile('foto_perbaikan')) {
+            if ($laporan->foto_perbaikan) {
+                Storage::disk('public')->delete($laporan->foto_perbaikan);
+            }
+            $updateData['foto_perbaikan'] = $request->file('foto_perbaikan')->store('perbaikan', 'public');
+        }
 
         if ($request->status_kerusakan === 'Diproses' && !$laporan->tgl_mulai_perbaikan) {
             $updateData['tgl_mulai_perbaikan'] = now();

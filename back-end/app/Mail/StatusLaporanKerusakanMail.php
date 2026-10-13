@@ -9,6 +9,9 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Facades\Storage;
+
 class StatusLaporanKerusakanMail extends Mailable
 {
     use Queueable, SerializesModels;
@@ -19,13 +22,14 @@ class StatusLaporanKerusakanMail extends Mailable
     public $keterangan;
     public $hasil;
     public $biaya;
+    public $foto_perbaikan;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($pesan, $tipe, $nama_pengguna, $keterangan = null, $hasil = null, $biaya = null)
+    public function __construct($pesan, $tipe, $nama_pengguna, $keterangan = null, $hasil = null, $biaya = null, $foto_perbaikan = null)
     {
         $this->pesan = $pesan;
         $this->tipe = $tipe;
@@ -33,6 +37,7 @@ class StatusLaporanKerusakanMail extends Mailable
         $this->keterangan = $keterangan;
         $this->hasil = $hasil;
         $this->biaya = $biaya;
+        $this->foto_perbaikan = $foto_perbaikan;
     }
 
     /**
@@ -66,6 +71,14 @@ class StatusLaporanKerusakanMail extends Mailable
      */
     public function attachments()
     {
-        return [];
+        $attachments = [];
+        if ($this->foto_perbaikan && Storage::disk('public')->exists($this->foto_perbaikan)) {
+            $path = Storage::disk('public')->path($this->foto_perbaikan);
+            $ext = pathinfo($path, PATHINFO_EXTENSION) ?: 'jpg';
+            $attachments[] = Attachment::fromPath($path)
+                ->as('foto_hasil_perbaikan.' . $ext)
+                ->withMime(mime_content_type($path) ?: 'image/jpeg');
+        }
+        return $attachments;
     }
 }

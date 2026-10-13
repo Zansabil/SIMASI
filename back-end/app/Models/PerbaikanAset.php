@@ -24,7 +24,8 @@ class PerbaikanAset extends Model
         'tanggal_selesai',
         'status_perbaikan',
         'hasil',
-        'biaya'
+        'biaya',
+        'foto_perbaikan'
     ];
 
     // 4. Relasi ke Laporan Kerusakan

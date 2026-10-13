@@ -134,6 +134,9 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
         // Prioritaskan foto kerusakan yang di-upload pada form laporan (item.lampiran)
         const damagePhoto = item.lampiran ? resolveImageUrl(item.lampiran) : null;
         const assetPhoto = item.aset?.foto ? resolveImageUrl(item.aset.foto) : null;
+        const repairPhoto = (item.foto_perbaikan || item.perbaikan?.foto_perbaikan) 
+          ? resolveImageUrl(item.foto_perbaikan || item.perbaikan?.foto_perbaikan) 
+          : null;
         const imagePath = damagePhoto || assetPhoto || DEFAULT_ASSET_IMAGE;
 
         return {
@@ -151,7 +154,10 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           priority: 'medium', // Prototype (tidak ada field priority di DB)
           image_path: imagePath,
           damage_image: damagePhoto,
-          asset_image: assetPhoto
+          asset_image: assetPhoto,
+          foto_perbaikan: repairPhoto,
+          hasil: item.perbaikan?.hasil || '',
+          biaya: item.perbaikan?.biaya || 0
         };
       });
 
@@ -180,7 +186,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   };
 
   const handleEditSubmit = async (editData) => {
-    // editData contains { status, priority, keterangan, hasil, biaya, alasanTolak }
+    // editData contains { status, priority, keterangan, hasil, biaya, alasanTolak, foto_perbaikan }
     if (!selectedItem) return;
 
     try {
@@ -193,16 +199,16 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       const backendStatus = backendStatusMap[editData.status] || 'Menunggu';
 
       // 1. Selalu update progress & keterangan lapangan
-      await updateRepairProgress(selectedItem.id, backendStatus, editData.keterangan);
+      await updateRepairProgress(selectedItem.id, backendStatus, editData.keterangan, editData.foto_perbaikan);
 
       // 2. Jalankan logika spesifik berdasarkan status
       if (editData.status === 'rejected') {
         await rejectRepair(selectedItem.id, editData.alasanTolak || 'Ditolak oleh petugas.');
       } else if (editData.status === 'completed') {
-        // Tandai selesai dan buat history di perbaikan_aset
+        // Tandai selesai dan buat history di perbaikan_aset beserta foto hasil perbaikan
         const idPetugas = localStorage.getItem('user_id'); 
         if (!idPetugas) throw new Error("Sesi tidak valid. Harap login kembali.");
-        await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya);
+        await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya, editData.foto_perbaikan);
       }
 
       // Refresh list
@@ -371,6 +377,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
             isOpen={isViewOpen}
             onClose={() => setIsViewOpen(false)}
             selectedItem={selectedItem}
+            onPreviewPhoto={(url, title) => setPhotoPreview({ url, title })}
           />
         )}
 

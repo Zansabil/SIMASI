@@ -26,14 +26,32 @@ class PerbaikanAsetController extends Controller
     // 2. STORE: Menyimpan data perbaikan baru dari inputan form di ReactJS
     public function store(Request $request)
     {
+        // Auto-migration fail-safe for hosting/production
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('perbaikan_aset', 'foto_perbaikan')) {
+            \Illuminate\Support\Facades\Schema::table('perbaikan_aset', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('foto_perbaikan')->nullable()->after('hasil');
+            });
+        }
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('laporan_kerusakan', 'foto_perbaikan')) {
+            \Illuminate\Support\Facades\Schema::table('laporan_kerusakan', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('foto_perbaikan')->nullable()->after('lampiran');
+            });
+        }
+
         // 1. Validasi input dari API
         $request->validate([
             'id_laporan'       => 'required',
             'id_petugas'       => 'required',
             'tanggal_mulai'    => 'required|date',
             'status_perbaikan' => 'required',
-            'biaya'            => 'nullable|numeric' 
+            'biaya'            => 'nullable|numeric',
+            'foto_perbaikan'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120'
         ]);
+
+        $fotoPerbaikanPath = null;
+        if ($request->hasFile('foto_perbaikan')) {
+            $fotoPerbaikanPath = $request->file('foto_perbaikan')->store('perbaikan', 'public');
+        }
 
         // 2. Simpan ke tabel perbaikan_aset
         $perbaikan = PerbaikanAset::create([
@@ -44,6 +62,7 @@ class PerbaikanAsetController extends Controller
             'status_perbaikan' => $request->status_perbaikan,
             'hasil'            => $request->hasil,
             'biaya'            => $request->biaya ?? 0, 
+            'foto_perbaikan'   => $fotoPerbaikanPath,
         ]);
 
         // 3. LOGIKA SINKRONISASI otomatis jika perbaikan langsung dinyatakan 'Selesai'
@@ -52,9 +71,16 @@ class PerbaikanAsetController extends Controller
             // Cari data laporan kerusakan terkait
             $laporan = LaporanKerusakan::findOrFail($request->id_laporan);
             
-            // A. Ubah status laporan jadi Selesai dan update tanggal
+            // A. Ubah status laporan jadi Selesai dan update tanggal serta foto perbaikan
             $updateData = ['status_kerusakan' => 'Selesai'];
             
+            if ($fotoPerbaikanPath) {
+                if ($laporan->foto_perbaikan) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($laporan->foto_perbaikan);
+                }
+                $updateData['foto_perbaikan'] = $fotoPerbaikanPath;
+            }
+
             if (!$laporan->tgl_mulai_perbaikan) {
                 $updateData['tgl_mulai_perbaikan'] = $request->tanggal_mulai;
             }
@@ -84,7 +110,7 @@ class PerbaikanAsetController extends Controller
                 }
             }
 
-            // C. Kirim Notifikasi dan Email Selesai beserta Keterangan Lapangan & Hasil Perbaikan
+            // C. Kirim Notifikasi dan Email Selesai beserta Keterangan Lapangan, Hasil Perbaikan, dan Foto Hasil Perbaikan
             $laporan->load('pelapor'); // Pastikan relasi pelapor di-load
             \App\Models\Notifikasi::create([
                 'id_pengguna'    => $laporan->id_pelapor,
@@ -103,7 +129,8 @@ class PerbaikanAsetController extends Controller
                         $laporan->pelapor->nama,
                         $laporan->keterangan_perbaikan, // Keterangan Lapangan
                         $request->hasil,               // Hasil Perbaikan
-                        $request->biaya                // Total Biaya
+                        $request->biaya,               // Total Biaya
+                        $fotoPerbaikanPath             // Foto Hasil Perbaikan
                     ));
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());

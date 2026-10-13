@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiX, FiAlertCircle } from 'react-icons/fi';
+import { FiX, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 // Status mapping helper
@@ -33,8 +33,18 @@ const renderPriorityBadge = (priority) => {
   }
 };
 
-export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
+export default function RepairDetailModal({ isOpen, onClose, selectedItem, onPreviewPhoto }) {
   if (!isOpen || !selectedItem) return null;
+
+  const handleImageClick = (url, title) => {
+    if (onPreviewPhoto && url) {
+      onPreviewPhoto(url, title);
+    }
+  };
+
+  const damageImg = selectedItem.damage_image || selectedItem.image_path || DEFAULT_ASSET_IMAGE;
+  const assetImg = selectedItem.asset_image && selectedItem.asset_image !== damageImg ? selectedItem.asset_image : null;
+  const repairImg = selectedItem.foto_perbaikan;
 
   return (
     <div className="modal-overlay-bg">
@@ -100,31 +110,78 @@ export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
           </>
         )}
 
-        <div className="detail-photos-label">Foto Kerusakan & Aset</div>
+        {selectedItem.hasil && (
+          <>
+            <div className="detail-desc-header" style={{ marginTop: '16px', color: '#059669', fontWeight: 600 }}>
+              <FiCheckCircle size={16} /> Hasil Tindakan Perbaikan
+            </div>
+            <div className="detail-desc-box" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534' }}>
+              <div>{selectedItem.hasil}</div>
+              {selectedItem.biaya > 0 && (
+                <div style={{ marginTop: '8px', fontSize: '13px', fontWeight: 600, color: '#047857' }}>
+                  Total Biaya: Rp {Number(selectedItem.biaya).toLocaleString('id-ID')}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        <div className="detail-photos-label">Foto Kerusakan & Bukti Perbaikan</div>
         <div className="detail-photos-grid">
-          <div className="detail-photo-card">
+          {/* Foto Kerusakan */}
+          <div 
+            className="detail-photo-card"
+            style={{ cursor: onPreviewPhoto ? 'pointer' : 'default', display: 'flex', flexDirection: 'column' }}
+            onClick={() => handleImageClick(damageImg, `Foto Kerusakan - ${selectedItem.asset_name}`)}
+            title={onPreviewPhoto ? "Klik untuk memperbesar" : ""}
+          >
             <img 
-              src={
-                selectedItem.damage_image ||
-                selectedItem.image_path ||
-                DEFAULT_ASSET_IMAGE
-              } 
+              src={damageImg} 
               alt="foto-kerusakan" 
               className="detail-photo-img" 
+              style={{ flex: 1, minHeight: 0, width: '100%', objectFit: 'cover' }}
             />
-            <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', marginTop: '6px', fontWeight: 500 }}>
+            <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', padding: '6px 4px', fontWeight: 600, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
               Foto Kerusakan
             </div>
           </div>
-          {selectedItem.asset_image && selectedItem.asset_image !== (selectedItem.damage_image || selectedItem.image_path) && (
-            <div className="detail-photo-card">
+
+          {/* Foto Aset Katalog */}
+          {assetImg && (
+            <div 
+              className="detail-photo-card"
+              style={{ cursor: onPreviewPhoto ? 'pointer' : 'default', display: 'flex', flexDirection: 'column' }}
+              onClick={() => handleImageClick(assetImg, `Foto Aset - ${selectedItem.asset_name}`)}
+              title={onPreviewPhoto ? "Klik untuk memperbesar" : ""}
+            >
               <img 
-                src={selectedItem.asset_image} 
+                src={assetImg} 
                 alt="foto-aset" 
                 className="detail-photo-img" 
+                style={{ flex: 1, minHeight: 0, width: '100%', objectFit: 'cover' }}
               />
-              <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', marginTop: '6px', fontWeight: 500 }}>
+              <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', padding: '6px 4px', fontWeight: 600, background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                 Foto Aset (Katalog)
+              </div>
+            </div>
+          )}
+
+          {/* Foto Hasil Perbaikan */}
+          {repairImg && (
+            <div 
+              className="detail-photo-card"
+              style={{ cursor: onPreviewPhoto ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', border: '2px solid #10b981', boxShadow: '0 2px 8px rgba(16, 185, 129, 0.15)' }}
+              onClick={() => handleImageClick(repairImg, `Foto Hasil Perbaikan - ${selectedItem.asset_name}`)}
+              title={onPreviewPhoto ? "Klik untuk memperbesar" : ""}
+            >
+              <img 
+                src={repairImg} 
+                alt="foto-hasil-perbaikan" 
+                className="detail-photo-img" 
+                style={{ flex: 1, minHeight: 0, width: '100%', objectFit: 'cover' }}
+              />
+              <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#047857', padding: '6px 4px', fontWeight: 700, background: '#ecfdf5', borderTop: '1px solid #a7f3d0' }}>
+                ✓ Hasil Perbaikan
               </div>
             </div>
           )}

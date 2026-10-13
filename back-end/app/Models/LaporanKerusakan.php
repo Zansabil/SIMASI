@@ -27,6 +27,7 @@ class LaporanKerusakan extends Model
         'status_kerusakan',
 
         'lampiran',
+        'foto_perbaikan',
         'alasan_penolakan',
         'keterangan_perbaikan',
         'tgl_mulai_perbaikan',
@@ -47,5 +48,9 @@ class LaporanKerusakan extends Model
         return $this->belongsTo(Pengguna::class, 'id_pelapor')->withTrashed();
     }
 
-
+    // 3. Relasi ke riwayat perbaikan
+    public function perbaikan()
+    {
+        return $this->hasOne(PerbaikanAset::class, 'id_laporan')->latestOfMany('tgl_dibuat');
+    }
 }

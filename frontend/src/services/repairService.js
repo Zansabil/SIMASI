@@ -47,8 +47,28 @@ export const rejectRepair = async (id, reason = 'Ditolak oleh petugas') => {
   return response.data;
 };
 
-export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan telah diselesaikan secara otomatis.', biaya = 0) => {
+export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan telah diselesaikan secara otomatis.', biaya = 0, fotoPerbaikan = null) => {
   const today = new Date().toISOString().split('T')[0];
+  
+  if (fotoPerbaikan instanceof File) {
+    const formData = new FormData();
+    formData.append('id_laporan', idLaporan);
+    formData.append('id_petugas', idPetugas);
+    formData.append('tanggal_mulai', today);
+    formData.append('tanggal_selesai', today);
+    formData.append('status_perbaikan', 'Selesai');
+    formData.append('hasil', hasil);
+    formData.append('biaya', biaya || 0);
+    formData.append('foto_perbaikan', fotoPerbaikan);
+
+    const response = await api.post('/api/perbaikan_aset', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  }
+
   const response = await api.post('/api/perbaikan_aset', {
     id_laporan: idLaporan,
     id_petugas: idPetugas,
@@ -56,7 +76,7 @@ export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan te
     tanggal_selesai: today,
     status_perbaikan: 'Selesai',
     hasil: hasil,
-    biaya: biaya
+    biaya: biaya || 0
   });
   return response.data;
 };
@@ -66,7 +86,21 @@ export const deleteRepair = async (id) => {
   return response.data;
 };
 
-export const updateRepairProgress = async (id, status, keterangan) => {
+export const updateRepairProgress = async (id, status, keterangan, fotoPerbaikan = null) => {
+  if (fotoPerbaikan instanceof File) {
+    const formData = new FormData();
+    formData.append('status_kerusakan', status);
+    if (keterangan) formData.append('keterangan_perbaikan', keterangan);
+    formData.append('foto_perbaikan', fotoPerbaikan);
+    formData.append('_method', 'PATCH');
+    const response = await api.post(`/api/laporan_kerusakan/${id}/progress`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  }
+
   const response = await api.patch(`/api/laporan_kerusakan/${id}/progress`, {
     status_kerusakan: status,
     keterangan_perbaikan: keterangan
