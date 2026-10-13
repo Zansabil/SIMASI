@@ -82,7 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute khusus untuk memvalidasi/menolak laporan
     Route::patch('/laporan_kerusakan/{id}/validasi', [LaporanKerusakanController::class, 'validasi']);
     Route::patch('/laporan_kerusakan/{id}/tolak', [LaporanKerusakanController::class, 'tolak']);
-    Route::patch('/laporan_kerusakan/{id}/progress', [LaporanKerusakanController::class, 'updateProgress']);
+    Route::match(['patch', 'post'], '/laporan_kerusakan/{id}/progress', [LaporanKerusakanController::class, 'updateProgress']);
     
     // Route Perbaikan Aset
     Route::apiResource('perbaikan_aset', PerbaikanAsetController::class);

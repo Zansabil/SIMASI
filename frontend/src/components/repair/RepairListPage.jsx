@@ -198,17 +198,23 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       };
       const backendStatus = backendStatusMap[editData.status] || 'Menunggu';
 
-      // 1. Selalu update progress & keterangan lapangan
-      await updateRepairProgress(selectedItem.id, backendStatus, editData.keterangan, editData.foto_perbaikan);
-
-      // 2. Jalankan logika spesifik berdasarkan status
-      if (editData.status === 'rejected') {
-        await rejectRepair(selectedItem.id, editData.alasanTolak || 'Ditolak oleh petugas.');
-      } else if (editData.status === 'completed') {
-        // Tandai selesai dan buat history di perbaikan_aset beserta foto hasil perbaikan
+      if (editData.status === 'completed') {
+        // Tandai selesai, buat history di perbaikan_aset beserta foto hasil perbaikan & kirim email ke pelapor
         const idPetugas = localStorage.getItem('user_id'); 
         if (!idPetugas) throw new Error("Sesi tidak valid. Harap login kembali.");
-        await completeRepair(selectedItem.id, idPetugas, editData.hasil, editData.biaya, editData.foto_perbaikan);
+        await completeRepair(
+          selectedItem.id, 
+          idPetugas, 
+          editData.hasil, 
+          editData.biaya, 
+          editData.foto_perbaikan, 
+          editData.keterangan
+        );
+      } else if (editData.status === 'rejected') {
+        await rejectRepair(selectedItem.id, editData.alasanTolak || 'Ditolak oleh petugas.');
+      } else {
+        // Status Menunggu atau Diproses
+        await updateRepairProgress(selectedItem.id, backendStatus, editData.keterangan);
       }
 
       // Refresh list
@@ -217,7 +223,8 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
       setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Status laporan perbaikan berhasil diperbarui.' });
     } catch (err) {
       console.error("Gagal update status", err);
-      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal mengupdate status: " + (err.response?.data?.message || err.message) });
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: "Gagal mengupdate status: " + msg });
     }
   };
 

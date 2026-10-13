@@ -72,12 +72,24 @@ class StatusLaporanKerusakanMail extends Mailable
     public function attachments()
     {
         $attachments = [];
-        if ($this->foto_perbaikan && Storage::disk('public')->exists($this->foto_perbaikan)) {
-            $path = Storage::disk('public')->path($this->foto_perbaikan);
-            $ext = pathinfo($path, PATHINFO_EXTENSION) ?: 'jpg';
-            $attachments[] = Attachment::fromPath($path)
-                ->as('foto_hasil_perbaikan.' . $ext)
-                ->withMime(mime_content_type($path) ?: 'image/jpeg');
+        try {
+            if ($this->foto_perbaikan && Storage::disk('public')->exists($this->foto_perbaikan)) {
+                $path = Storage::disk('public')->path($this->foto_perbaikan);
+                $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION) ?: 'jpg');
+                $mimeMap = [
+                    'jpg'  => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png'  => 'image/png',
+                    'webp' => 'image/webp',
+                    'gif'  => 'image/gif',
+                ];
+                $mime = $mimeMap[$ext] ?? 'image/jpeg';
+                $attachments[] = Attachment::fromPath($path)
+                    ->as('foto_hasil_perbaikan.' . $ext)
+                    ->withMime($mime);
+            }
+        } catch (\Throwable $t) {
+            // If attachment fails, email still sends without attachment
         }
         return $attachments;
     }

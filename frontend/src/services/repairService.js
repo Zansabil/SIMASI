@@ -47,7 +47,7 @@ export const rejectRepair = async (id, reason = 'Ditolak oleh petugas') => {
   return response.data;
 };
 
-export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan telah diselesaikan secara otomatis.', biaya = 0, fotoPerbaikan = null) => {
+export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan telah diselesaikan secara otomatis.', biaya = 0, fotoPerbaikan = null, keterangan = '') => {
   const today = new Date().toISOString().split('T')[0];
   
   if (fotoPerbaikan instanceof File) {
@@ -59,6 +59,7 @@ export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan te
     formData.append('status_perbaikan', 'Selesai');
     formData.append('hasil', hasil);
     formData.append('biaya', biaya || 0);
+    if (keterangan) formData.append('keterangan_perbaikan', keterangan);
     formData.append('foto_perbaikan', fotoPerbaikan);
 
     const response = await api.post('/api/perbaikan_aset', formData, {
@@ -76,7 +77,8 @@ export const completeRepair = async (idLaporan, idPetugas, hasil = 'Perbaikan te
     tanggal_selesai: today,
     status_perbaikan: 'Selesai',
     hasil: hasil,
-    biaya: biaya || 0
+    biaya: biaya || 0,
+    keterangan_perbaikan: keterangan
   });
   return response.data;
 };

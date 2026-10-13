@@ -41,12 +41,30 @@
                 <strong>Total Biaya:</strong><br>
                 Rp {{ number_format($biaya, 0, ',', '.') }}
                 @endif
-                @if(!empty($foto_perbaikan) && \Illuminate\Support\Facades\Storage::disk('public')->exists($foto_perbaikan))
-                <br><br>
-                <strong>Foto Hasil Perbaikan:</strong><br>
-                <div style="margin-top: 12px; text-align: center;">
-                    <img src="{{ $message->embed(\Illuminate\Support\Facades\Storage::disk('public')->path($foto_perbaikan)) }}" alt="Foto Hasil Perbaikan" style="max-width: 100%; max-height: 360px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block;">
-                </div>
+                @if(!empty($foto_perbaikan))
+                    @php
+                        $imgSrc = null;
+                        try {
+                            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($foto_perbaikan)) {
+                                $fullImgPath = \Illuminate\Support\Facades\Storage::disk('public')->path($foto_perbaikan);
+                                if (isset($message) && is_object($message) && method_exists($message, 'embed')) {
+                                    $imgSrc = $message->embed($fullImgPath);
+                                }
+                            }
+                        } catch (\Throwable $t) {
+                            $imgSrc = null;
+                        }
+                        if (!$imgSrc) {
+                            $imgSrc = url('storage/' . $foto_perbaikan);
+                        }
+                    @endphp
+                    @if($imgSrc)
+                    <br><br>
+                    <strong>Foto Hasil Perbaikan:</strong><br>
+                    <div style="margin-top: 12px; text-align: center;">
+                        <img src="{{ $imgSrc }}" alt="Foto Hasil Perbaikan" style="max-width: 100%; max-height: 360px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: inline-block;">
+                    </div>
+                    @endif
                 @endif
             </div>
             

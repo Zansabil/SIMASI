@@ -320,6 +320,12 @@ class LaporanKerusakanController extends Controller
     // 8. Update Progress Perbaikan (Khusus Petugas)
     public function updateProgress(Request $request, $id)
     {
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('laporan_kerusakan', 'foto_perbaikan')) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `laporan_kerusakan` ADD COLUMN `foto_perbaikan` VARCHAR(255) NULL AFTER `lampiran`");
+            }
+        } catch (\Throwable $e) {}
+
         $sanitizeFields = ['status_kerusakan', 'keterangan_perbaikan'];
         $sanitizedData = [];
         foreach ($sanitizeFields as $field) {

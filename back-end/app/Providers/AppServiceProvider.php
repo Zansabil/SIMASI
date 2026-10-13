@@ -14,6 +14,16 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Auto-migration fail-safe untuk tabel laporan_kerusakan dan perbaikan_aset
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('laporan_kerusakan') && !\Illuminate\Support\Facades\Schema::hasColumn('laporan_kerusakan', 'foto_perbaikan')) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `laporan_kerusakan` ADD COLUMN `foto_perbaikan` VARCHAR(255) NULL AFTER `lampiran`");
+            }
+            if (\Illuminate\Support\Facades\Schema::hasTable('perbaikan_aset') && !\Illuminate\Support\Facades\Schema::hasColumn('perbaikan_aset', 'foto_perbaikan')) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `perbaikan_aset` ADD COLUMN `foto_perbaikan` VARCHAR(255) NULL AFTER `hasil`");
+            }
+        } catch (\Throwable $e) {}
+
         // Berikan akses penuh (bypass semua gate) untuk Super Admin
         Gate::before(function ($user, $ability) {
             if ($user->id_peran == 1) {

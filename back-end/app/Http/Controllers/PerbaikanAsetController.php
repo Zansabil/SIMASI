@@ -27,16 +27,17 @@ class PerbaikanAsetController extends Controller
     public function store(Request $request)
     {
         // Auto-migration fail-safe for hosting/production
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('perbaikan_aset', 'foto_perbaikan')) {
-            \Illuminate\Support\Facades\Schema::table('perbaikan_aset', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('foto_perbaikan')->nullable()->after('hasil');
-            });
-        }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('laporan_kerusakan', 'foto_perbaikan')) {
-            \Illuminate\Support\Facades\Schema::table('laporan_kerusakan', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('foto_perbaikan')->nullable()->after('lampiran');
-            });
-        }
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('perbaikan_aset', 'foto_perbaikan')) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `perbaikan_aset` ADD COLUMN `foto_perbaikan` VARCHAR(255) NULL AFTER `hasil`");
+            }
+        } catch (\Throwable $e) {}
+
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('laporan_kerusakan', 'foto_perbaikan')) {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE `laporan_kerusakan` ADD COLUMN `foto_perbaikan` VARCHAR(255) NULL AFTER `lampiran`");
+            }
+        } catch (\Throwable $e) {}
 
         // 1. Validasi input dari API
         $request->validate([
@@ -81,6 +82,10 @@ class PerbaikanAsetController extends Controller
                 $updateData['foto_perbaikan'] = $fotoPerbaikanPath;
             }
 
+            if ($request->filled('keterangan_perbaikan') || $request->filled('keterangan')) {
+                $updateData['keterangan_perbaikan'] = $request->keterangan_perbaikan ?? $request->keterangan;
+            }
+
             if (!$laporan->tgl_mulai_perbaikan) {
                 $updateData['tgl_mulai_perbaikan'] = $request->tanggal_mulai;
             }
@@ -112,16 +117,18 @@ class PerbaikanAsetController extends Controller
 
             // C. Kirim Notifikasi dan Email Selesai beserta Keterangan Lapangan, Hasil Perbaikan, dan Foto Hasil Perbaikan
             $laporan->load('pelapor'); // Pastikan relasi pelapor di-load
-            \App\Models\Notifikasi::create([
-                'id_pengguna'    => $laporan->id_pelapor,
-                'tipe'           => 'Perbaikan Selesai',
-                'pesan'          => 'Perbaikan aset ' . ($aset ? $aset->nama_aset : '') . ' telah Selesai.',
-                'terbaca'        => 0,
-                'waktu_terkirim' => now(),
-                'tgl_dibuat'     => now()
-            ]);
+            if ($laporan->id_pelapor) {
+                \App\Models\Notifikasi::create([
+                    'id_pengguna'    => $laporan->id_pelapor,
+                    'tipe'           => 'Perbaikan Selesai',
+                    'pesan'          => 'Perbaikan aset ' . ($aset ? $aset->nama_aset : '') . ' telah Selesai.',
+                    'terbaca'        => 0,
+                    'waktu_terkirim' => now(),
+                    'tgl_dibuat'     => now()
+                ]);
+            }
 
-            if ($laporan->pelapor && $laporan->pelapor->email) {
+            if ($laporan->pelapor && !empty($laporan->pelapor->email)) {
                 try {
                     \Illuminate\Support\Facades\Mail::to($laporan->pelapor->email)->send(new \App\Mail\StatusLaporanKerusakanMail(
                         'Perbaikan aset ' . ($aset ? $aset->nama_aset : '') . ' telah selesai dikerjakan.',
@@ -132,7 +139,7 @@ class PerbaikanAsetController extends Controller
                         $request->biaya,               // Total Biaya
                         $fotoPerbaikanPath             // Foto Hasil Perbaikan
                     ));
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());
                 }
             }
