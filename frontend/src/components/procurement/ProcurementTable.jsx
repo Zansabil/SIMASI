@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiChevronDown, FiEye, FiCheck, FiX, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiChevronDown, FiEye, FiCheck, FiX, FiEdit2, FiTrash2, FiRotateCcw } from 'react-icons/fi';
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -88,7 +88,7 @@ export default function ProcurementTable({
               <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
               <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
               <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-              {showActions && <th style={{ width: '170px', textAlign: 'center' }}>Aksi</th>}
+              {showActions && <th style={{ width: '240px', textAlign: 'center' }}>Aksi</th>}
             </tr>
           </thead>
           <tbody>
@@ -182,6 +182,16 @@ export default function ProcurementTable({
                           >
                             <FiX size={14} /> Tolak
                           </button>
+                          {subItem.status !== 'pending' && (
+                            <button
+                              type="button"
+                              className="btn-cancel-revise"
+                              onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.originalIndex}`]: false}))}
+                              title="Batal revisi (kembali ke tombol revisi)"
+                            >
+                              <FiRotateCcw size={12} /> Batal
+                            </button>
+                          )}
                         </div>
                       ) : (
                         <div className="action-decision-cell">
@@ -287,7 +297,7 @@ export default function ProcurementTable({
                             <th style={{ width: '160px', textAlign: 'right' }}>Estimasi Harga</th>
                             <th style={{ width: '160px', textAlign: 'right' }}>Total</th>
                             <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-                            {showActions && <th style={{ width: '170px', textAlign: 'center' }}>Aksi</th>}
+                            {showActions && <th style={{ width: '240px', textAlign: 'center' }}>Aksi</th>}
                           </tr>
                         </thead>
                         <tbody>
@@ -374,6 +384,16 @@ export default function ProcurementTable({
                                       >
                                         <FiX size={14} /> Tolak
                                       </button>
+                                      {subItem.status !== 'pending' && (
+                                        <button
+                                          type="button"
+                                          className="btn-cancel-revise"
+                                          onClick={() => setRevisingItems(prev => ({...prev, [`${item.id}-${index}`]: false}))}
+                                          title="Batal revisi (kembali ke tombol revisi)"
+                                        >
+                                          <FiRotateCcw size={12} /> Batal
+                                        </button>
+                                      )}
                                     </div>
                                   ) : (
                                     <div className="action-decision-cell">
