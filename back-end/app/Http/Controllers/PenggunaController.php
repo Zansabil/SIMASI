@@ -13,8 +13,8 @@ class PenggunaController extends Controller
     {
         Gate::authorize('kelola-user');
         
-        // Mengambil semua pengguna kecuali pengguna yang sedang login saat ini
-        $penggunas = Pengguna::with('peran')->where('id', '!=', auth()->user()->id)->get();
+        // Mengambil semua pengguna termasuk akun Super Admin
+        $penggunas = Pengguna::with('peran')->orderBy('id', 'asc')->get();
         
         return response()->json([
             'success' => true,
@@ -92,7 +92,7 @@ class PenggunaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data pengguna ' . $pengguna->nama . ' berhasil diperbarui!',
-            'data'    => $pengguna
+            'data'    => $pengguna->fresh(['peran'])
         ], 200);
     }
 
@@ -101,6 +101,13 @@ class PenggunaController extends Controller
     {
         Gate::authorize('kelola-user');
         
+        if (auth()->user()->id == $id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak dapat menghapus akun Anda sendiri yang sedang aktif digunakan.'
+            ], 403);
+        }
+
         $pengguna = Pengguna::findOrFail($id);
         
         // Tambahkan suffix timestamp agar email dan username bisa dipakai lagi

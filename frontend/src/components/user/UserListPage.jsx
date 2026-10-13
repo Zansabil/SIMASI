@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
-import { FiPlus } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
@@ -15,7 +14,6 @@ const getRoleDefaultAccess = (role) => {
   switch (role) {
     case 'Super Admin':
     case 'Administrator':
-    case 'Super Admin':
       return {
         dashboard: true,
         daftarAset: true,
@@ -68,53 +66,6 @@ const getRoleDefaultAccess = (role) => {
   }
 };
 
-const initialMockUsers = [
-  {
-    id: 'mock-1',
-    username: 'admin',
-    name: 'Administrator Sistem',
-    email: 'admin@simas.sch.id',
-    role: 'Administrator',
-    unit: 'Yayasan / Global',
-    status: 'Aktif',
-    is_current: true,
-    access: getRoleDefaultAccess('Administrator')
-  },
-  {
-    id: 'mock-2',
-    username: 'kepalayayasan',
-    name: 'Dr. H. Muhammad Rizki, M.Pd',
-    email: 'kepala.yayasan@simas.sch.id',
-    role: 'Kepala Yayasan',
-    unit: 'Yayasan / Global',
-    status: 'Aktif',
-    is_current: false,
-    access: getRoleDefaultAccess('Kepala Yayasan')
-  },
-  {
-    id: 'mock-3',
-    username: 'adminsd',
-    name: 'Siti Aminah, S.Pd',
-    email: 'admin.sd@simas.sch.id',
-    role: 'Admin',
-    unit: 'SD',
-    status: 'Aktif',
-    is_current: false,
-    access: getRoleDefaultAccess('Admin')
-  },
-  {
-    id: 'mock-4',
-    username: 'teknisi',
-    name: 'Joko Susilo',
-    email: 'teknisi.sd@simas.sch.id',
-    role: 'Petugas Perbaikan',
-    unit: 'Yayasan / Global',
-    status: 'Aktif',
-    is_current: false,
-    access: getRoleDefaultAccess('Petugas Perbaikan')
-  }
-];
-
 export default function UserListPage({ role, currentPath }) {
   const [userName, setUserName] = useState('User');
   const [searchQuery, setSearchQuery] = useState('');
@@ -127,8 +78,8 @@ export default function UserListPage({ role, currentPath }) {
   const [userToDelete, setUserToDelete] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
 
-  const [allUsers, setAllUsers] = useState(initialMockUsers);
-  const [users, setUsers] = useState(initialMockUsers);
+  const [allUsers, setAllUsers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -145,88 +96,76 @@ export default function UserListPage({ role, currentPath }) {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  // Local filtering helper for offline demo
-  const filterMockData = () => {
-    let filtered = [...allUsers];
+  // Fetch users from API
+  const fetchUsers = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem('auth_token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json'
+        }
+      };
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(u =>
-        u.username.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.name.toLowerCase().includes(q)
+      const response = await axios.get(
+        `${API_BASE_URL}/api/pengguna`,
+        config
       );
-    }
 
-    setUsers(filtered);
+      if (response.data && Array.isArray(response.data.data)) {
+        let rawData = response.data.data;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          rawData = rawData.filter(u => 
+            (u.nama_pengguna && u.nama_pengguna.toLowerCase().includes(q)) || 
+            (u.email && u.email.toLowerCase().includes(q)) || 
+            (u.nama && u.nama.toLowerCase().includes(q))
+          );
+        }
+
+        const currentUserId = localStorage.getItem('user_id');
+        const mapped = rawData.map(u => {
+          let mappedRole = 'Super Admin';
+          if (u.id_peran === 1) mappedRole = 'Super Admin';
+          else if (u.id_peran === 2) mappedRole = 'Kepala Yayasan';
+          else if (u.id_peran === 3) mappedRole = 'Admin';
+          else if (u.id_peran === 4) mappedRole = 'Petugas Perbaikan';
+          else if (u.id_peran === 5) mappedRole = 'Guru';
+          
+          let mappedAccess = getRoleDefaultAccess(mappedRole);
+          const isCurrent = (currentUserId && String(u.id) === String(currentUserId)) || (u.nama === userName);
+
+          return {
+            id: u.id,
+            username: u.nama_pengguna || (u.email ? u.email.split('@')[0] : 'user'),
+            name: u.nama || 'Tanpa Nama',
+            email: u.email || '-',
+            role: mappedRole,
+            unit: u.area || 'Yayasan / Global',
+            status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
+            is_current: isCurrent,
+            access: mappedAccess
+          };
+        });
+        setUsers(mapped);
+        setAllUsers(mapped);
+      } else {
+        setUsers([]);
+        setAllUsers([]);
+      }
+    } catch (err) {
+      console.error("Fetch Users Error Detail:", err);
+      setUsers([]);
+      setAllUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Fetch users from API
   useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem('auth_token');
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        };
-
-        const response = await axios.get(
-          `${API_BASE_URL}/api/pengguna`,
-          config
-        );
-
-        if (response.data && Array.isArray(response.data.data)) {
-          // Filter out locally if search query exists (or we can pass ?search=...)
-          let rawData = response.data.data;
-          if (searchQuery) {
-            const q = searchQuery.toLowerCase();
-            rawData = rawData.filter(u => 
-              (u.nama_pengguna && u.nama_pengguna.toLowerCase().includes(q)) || 
-              (u.email && u.email.toLowerCase().includes(q)) || 
-              (u.nama && u.nama.toLowerCase().includes(q))
-            );
-          }
-
-          const mapped = rawData.map(u => {
-            let mappedRole = 'Super Admin';
-            if (u.id_peran === 1) mappedRole = 'Super Admin';
-            else if (u.id_peran === 2) mappedRole = 'Kepala Yayasan';
-            else if (u.id_peran === 3) mappedRole = 'Admin';
-            else if (u.id_peran === 4) mappedRole = 'Petugas Perbaikan';
-            else if (u.id_peran === 5) mappedRole = 'Guru';
-            
-            let mappedAccess = getRoleDefaultAccess(mappedRole);
-
-            return {
-              id: u.id,
-              username: u.nama_pengguna || (u.email ? u.email.split('@')[0] : 'user'),
-              name: u.nama || 'Tanpa Nama',
-              email: u.email || '-',
-              role: mappedRole,
-              unit: u.area || 'Yayasan / Global',
-              status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
-              is_current: u.nama === userName,
-              access: mappedAccess
-            };
-          });
-          setUsers(mapped);
-        } else {
-          filterMockData();
-        }
-      } catch (err) {
-        console.error("Fetch Users Error Detail:", err);
-        console.warn("Backend API not reachable. Using locally filtered mock data for presentation.", err);
-        filterMockData();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchUsers();
-  }, [searchQuery, allUsers, userName]);
+  }, [searchQuery, userName]);
 
   // Actions handlers
   const handleEdit = (user) => {
@@ -250,14 +189,17 @@ export default function UserListPage({ role, currentPath }) {
       await axios.delete(`${API_BASE_URL}/api/pengguna/${userToDelete.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      setAllUsers(prev => prev.filter(item => item.id !== userToDelete.id));
+      setUsers(prev => prev.filter(item => item.id !== userToDelete.id));
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Pengguna berhasil dihapus.' });
     } catch (err) {
       console.error("Backend API error:", err);
-      alert("Gagal menghapus pengguna dari server.");
+      const errMsg = err.response?.data?.message || "Gagal menghapus pengguna dari server.";
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errMsg });
+    } finally {
+      setIsDeleteConfirmOpen(false);
+      setUserToDelete(null);
     }
-    setAllUsers(prev => prev.filter(item => item.id !== userToDelete.id));
-    setIsDeleteConfirmOpen(false);
-    setUserToDelete(null);
-    setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Pengguna berhasil dihapus.' });
   };
 
   const handleTambahPenggunaClick = () => {
@@ -287,17 +229,6 @@ export default function UserListPage({ role, currentPath }) {
 
     if (editingUser) {
       // Edit Mode
-      const updatedUser = {
-        ...editingUser,
-        username: formData.username,
-        name: formData.name,
-        email: formData.email,
-        role: formData.role,
-        unit: formData.unit,
-        status: formData.status,
-        access: { ...formData.access }
-      };
-
       try {
         const token = localStorage.getItem('auth_token');
         const config = {
@@ -323,27 +254,23 @@ export default function UserListPage({ role, currentPath }) {
             access: { ...formData.access }
           };
           setAllUsers(prev => prev.map(item => item.id === editingUser.id ? mappedUser : item));
-        } else {
-          setAllUsers(prev => prev.map(item => item.id === editingUser.id ? updatedUser : item));
+          setUsers(prev => prev.map(item => item.id === editingUser.id ? mappedUser : item));
+
+          if (editingUser.is_current) {
+            localStorage.setItem('user_name', u.nama);
+            localStorage.setItem('user_email', u.email);
+            localStorage.setItem('user_username', u.nama_pengguna);
+            const roleSlug = mappedRole === 'Super Admin' ? 'super-admin' : (mappedRole === 'Kepala Yayasan' ? 'kepala-yayasan' : (mappedRole === 'Petugas Perbaikan' ? 'petugas-perbaikan' : (mappedRole === 'Guru' ? 'guru' : 'admin')));
+            localStorage.setItem('user_role', roleSlug);
+          }
         }
+        await fetchUsers();
       } catch (err) {
         console.error("Backend API error:", err);
         throw err;
       }
     } else {
       // Add Mode
-      const newUser = {
-        id: 'local-' + Date.now(),
-        username: formData.username,
-        name: formData.name,
-        email: formData.email,
-        role: formData.role || 'Administrator',
-        unit: formData.unit || 'Yayasan / Global',
-        status: formData.status,
-        is_current: false,
-        access: { ...formData.access }
-      };
-
       try {
         const token = localStorage.getItem('auth_token');
         const config = {
@@ -352,26 +279,8 @@ export default function UserListPage({ role, currentPath }) {
           }
         };
 
-        const response = await axios.post(`${API_BASE_URL}/api/pengguna`, payload, config);
-
-        if (response.data && response.data.data) {
-          const u = response.data.data;
-          const mappedRole = u.id_peran === 1 ? 'Super Admin' : (u.id_peran === 2 ? 'Kepala Yayasan' : (u.id_peran === 4 ? 'Petugas Perbaikan' : (u.id_peran === 5 ? 'Guru' : 'Admin')));
-          const mappedUser = {
-            id: u.id,
-            username: u.nama_pengguna,
-            name: u.nama,
-            email: u.email,
-            role: mappedRole,
-            unit: u.area || 'Yayasan / Global',
-            status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
-            is_current: false,
-            access: { ...formData.access }
-          };
-          setAllUsers(prev => [mappedUser, ...prev]);
-        } else {
-          setAllUsers(prev => [newUser, ...prev]);
-        }
+        await axios.post(`${API_BASE_URL}/api/pengguna`, payload, config);
+        await fetchUsers();
       } catch (err) {
         console.error("Backend API error:", err);
         throw err;
@@ -379,7 +288,7 @@ export default function UserListPage({ role, currentPath }) {
     }
 
     setIsFormOpen(false);
-    setStatusModal({ isOpen: true, type: 'success', title: 'Terima kasih', message: editingUser ? "Pengguna berhasil diperbarui" : "Pengguna baru berhasil ditambahkan" });
+    setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: editingUser ? "Data pengguna berhasil diperbarui" : "Pengguna baru berhasil ditambahkan" });
   };
 
   const PlusIcon = () => (
@@ -417,7 +326,7 @@ export default function UserListPage({ role, currentPath }) {
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
-        {!isLoading && (
+        {!isLoading && users.length > 0 && (
           <Pagination
             currentPage={currentPage}
             itemsPerPage={itemsPerPage}
