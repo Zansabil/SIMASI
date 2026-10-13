@@ -15,7 +15,7 @@ import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
 import { API_BASE_URL } from '../../config';
 import { parseLocation } from '../../utils/locationHelper';
-import { resolveImageUrl } from '../../utils/imageHelper';
+import { resolveImageUrl, DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
 // Import service API
 import { 
@@ -118,7 +118,10 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           }
         }
 
-        const imagePath = resolveImageUrl(item.aset?.foto || item.lampiran);
+        // Prioritaskan foto kerusakan yang di-upload pada form laporan (item.lampiran)
+        const damagePhoto = item.lampiran ? resolveImageUrl(item.lampiran) : null;
+        const assetPhoto = item.aset?.foto ? resolveImageUrl(item.aset.foto) : null;
+        const imagePath = damagePhoto || assetPhoto || DEFAULT_ASSET_IMAGE;
 
         return {
           id: item.id,
@@ -133,7 +136,9 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           end_date: item.tgl_selesai_perbaikan ? new Date(item.tgl_selesai_perbaikan).toLocaleDateString('id-ID') : '-',
           status: status,
           priority: 'medium', // Prototype (tidak ada field priority di DB)
-          image_path: imagePath
+          image_path: imagePath,
+          damage_image: damagePhoto,
+          asset_image: assetPhoto
         };
       });
 
@@ -346,14 +351,12 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           />
         )}
 
-        {/* Detail Modal for Petugas */}
-        {hasStaffAccess && (
-          <RepairDetailModal
-            isOpen={isViewOpen}
-            onClose={() => setIsViewOpen(false)}
-            selectedItem={selectedItem}
-          />
-        )}
+        {/* Detail Modal (Dapat dibuka semua role saat klik foto atau aksi detail) */}
+        <RepairDetailModal
+          isOpen={isViewOpen}
+          onClose={() => setIsViewOpen(false)}
+          selectedItem={selectedItem}
+        />
 
         {/* Edit Modal for Petugas */}
         {hasStaffAccess && (

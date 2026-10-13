@@ -16,9 +16,12 @@ export const DEFAULT_ASSET_IMAGE = defaultPlaceholder;
 export const resolveImageUrl = (path) => {
   if (!path) return DEFAULT_ASSET_IMAGE;
   
-  if (path.startsWith('http') || path.startsWith('data:')) {
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
     return path;
   }
   
-  return `${API_BASE_URL}/storage/${path}`;
+  // Normalisasi jika path sudah memiliki awalan 'storage/' atau '/'
+  const cleanPath = path.replace(/^\/+/, '').replace(/^storage\//, '');
+
+  return `${API_BASE_URL}/storage/${cleanPath}`;
 };

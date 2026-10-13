@@ -100,28 +100,34 @@ export default function RepairDetailModal({ isOpen, onClose, selectedItem }) {
           </>
         )}
 
-        <div className="detail-photos-label">Foto Kerusakan</div>
+        <div className="detail-photos-label">Foto Kerusakan & Aset</div>
         <div className="detail-photos-grid">
           <div className="detail-photo-card">
             <img 
               src={
+                selectedItem.damage_image ||
                 selectedItem.image_path ||
                 DEFAULT_ASSET_IMAGE
               } 
-              alt="lampiran-1" 
+              alt="foto-kerusakan" 
               className="detail-photo-img" 
             />
+            <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', marginTop: '6px', fontWeight: 500 }}>
+              Foto Kerusakan
+            </div>
           </div>
-          <div className="detail-photo-card">
-            <img 
-              src={
-                selectedItem.image_path ||
-                DEFAULT_ASSET_IMAGE
-              } 
-              alt="lampiran-2" 
-              className="detail-photo-img" 
-            />
-          </div>
+          {selectedItem.asset_image && selectedItem.asset_image !== (selectedItem.damage_image || selectedItem.image_path) && (
+            <div className="detail-photo-card">
+              <img 
+                src={selectedItem.asset_image} 
+                alt="foto-aset" 
+                className="detail-photo-img" 
+              />
+              <div style={{ textAlign: 'center', fontSize: '11.5px', color: '#64748b', marginTop: '6px', fontWeight: 500 }}>
+                Foto Aset (Katalog)
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -57,7 +57,12 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                   </td>
                 )}
                 <td className="col-photo">
-                  <div className="repair-thumbnail-container">
+                  <div 
+                    className="repair-thumbnail-container"
+                    onClick={() => onOpenView && onOpenView(item)}
+                    style={{ cursor: 'pointer' }}
+                    title="Klik untuk melihat foto lebih besar & detail"
+                  >
                     <img
                       src={
                         item.image_path ||
