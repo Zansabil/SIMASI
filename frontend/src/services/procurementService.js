@@ -35,3 +35,21 @@ export const rejectProcurement = async (id, catatan_penolakan) => {
   const response = await api.patch(`/api/pengadaan_aset/${id}/tolak`, { catatan_penolakan });
   return response.data;
 };
+
+/**
+ * Hapus 1 pengajuan pengadaan aset
+ * DELETE /api/pengadaan_aset/{id}
+ */
+export const deleteProcurement = async (id) => {
+  const response = await api.delete(`/api/pengadaan_aset/${id}`);
+  return response.data;
+};
+
+/**
+ * Hapus batch berkas laporan pengadaan aset
+ * POST /api/pengadaan_aset/batch-delete
+ */
+export const deleteProcurementBatch = async (ids) => {
+  const response = await api.post('/api/pengadaan_aset/batch-delete', { ids });
+  return response.data;
+};

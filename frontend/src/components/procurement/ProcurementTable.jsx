@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiChevronDown, FiEye, FiCheck, FiX, FiEdit2 } from 'react-icons/fi';
+import { FiChevronDown, FiEye, FiCheck, FiX, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const formatRupiah = (number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -19,7 +19,9 @@ export default function ProcurementTable({
   showUnit = true,
   onApproveItem,
   onRejectItem,
-  onUpdateRejectNotes
+  onUpdateRejectNotes,
+  onDeleteItem,
+  onDeleteReport
 }) {
   const [expandedCards, setExpandedCards] = useState({});
   const [revisingItems, setRevisingItems] = useState({});
@@ -179,15 +181,37 @@ export default function ProcurementTable({
                           >
                             <FiX size={14} /> Tolak
                           </button>
+                          {onDeleteItem && (
+                            <button
+                              type="button"
+                              className="btn-delete-item"
+                              onClick={() => onDeleteItem(subItem.parent.id, subItem.parent.items.indexOf(subItem), subItem)}
+                              title="Hapus barang ini"
+                            >
+                              <FiTrash2 size={13} /> Hapus
+                            </button>
+                          )}
                         </div>
                       ) : (
-                        <button
-                          type="button"
-                          className="btn-revise-item"
-                          onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`]: true}))}
-                        >
-                          <FiEdit2 size={14} /> Revisi
-                        </button>
+                        <div className="action-decision-cell">
+                          <button
+                            type="button"
+                            className="btn-revise-item"
+                            onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`]: true}))}
+                          >
+                            <FiEdit2 size={14} /> Revisi
+                          </button>
+                          {onDeleteItem && (
+                            <button
+                              type="button"
+                              className="btn-delete-item"
+                              onClick={() => onDeleteItem(subItem.parent.id, subItem.parent.items.indexOf(subItem), subItem)}
+                              title="Hapus barang ini"
+                            >
+                              <FiTrash2 size={13} /> Hapus
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   )}
@@ -243,6 +267,21 @@ export default function ProcurementTable({
                       </div>
                     </div>
                   </div>
+
+                  {/* Quick Delete Report Button in Header */}
+                  {showActions && onDeleteReport && (
+                    <button
+                      type="button"
+                      className="card-quick-delete-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteReport(item);
+                      }}
+                      title="Hapus Laporan Pengadaan Ini"
+                    >
+                      <FiTrash2 size={16} />
+                    </button>
+                  )}
 
                   {/* Chevron Icon toggler */}
                   <div className={`chevron-icon-wrapper ${isExpanded ? 'expanded' : ''}`}>
@@ -354,15 +393,37 @@ export default function ProcurementTable({
                                       >
                                         <FiX size={14} /> Tolak
                                       </button>
+                                      {onDeleteItem && (
+                                        <button
+                                          type="button"
+                                          className="btn-delete-item"
+                                          onClick={() => onDeleteItem(item.id, index, subItem)}
+                                          title="Hapus barang ini"
+                                        >
+                                          <FiTrash2 size={13} /> Hapus
+                                        </button>
+                                      )}
                                     </div>
                                   ) : (
-                                    <button
-                                      type="button"
-                                      className="btn-revise-item"
-                                      onClick={() => setRevisingItems(prev => ({...prev, [`${item.id}-${index}`]: true}))}
-                                    >
-                                      <FiEdit2 size={14} /> Revisi
-                                    </button>
+                                    <div className="action-decision-cell">
+                                      <button
+                                        type="button"
+                                        className="btn-revise-item"
+                                        onClick={() => setRevisingItems(prev => ({...prev, [`${item.id}-${index}`]: true}))}
+                                      >
+                                        <FiEdit2 size={14} /> Revisi
+                                      </button>
+                                      {onDeleteItem && (
+                                        <button
+                                          type="button"
+                                          className="btn-delete-item"
+                                          onClick={() => onDeleteItem(item.id, index, subItem)}
+                                          title="Hapus barang ini"
+                                        >
+                                          <FiTrash2 size={13} /> Hapus
+                                        </button>
+                                      )}
+                                    </div>
                                   )}
                                 </td>
                               )}
@@ -372,8 +433,18 @@ export default function ProcurementTable({
                       </table>
                     </div>
 
-                    {/* Action area: button only, aligned to bottom right */}
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                    {/* Action area: buttons aligned to bottom right */}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', marginTop: '20px' }}>
+                      {showActions && onDeleteReport && (
+                        <button 
+                          type="button"
+                          className="btn-delete-report"
+                          onClick={() => onDeleteReport(item)}
+                          title="Hapus Seluruh Berkas Laporan Pengadaan Ini"
+                        >
+                          <FiTrash2 size={16} /> Hapus Laporan
+                        </button>
+                      )}
                       <button 
                         type="button"
                         className="btn-view-full-letter"

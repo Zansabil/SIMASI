@@ -212,13 +212,22 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   const [decisionNotes, setDecisionNotes] = useState('');
   const [activeItemInfo, setActiveItemInfo] = useState(null); // { procurementId, itemIndex }
 
+  // Delete Modal States (Yayasan)
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    type: 'report', // 'report' or 'item'
+    title: '',
+    message: '',
+    targetData: null
+  });
+
   // ============================================================
   // FETCH DATA: Dari API backend, fallback ke data dummy
   // ============================================================
 
-  // Mencegah background scroll saat modal terbuka (mengatasi bug pada screenshot)
+  // Mencegah background scroll saat modal terbuka
   useEffect(() => {
-    if (isDecisionOpen || isDetailOpen || statusModal.isOpen) {
+    if (isDecisionOpen || isDetailOpen || statusModal.isOpen || deleteModal.isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'auto';
@@ -226,7 +235,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     return () => {
       document.body.style.overflow = 'auto';
     };
-  }, [isDecisionOpen, isDetailOpen, statusModal.isOpen]);
+  }, [isDecisionOpen, isDetailOpen, statusModal.isOpen, deleteModal.isOpen]);
   
   const loadProcurements = useCallback(async () => {
     setIsLoading(true);
@@ -613,6 +622,130 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     }
   };
 
+  // ============================================================
+  // DELETE: Hapus Laporan Pengadaan / Item Aset (Kepala Yayasan)
+  // ============================================================
+  const handleRequestDeleteReport = (report) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'report',
+      title: 'Hapus Laporan Pengadaan?',
+      message: `Apakah Anda yakin ingin menghapus seluruh berkas usulan pengadaan ${report.letter_number} yang diajukan oleh ${report.reporter_name}? Semua data barang di dalamnya (${report.items.length} barang) akan dihapus secara permanen.`,
+      targetData: report
+    });
+  };
+
+  const handleRequestDeleteItem = (procId, itemIndex, subItem) => {
+    setDeleteModal({
+      isOpen: true,
+      type: 'item',
+      title: 'Hapus Barang Pengadaan?',
+      message: `Apakah Anda yakin ingin menghapus barang "${subItem.name}" dari berkas pengadaan ini?`,
+      targetData: { procId, itemIndex, subItem }
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.targetData) return;
+    setIsSubmitting(true);
+
+    if (deleteModal.type === 'report') {
+      const report = deleteModal.targetData;
+      const ids = report.items.map(i => i.id).filter(Boolean);
+
+      if (isUsingBackend) {
+        try {
+          const token = localStorage.getItem('auth_token');
+          const config = {
+            headers: { Authorization: `Bearer ${token}` }
+          };
+
+          if (ids.length > 0) {
+            await axios.post(`${API_BASE_URL}/api/pengadaan_aset/batch-delete`, { ids }, config);
+          }
+
+          await loadProcurements();
+          setDeleteModal({ isOpen: false, type: 'report', title: '', message: '', targetData: null });
+          setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Berhasil Dihapus',
+            message: `Berkas usulan pengadaan ${report.letter_number} berhasil dihapus dari sistem.`
+          });
+        } catch (err) {
+          console.error("Gagal menghapus laporan pengadaan:", err);
+          const errorMsg = err.response?.data?.message || 'Gagal menghapus laporan pengadaan dari server.';
+          setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        const updated = procurements.filter(p => p.id !== report.id);
+        localStorage.setItem('simas_procurements', JSON.stringify(updated));
+        setProcurements(updated);
+        setDeleteModal({ isOpen: false, type: 'report', title: '', message: '', targetData: null });
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil Dihapus',
+          message: `Berkas usulan pengadaan ${report.letter_number} berhasil dihapus.`
+        });
+        setIsSubmitting(false);
+      }
+    } else {
+      const { procId, itemIndex, subItem } = deleteModal.targetData;
+      const backendId = subItem.id;
+
+      if (isUsingBackend && backendId) {
+        try {
+          const token = localStorage.getItem('auth_token');
+          const config = {
+            headers: { Authorization: `Bearer ${token}` }
+          };
+
+          await axios.delete(`${API_BASE_URL}/api/pengadaan_aset/${backendId}`, config);
+          await loadProcurements();
+          setDeleteModal({ isOpen: false, type: 'item', title: '', message: '', targetData: null });
+          setStatusModal({
+            isOpen: true,
+            type: 'success',
+            title: 'Berhasil Dihapus',
+            message: `Barang "${subItem.name}" berhasil dihapus dari pengadaan.`
+          });
+        } catch (err) {
+          console.error("Gagal menghapus item pengadaan:", err);
+          const errorMsg = err.response?.data?.message || 'Gagal menghapus item barang dari server.';
+          setStatusModal({ isOpen: true, type: 'error', title: 'Gagal', message: errorMsg });
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        const updated = procurements.map(proc => {
+          if (proc.id === procId) {
+            const newItems = proc.items.filter((_, idx) => idx !== itemIndex);
+            return {
+              ...proc,
+              items: newItems,
+              total_cost: newItems.reduce((acc, curr) => acc + curr.qty * curr.price, 0)
+            };
+          }
+          return proc;
+        }).filter(proc => proc.items.length > 0);
+
+        localStorage.setItem('simas_procurements', JSON.stringify(updated));
+        setProcurements(updated);
+        setDeleteModal({ isOpen: false, type: 'item', title: '', message: '', targetData: null });
+        setStatusModal({
+          isOpen: true,
+          type: 'success',
+          title: 'Berhasil Dihapus',
+          message: `Barang "${subItem.name}" berhasil dihapus dari pengadaan.`
+        });
+        setIsSubmitting(false);
+      }
+    }
+  };
+
   const filteredProcurements = procurements.filter(item => 
     item.letter_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.reporter_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -667,6 +800,8 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
                 onApproveItem={(procId, itemIndex) => handleOpenDecision(procId, itemIndex, 'approve')}
                 onRejectItem={(procId, itemIndex) => handleOpenDecision(procId, itemIndex, 'reject')}
                 onUpdateRejectNotes={handleUpdateRejectNotes}
+                onDeleteItem={handleRequestDeleteItem}
+                onDeleteReport={handleRequestDeleteReport}
               />
             )}
           </>
@@ -887,6 +1022,18 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <StatusModal
+          isOpen={deleteModal.isOpen}
+          type="warning"
+          title={deleteModal.title}
+          message={deleteModal.message}
+          confirmText={isSubmitting ? "Menghapus..." : "Ya, Hapus"}
+          cancelText="Batal"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        />
 
         {/* Status Modal */}
         <StatusModal

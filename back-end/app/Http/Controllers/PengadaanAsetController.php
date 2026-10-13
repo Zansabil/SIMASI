@@ -135,4 +135,89 @@ class PengadaanAsetController extends Controller
             'data'    => $pengadaan
         ], 200);
     }
+
+    // ==========================================
+    // FUNGSI KHUSUS KEPALA YAYASAN (DELETE)
+    // ==========================================
+
+    // 5. Menghapus 1 Data Pengadaan Aset (Khusus Kepala Yayasan & Super Admin)
+    public function destroy($id)
+    {
+        Gate::authorize('setuju-pengadaan');
+
+        $pengadaan = PengadaanAset::where('idpengadaan_aset', $id)->first();
+
+        if (!$pengadaan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data pengadaan aset tidak ditemukan.'
+            ], 404);
+        }
+
+        $namaBarang = $pengadaan->nama_barang;
+        $idPemohon = $pengadaan->idpengguna;
+
+        $pengadaan->delete();
+
+        if ($idPemohon) {
+            Notifikasi::create([
+                'id_pengguna'    => $idPemohon,
+                'tipe'           => 'Pengajuan Dihapus',
+                'pesan'          => 'Pengajuan pengadaan aset [' . $namaBarang . '] Anda telah dihapus oleh Kepala Yayasan.',
+                'terbaca'        => 0,
+                'waktu_terkirim' => now(),
+                'tgl_dibuat'     => now()
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pengadaan aset [$namaBarang] berhasil dihapus."
+        ], 200);
+    }
+
+    // 6. Menghapus Sekaligus / Batch Berkas Laporan Pengadaan
+    public function destroyBatch(Request $request)
+    {
+        Gate::authorize('setuju-pengadaan');
+
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer'
+        ]);
+
+        $ids = $request->ids;
+        $pengadaans = PengadaanAset::whereIn('idpengadaan_aset', $ids)->get();
+
+        if ($pengadaans->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada data pengadaan yang ditemukan untuk dihapus.'
+            ], 404);
+        }
+
+        $count = $pengadaans->count();
+
+        // Kirim notifikasi ke pemohon jika ada
+        foreach ($pengadaans as $p) {
+            if ($p->idpengguna) {
+                Notifikasi::create([
+                    'id_pengguna'    => $p->idpengguna,
+                    'tipe'           => 'Pengajuan Dihapus',
+                    'pesan'          => 'Pengajuan pengadaan aset [' . $p->nama_barang . '] Anda telah dihapus oleh Kepala Yayasan.',
+                    'terbaca'        => 0,
+                    'waktu_terkirim' => now(),
+                    'tgl_dibuat'     => now()
+                ]);
+            }
+        }
+
+        PengadaanAset::whereIn('idpengadaan_aset', $ids)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "$count data pengadaan aset dalam laporan berhasil dihapus.",
+            'deleted_count' => $count
+        ], 200);
+    }
 }

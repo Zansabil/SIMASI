@@ -95,6 +95,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route Pengadaan Aset & Approval
     Route::patch('/pengadaan_aset/{id}/setuju', [PengadaanAsetController::class, 'setuju']);
     Route::patch('/pengadaan_aset/{id}/tolak', [PengadaanAsetController::class, 'tolak']);
+    Route::post('/pengadaan_aset/batch-delete', [PengadaanAsetController::class, 'destroyBatch']);
+    Route::delete('/pengadaan_aset/batch-delete', [PengadaanAsetController::class, 'destroyBatch']);
     Route::apiResource('pengadaan_aset', PengadaanAsetController::class);
     
     // Route Riwayat Aset
