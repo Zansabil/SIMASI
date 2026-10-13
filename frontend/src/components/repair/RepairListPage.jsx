@@ -10,7 +10,7 @@ import RepairTable from './RepairTable';
 import RepairFormModal from './RepairFormModal';
 import RepairDetailModal from './RepairDetailModal';
 import RepairEditModal from './RepairEditModal';
-import { FiPlus, FiLoader } from 'react-icons/fi';
+import { FiPlus, FiLoader, FiX } from 'react-icons/fi';
 import Pagination from '../asset/Pagination';
 import './RepairListPage.css';
 import { API_BASE_URL } from '../../config';
@@ -50,6 +50,19 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, item: null });
 
   const [repairs, setRepairs] = useState([]);
+  const [photoPreview, setPhotoPreview] = useState(null); // { url, title }
+
+  // Lock scroll saat preview foto aktif
+  useEffect(() => {
+    if (photoPreview) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [photoPreview]);
 
   // Prefill state (navigasi dari Daftar Aset)
   const [searchParams, setSearchParams] = useSearchParams();
@@ -326,6 +339,7 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
               onOpenView={handleOpenView}
               onOpenEdit={handleOpenEdit}
               onDelete={handleDeleteClick}
+              onPreviewPhoto={(url, title) => setPhotoPreview({ url, title })}
             />
 
             <Pagination
@@ -351,12 +365,40 @@ export default function RepairListPage({ role, hasWriteAccess, hasStaffAccess, c
           />
         )}
 
-        {/* Detail Modal (Dapat dibuka semua role saat klik foto atau aksi detail) */}
-        <RepairDetailModal
-          isOpen={isViewOpen}
-          onClose={() => setIsViewOpen(false)}
-          selectedItem={selectedItem}
-        />
+        {/* Detail Modal (Hanya dibuka saat tombol aksi Detail diklik) */}
+        {hasStaffAccess && (
+          <RepairDetailModal
+            isOpen={isViewOpen}
+            onClose={() => setIsViewOpen(false)}
+            selectedItem={selectedItem}
+          />
+        )}
+
+        {/* Photo Lightbox Modal (Hanya menampilkan foto saat thumbnail diklik) */}
+        {photoPreview && (
+          <div className="photo-lightbox-overlay" onClick={() => setPhotoPreview(null)}>
+            <div className="photo-lightbox-content" onClick={(e) => e.stopPropagation()}>
+              <button 
+                type="button"
+                className="photo-lightbox-close" 
+                onClick={() => setPhotoPreview(null)}
+                aria-label="Tutup Foto"
+              >
+                <FiX size={22} />
+              </button>
+              <img 
+                src={photoPreview.url} 
+                alt={photoPreview.title || "Foto"} 
+                className="photo-lightbox-img" 
+              />
+              {photoPreview.title && (
+                <div className="photo-lightbox-caption">
+                  {photoPreview.title}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Edit Modal for Petugas */}
         {hasStaffAccess && (

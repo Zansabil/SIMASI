@@ -4,7 +4,7 @@ import RepairStatusBadge from './RepairStatusBadge';
 import PriorityBadge from './PriorityBadge';
 import { DEFAULT_ASSET_IMAGE } from '../../utils/imageHelper';
 
-export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit, onDelete }) {
+export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpenView, onOpenEdit, onDelete, onPreviewPhoto }) {
   return (
     <div className="repair-table-wrapper">
       <table className="repair-table-el">
@@ -59,9 +59,9 @@ export default function RepairTable({ repairs, isLoading, hasStaffAccess, onOpen
                 <td className="col-photo">
                   <div 
                     className="repair-thumbnail-container"
-                    onClick={() => onOpenView && onOpenView(item)}
+                    onClick={() => onPreviewPhoto && onPreviewPhoto(item.image_path || DEFAULT_ASSET_IMAGE, item.asset_name)}
                     style={{ cursor: 'pointer' }}
-                    title="Klik untuk melihat foto lebih besar & detail"
+                    title="Klik untuk melihat foto"
                   >
                     <img
                       src={
