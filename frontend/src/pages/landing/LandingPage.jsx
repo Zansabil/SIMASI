@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiCheckSquare, FiShoppingCart, FiTool, FiPhone, FiMail, FiGlobe, FiMapPin } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaTiktok, FaTelegramPlane } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaTiktok, FaYoutube, FaWhatsapp } from 'react-icons/fa';
 import logoWide from '../../assets/logo-wide.png';
 import logoWhite from '../../assets/Simas Putih.png';
 import gedung from '../../assets/BgPesantren.png';
@@ -90,14 +90,14 @@ export default function LandingPage() {
               <a href="https://facebook.com/ypitamirasshidiiqi" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
                 <FaFacebookF size={16} />
               </a>
-              <a href="https://instagram.com/asshiddiiqi.official" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
+              <a href="https://www.instagram.com/ashshiddiiqi.official?exln=MWdyNjNxN3Bkc2d6aQ==" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
                 <FaInstagram size={16} />
               </a>
               <a href="https://tiktok.com/@ashshiddiiqi.offi" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="TikTok">
                 <FaTiktok size={16} />
               </a>
-              <a href="https://t.me/gVEytRDiM7JjNGU1" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Telegram">
-                <FaTelegramPlane size={16} />
+              <a href="https://www.youtube.com/@ash-shiddiiqistudio2007" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="YouTube">
+                <FaYoutube size={16} />
               </a>
             </div>
           </div>
@@ -119,12 +119,16 @@ export default function LandingPage() {
             <h4 className="footer-heading">Info Kontak</h4>
             <div className="footer-contact-list">
               <div className="footer-contact-item">
-                <FiPhone size={14} className="footer-icon" />
-                <span>+62 813-6766-9111</span>
+                <FaWhatsapp size={15} className="footer-icon" />
+                <a href="https://wa.me/6281367669111" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  +62 813-6766-9111
+                </a>
               </div>
               <div className="footer-contact-item">
                 <FiMail size={14} className="footer-icon" />
-                <span>media.shiddiq@gmail.com</span>
+                <a href="mailto:media.shiddiq@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  media.shiddiq@gmail.com
+                </a>
               </div>
               <div className="footer-contact-item">
                 <FiGlobe size={14} className="footer-icon" />
