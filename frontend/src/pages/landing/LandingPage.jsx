@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiCheckSquare, FiShoppingCart, FiTool, FiPhone, FiMail, FiGlobe, FiMapPin } from 'react-icons/fi';
-import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaTiktok, FaTelegramPlane } from 'react-icons/fa';
 import logoWide from '../../assets/logo-wide.png';
 import logoWhite from '../../assets/Simas Putih.png';
 import gedung from '../../assets/BgPesantren.png';
@@ -87,14 +87,17 @@ export default function LandingPage() {
           <div className="footer-section footer-section--socials">
             <h4 className="footer-heading">Sosial Media Sekolah</h4>
             <div className="footer-socials">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
+              <a href="https://facebook.com/ypitamirasshidiiqi" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Facebook">
                 <FaFacebookF size={16} />
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
+              <a href="https://instagram.com/asshiddiiqi.official" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Instagram">
                 <FaInstagram size={16} />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="YouTube">
-                <FaYoutube size={16} />
+              <a href="https://tiktok.com/@ashshiddiiqi.offi" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="TikTok">
+                <FaTiktok size={16} />
+              </a>
+              <a href="https://t.me/gVEytRDiM7JjNGU1" target="_blank" rel="noopener noreferrer" className="social-icon" aria-label="Telegram">
+                <FaTelegramPlane size={16} />
               </a>
             </div>
           </div>
@@ -103,8 +106,11 @@ export default function LandingPage() {
           <div className="footer-section footer-section--address">
             <h4 className="footer-heading">Alamat</h4>
             <div className="footer-address">
-              <FiMapPin size={14} className="footer-icon" />
-              <p>Jl. Jambi – Ma. Bulian KM 36,<br />Jembatan Mas, Jambi</p>
+              <FiMapPin size={16} className="footer-icon" />
+              <p>
+                <strong>Boarding School (SMP IT - SMA IT - MA):</strong><br />
+                Jl. Lintas Jambi - Ma.Bulian KM 36, Jembatan Mas Pemayung, Kab. Batanghari, Jambi.
+              </p>
             </div>
           </div>
 
@@ -122,7 +128,9 @@ export default function LandingPage() {
               </div>
               <div className="footer-contact-item">
                 <FiGlobe size={14} className="footer-icon" />
-                <span>ash-shiddiiqi.sch.id</span>
+                <a href="https://ash-shiddiiqi.sch.id" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
+                  ash-shiddiiqi.sch.id
+                </a>
               </div>
             </div>
           </div>
