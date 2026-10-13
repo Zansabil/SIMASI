@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
-import { FiUser, FiSave, FiCheck, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiSave, FiCheck, FiEye, FiEyeOff, FiLogOut } from 'react-icons/fi';
 import DashboardLayout from '../layout/DashboardLayout';
 import StatusModal from '../ui/StatusModal';
 import './Profile.css';
@@ -35,7 +36,17 @@ const PwInput = ({ label, value, onChange, show, onToggle }) => (
 );
 
 export default function ProfilePage({ role, defaultRoleName, currentPath }) {
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('user_name');
+    localStorage.removeItem('user_avatar');
+    navigate('/login');
+  };
 
   // Profile data state — seeded from localStorage
   const [profileName, setProfileName]         = useState('');
@@ -286,6 +297,38 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
                 </button>
               </div>
             </form>
+          </div>
+
+          {/* Card 3: Keluar dari Akun */}
+          <div className="profile-card" style={{ marginTop: '24px', border: '1px solid #fee2e2' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <h3 className="profile-card-title" style={{ color: '#dc2626', margin: 0 }}>Keluar dari Akun</h3>
+                <p className="profile-card-subtitle" style={{ margin: '4px 0 0 0' }}>Akhiri sesi Anda pada perangkat ini.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#b91c1c'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+              >
+                <FiLogOut size={16} /> Keluar
+              </button>
+            </div>
           </div>
 
         </div>{/* end cards-center-wrap */}
