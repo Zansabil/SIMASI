@@ -5,7 +5,7 @@ export default function DaftarAset() {
   return (
     <AssetListPage
       role="super-admin"
-      hasWriteAccess={false}
+      hasWriteAccess={true}
       currentPath="/super-admin/daftar-aset"
     />
   );
