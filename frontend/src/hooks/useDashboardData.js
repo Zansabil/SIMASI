@@ -47,14 +47,23 @@ const DEFAULT_ACTIVITIES = [
  * Custom hook untuk mengambil data statistik aset dan aktivitas terbaru
  * dari endpoint dashboard backend Laravel.
  *
- * Secara otomatis menggunakan data mock apabila backend tidak dapat dijangkau
- * (mode demo / offline prototype).
+const EMPTY_STATS = {
+  total_aset: 0,
+  aset_aktif: 0,
+  perbaikan: 0,
+  elektronik: 0,
+  furnitur: 0,
+};
+
+/**
+ * Custom hook untuk mengambil data statistik aset dan aktivitas terbaru
+ * dari endpoint dashboard backend Laravel.
  *
  * @returns {{ stats: object, activities: Array, isLoading: boolean }}
  */
 export default function useDashboardData() {
-  const [stats, setStats]           = useState(DEFAULT_STATS);
-  const [activities, setActivities] = useState(DEFAULT_ACTIVITIES);
+  const [stats, setStats]           = useState(EMPTY_STATS);
+  const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading]   = useState(true);
 
   useEffect(() => {
@@ -62,7 +71,10 @@ export default function useDashboardData() {
       try {
         const token = localStorage.getItem('auth_token');
         const config = {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json'
+          },
         };
 
         const response = await axios.get(
@@ -73,24 +85,27 @@ export default function useDashboardData() {
         if (response.data) {
           // Update stats dari response API
           setStats({
-            total_aset:  response.data.stats?.total_aset  || 0,
-            aset_aktif:  response.data.stats?.aset_aktif  || 0,
-            perbaikan:   response.data.stats?.perbaikan   || 0,
-            elektronik:  response.data.stats?.elektronik  || 0,
-            furnitur:    response.data.stats?.furnitur    || 0,
+            total_aset:  response.data.stats?.total_aset  ?? 0,
+            aset_aktif:  response.data.stats?.aset_aktif  ?? 0,
+            perbaikan:   response.data.stats?.perbaikan   ?? 0,
+            elektronik:  response.data.stats?.elektronik  ?? 0,
+            furnitur:    response.data.stats?.furnitur    ?? 0,
           });
 
-          // Update aktivitas hanya jika API mengembalikan data
-          if (response.data.activities?.length > 0) {
+          // Update aktivitas dari response API (termasuk array kosong jika belum ada aktivitas)
+          if (Array.isArray(response.data.activities)) {
             setActivities(response.data.activities);
           }
         }
       } catch (err) {
-        console.warn(
-          'Backend API tidak dapat dijangkau. Menggunakan data mock untuk demo.',
-          err
-        );
-        // Biarkan state default (mock data) tetap aktif
+        console.warn('Gagal memuat data statistik dashboard dari API:', err);
+        // Fallback demo hanya jika tidak login sama sekali (mode demo tanpa backend)
+        if (!localStorage.getItem('auth_token')) {
+          setStats(DEFAULT_STATS);
+          setActivities(DEFAULT_ACTIVITIES);
+        } else {
+          setActivities([]);
+        }
       } finally {
         setIsLoading(false);
       }

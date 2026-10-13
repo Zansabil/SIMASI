@@ -15,27 +15,15 @@ export default function ActivityList({ activities }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  const getTodayDateString = () => {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const year = today.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  const todayStr = getTodayDateString();
-
-  // Filter aktivitas agar hanya menampilkan yang dilakukan hari ini
-  const filteredActivities = (activities || []).filter(
-    (activity) => activity.date === todayStr
-  );
+  // Tampilkan seluruh aktivitas terbaru dari API (sudah terurut dari yang terbaru)
+  const displayActivities = activities || [];
 
   // Pagination slicing
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = currentPage * itemsPerPage;
-  const paginatedActivities = filteredActivities.slice(startIndex, endIndex);
+  const paginatedActivities = displayActivities.slice(startIndex, endIndex);
 
-  const hasMore = filteredActivities.length > endIndex;
+  const hasMore = displayActivities.length > endIndex;
 
   return (
     <section className="activities-section">
@@ -63,13 +51,13 @@ export default function ActivityList({ activities }) {
             );
           })
         ) : (
-          <div className="no-activities-message" style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-            Tidak ada aktivitas hari ini.
+          <div className="no-activities-message" style={{ padding: '32px 16px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
+            Belum ada aktivitas terbaru yang tercatat.
           </div>
         )}
       </div>
 
-      {filteredActivities.length > 0 && (
+      {displayActivities.length > 0 && (
         <Pagination
           currentPage={currentPage}
           itemsPerPage={itemsPerPage}
@@ -79,8 +67,8 @@ export default function ActivityList({ activities }) {
             setCurrentPage(1);
           }}
           hasMore={hasMore}
-          totalPages={Math.ceil(filteredActivities.length / itemsPerPage)}
-          totalItems={filteredActivities.length}
+          totalPages={Math.ceil(displayActivities.length / itemsPerPage)}
+          totalItems={displayActivities.length}
         />
       )}
     </section>

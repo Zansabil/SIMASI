@@ -24,13 +24,11 @@ class DashboardController extends Controller
         // Aset dalam Perbaikan (Sedang dikerjakan / status Diproses di Laporan Kerusakan)
         $perbaikan = LaporanKerusakan::where('status_kerusakan', 'Diproses')->count();
 
-        // 6. Mengambil Aktivitas Terbaru (7 hari terakhir, maks 10 item)
+        // 6. Mengambil Aktivitas Terbaru dari Pengadaan, Perbaikan, dan Laporan Kerusakan (Maks 10 item)
         $activities = [];
-        $sevenDaysAgo = date('Y-m-d', strtotime('-7 days'));
 
-        // Ambil pengadaan 7 hari terakhir
-        $pengadaans = PengadaanAset::whereDate('tgl_pengajuan', '>=', $sevenDaysAgo)
-            ->orderBy('tgl_pengajuan', 'desc')
+        // Ambil pengadaan terbaru (maks 10)
+        $pengadaans = PengadaanAset::orderBy('tgl_pengajuan', 'desc')
             ->limit(10)
             ->get();
         foreach ($pengadaans as $p) {
@@ -44,13 +42,12 @@ class DashboardController extends Controller
                 'title'    => 'Pengadaan - ' . $p->nama_barang,
                 'date'     => $p->tgl_pengajuan ? date('d-m-Y', strtotime($p->tgl_pengajuan)) : '',
                 'status'   => $status_mapped,
-                'raw_date' => $p->tgl_pengajuan
+                'raw_date' => $p->tgl_pengajuan ? date('Y-m-d H:i:s', strtotime($p->tgl_pengajuan)) : ''
             ];
         }
 
-        // Ambil perbaikan 7 hari terakhir
+        // Ambil perbaikan terbaru (maks 10)
         $perbaikans = PerbaikanAset::with('laporan.aset')
-            ->whereDate('tgl_dibuat', '>=', $sevenDaysAgo)
             ->orderBy('tgl_dibuat', 'desc')
             ->limit(10)
             ->get();
@@ -64,9 +61,34 @@ class DashboardController extends Controller
                 'id'       => 'perbaikan-' . $pb->id,
                 'type'     => 'Perbaikan',
                 'title'    => 'Perbaikan - ' . $nama_aset,
-                'date'     => $pb->tanggal_mulai ? date('d-m-Y', strtotime($pb->tanggal_mulai)) : '',
+                'date'     => $pb->tanggal_mulai ? date('d-m-Y', strtotime($pb->tanggal_mulai)) : ($pb->tgl_dibuat ? date('d-m-Y', strtotime($pb->tgl_dibuat)) : ''),
                 'status'   => $status_mapped,
-                'raw_date' => $pb->tanggal_mulai
+                'raw_date' => $pb->tgl_dibuat ? $pb->tgl_dibuat->format('Y-m-d H:i:s') : ($pb->tanggal_mulai ?? '')
+            ];
+        }
+
+        // Ambil laporan kerusakan terbaru (yang belum tercatat di perbaikan)
+        $idLaporanPerbaikan = $perbaikans->pluck('id_laporan')->filter()->toArray();
+        $laporans = LaporanKerusakan::with('aset')
+            ->whereNotIn('id', $idLaporanPerbaikan)
+            ->orderBy('tgl_dibuat', 'desc')
+            ->limit(10)
+            ->get();
+        foreach ($laporans as $lp) {
+            $status_mapped = 'pending';
+            if ($lp->status_kerusakan === 'Diproses') $status_mapped = 'in_progress';
+            elseif ($lp->status_kerusakan === 'Selesai') $status_mapped = 'completed';
+            elseif ($lp->status_kerusakan === 'Ditolak') $status_mapped = 'rejected';
+
+            $nama_aset = $lp->aset->nama_aset ?? 'Aset';
+
+            $activities[] = [
+                'id'       => 'laporan-' . $lp->id,
+                'type'     => 'Perbaikan',
+                'title'    => 'Laporan - ' . $nama_aset,
+                'date'     => $lp->tgl_laporan ? date('d-m-Y', strtotime($lp->tgl_laporan)) : ($lp->tgl_dibuat ? date('d-m-Y', strtotime($lp->tgl_dibuat)) : ''),
+                'status'   => $status_mapped,
+                'raw_date' => $lp->tgl_dibuat ? $lp->tgl_dibuat->format('Y-m-d H:i:s') : ($lp->tgl_laporan ?? '')
             ];
         }
 
