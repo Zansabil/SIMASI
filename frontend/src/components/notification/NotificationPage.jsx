@@ -142,13 +142,65 @@ export default function NotificationPage({ role, currentPath }) {
     window.dispatchEvent(new Event('notifications-updated'));
   };
 
-  // Hapus notifikasi (hanya lokal/UI, backend tidak punya endpoint delete)
-  const deleteNotification = (id) => {
+  // Hapus 1 notifikasi
+  const deleteNotification = async (id) => {
+    const prevNotifications = [...notifications];
     const updated = notifications.filter(n => n.id !== id);
     setNotifications(updated);
 
-    if (!isUsingBackend) {
+    if (isUsingBackend) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const config = {
+          headers: { Authorization: `Bearer ${token}` }
+        };
+        await axios.delete(`${API_BASE_URL}/api/notifikasi/${id}`, config);
+      } catch (err) {
+        console.error("Gagal menghapus notifikasi di backend:", err);
+        setNotifications(prevNotifications);
+        setStatusModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Gagal Menghapus',
+          message: 'Terjadi kesalahan saat menghapus notifikasi dari server.'
+        });
+        return;
+      }
+    } else {
       localStorage.setItem('simas_notifications', JSON.stringify(updated));
+    }
+
+    window.dispatchEvent(new Event('notifications-updated'));
+  };
+
+  // Hapus semua notifikasi
+  const deleteAllNotifications = async () => {
+    if (notifications.length === 0) return;
+    if (!window.confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) return;
+
+    const prevNotifications = [...notifications];
+    setNotifications([]);
+
+    if (isUsingBackend) {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const config = {
+          headers: { Authorization: `Bearer ${token}` }
+        };
+        await axios.delete(`${API_BASE_URL}/api/notifikasi`, config);
+      } catch (err) {
+        console.error("Gagal menghapus semua notifikasi di backend:", err);
+        setNotifications(prevNotifications);
+        setStatusModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Gagal Menghapus',
+          message: 'Terjadi kesalahan saat menghapus semua notifikasi dari server.'
+        });
+        return;
+      }
+    } else {
+      localStorage.removeItem('simas_notifications');
     }
 
     window.dispatchEvent(new Event('notifications-updated'));
@@ -185,15 +237,27 @@ export default function NotificationPage({ role, currentPath }) {
           <div style={{ flex: 1 }}>
             <h2 className="notification-page-title">Pemberitahuan</h2>
           </div>
-          {unreadCount > 0 && (
-            <button
-              className="action-btn-notif read-btn"
-              onClick={markAllAsRead}
-              style={{ fontSize: '13px', padding: '8px 16px' }}
-            >
-              <FiCheckCircle style={{ marginRight: '4px' }} /> Tandai Semua Dibaca
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {unreadCount > 0 && (
+              <button
+                className="action-btn-notif read-btn"
+                onClick={markAllAsRead}
+                style={{ fontSize: '13px', padding: '8px 16px' }}
+              >
+                <FiCheckCircle style={{ marginRight: '4px' }} /> Tandai Semua Dibaca
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button
+                className="action-btn-notif delete-btn"
+                onClick={deleteAllNotifications}
+                style={{ fontSize: '13px', padding: '8px 16px' }}
+                title="Hapus Semua Notifikasi"
+              >
+                <FiTrash2 style={{ marginRight: '4px' }} /> Hapus Semua
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabs */}

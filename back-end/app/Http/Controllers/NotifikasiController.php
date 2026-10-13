@@ -60,4 +60,38 @@ class NotifikasiController extends Controller
             'jumlah_diupdate' => $jumlahDiupdate
         ], 200);
     }
+
+    // DELETE: Fungsi untuk menghapus 1 notifikasi
+    public function destroy($id)
+    {
+        $notif = Notifikasi::where('id', $id)
+                           ->where('id_pengguna', auth()->user()->id)
+                           ->first();
+        
+        if ($notif) {
+            $notif->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Notifikasi berhasil dihapus.'
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Notifikasi tidak ditemukan atau Anda tidak memiliki akses.'
+        ], 404);
+    }
+
+    // DELETE: Fungsi untuk menghapus semua notifikasi milik user
+    public function hapusSemua()
+    {
+        $jumlahDihapus = Notifikasi::where('id_pengguna', auth()->user()->id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Semua notifikasi berhasil dihapus.',
+            'jumlah_dihapus' => $jumlahDihapus
+        ], 200);
+    }
 }

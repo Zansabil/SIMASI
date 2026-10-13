@@ -105,6 +105,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifikasi', [NotifikasiController::class, 'index']);
     Route::patch('/notifikasi/{id}/baca', [NotifikasiController::class, 'tandaiDibaca']);
     Route::post('/notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibaca']);
+    Route::delete('/notifikasi/semua', [NotifikasiController::class, 'hapusSemua']);
+    Route::delete('/notifikasi/{id}', [NotifikasiController::class, 'destroy']);
+    Route::delete('/notifikasi', [NotifikasiController::class, 'hapusSemua']);
     
     // Route Data Master
     Route::apiResource('kategori_aset', KategoriAsetController::class);
