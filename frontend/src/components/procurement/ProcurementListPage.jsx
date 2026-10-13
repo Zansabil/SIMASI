@@ -478,8 +478,12 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
   // ============================================================
   // APPROVAL: Setujui / Tolak via API backend
   // ============================================================
-  const handleOpenDecision = (procurementId, itemIndex, type) => {
-    setActiveItemInfo({ procurementId, itemIndex });
+  const handleOpenDecision = (procurementId, itemIndex, type, targetItem = null) => {
+    setActiveItemInfo({ 
+      procurementId, 
+      itemIndex,
+      backendItemId: targetItem?.id || targetItem?.idpengadaan_aset
+    });
     setDecisionType(type);
     setDecisionNotes('');
     setIsDecisionOpen(true);
@@ -489,14 +493,38 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     e.preventDefault();
     if (!activeItemInfo) return;
 
-    const { procurementId, itemIndex } = activeItemInfo;
+    const { procurementId, itemIndex, backendItemId } = activeItemInfo;
+
+    if (decisionType === 'reject' && !decisionNotes.trim()) {
+      setStatusModal({
+        isOpen: true,
+        type: 'error',
+        title: 'Gagal',
+        message: 'Alasan penolakan wajib diisi.'
+      });
+      return;
+    }
 
     if (isUsingBackend) {
-      // Cari item yang akan di-approve/reject untuk mendapatkan ID backend
-      const targetProc = procurements.find(p => p.id === procurementId);
-      if (!targetProc || !targetProc.items[itemIndex]) return;
+      // Cari ID backend (idpengadaan_aset)
+      let backendId = backendItemId;
+      if (!backendId) {
+        const targetProc = procurements.find(p => p.id === procurementId);
+        if (targetProc && targetProc.items && targetProc.items[itemIndex]) {
+          backendId = targetProc.items[itemIndex].id;
+        }
+      }
 
-      const backendId = targetProc.items[itemIndex].id; // ID dari backend (idpengadaan_aset)
+      if (!backendId) {
+        console.error("Target item ID not found for decision:", activeItemInfo);
+        setStatusModal({
+          isOpen: true,
+          type: 'error',
+          title: 'Gagal',
+          message: 'Data aset tidak ditemukan untuk diproses.'
+        });
+        return;
+      }
       
       setIsSubmitting(true);
       try {
@@ -543,7 +571,7 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       const updatedProcurements = procurements.map(proc => {
         if (proc.id === procurementId) {
           const updatedItems = proc.items.map((item, idx) => {
-            if (idx === itemIndex) {
+            if (idx === itemIndex || (backendItemId && item.id === backendItemId)) {
               return {
                 ...item,
                 status: decisionType === 'approve' ? 'approved' : 'rejected',
@@ -583,11 +611,16 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
     }
   };
 
-  const handleUpdateRejectNotes = async (procurementId, itemIndex, newNotes) => {
+  const handleUpdateRejectNotes = async (procurementId, itemIndex, newNotes, targetItem = null) => {
     if (isUsingBackend) {
-      const targetProc = procurements.find(p => p.id === procurementId);
-      if (!targetProc || !targetProc.items[itemIndex]) return;
-      const backendId = targetProc.items[itemIndex].id;
+      let backendId = targetItem?.id || targetItem?.idpengadaan_aset;
+      if (!backendId) {
+        const targetProc = procurements.find(p => p.id === procurementId);
+        if (targetProc && targetProc.items && targetProc.items[itemIndex]) {
+          backendId = targetProc.items[itemIndex].id;
+        }
+      }
+      if (!backendId) return;
       
       try {
         const token = localStorage.getItem('auth_token');
@@ -797,9 +830,9 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
                 statusFilter={statusFilter}
                 showActions={hasApprovalAccess}
                 showUnit={true}
-                onApproveItem={(procId, itemIndex) => handleOpenDecision(procId, itemIndex, 'approve')}
-                onRejectItem={(procId, itemIndex) => handleOpenDecision(procId, itemIndex, 'reject')}
-                onUpdateRejectNotes={handleUpdateRejectNotes}
+                onApproveItem={(procId, itemIndex, item) => handleOpenDecision(procId, itemIndex, 'approve', item)}
+                onRejectItem={(procId, itemIndex, item) => handleOpenDecision(procId, itemIndex, 'reject', item)}
+                onUpdateRejectNotes={(procId, itemIndex, newNotes, item) => handleUpdateRejectNotes(procId, itemIndex, newNotes, item)}
                 onDeleteItem={handleRequestDeleteItem}
                 onDeleteReport={handleRequestDeleteReport}
               />

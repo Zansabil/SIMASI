@@ -63,12 +63,13 @@ export default function ProcurementTable({
   if (statusFilter !== 'all') {
     const allFilteredItems = [];
     procurements.forEach(proc => {
-      (proc.items || []).forEach(item => {
+      (proc.items || []).forEach((item, itemIdx) => {
         const itemStatus = item.status || 'pending';
         if (itemStatus === statusFilter) {
           allFilteredItems.push({
             ...item,
-            parent: proc
+            parent: proc,
+            originalIndex: itemIdx
           });
         }
       });
@@ -115,7 +116,7 @@ export default function ProcurementTable({
                     </span>
                     {subItem.notes && (
                       <div className="item-notes-text" style={{ marginTop: '4px' }}>
-                        {editingNotesId === `${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}` ? (
+                        {editingNotesId === `${subItem.parent.id}-${subItem.originalIndex}` ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
                             <textarea 
                               className="decision-textarea" 
@@ -135,7 +136,7 @@ export default function ProcurementTable({
                                 className="decision-btn-submit approve" 
                                 style={{ padding: '4px 8px', fontSize: '11px' }}
                                 onClick={() => {
-                                  onUpdateRejectNotes(subItem.parent.id, subItem.parent.items.indexOf(subItem), editingNotesText);
+                                  onUpdateRejectNotes(subItem.parent.id, subItem.originalIndex, editingNotesText, subItem);
                                   setEditingNotesId(null);
                                 }}
                               >
@@ -149,7 +150,7 @@ export default function ProcurementTable({
                             {subItem.status === 'rejected' && showActions && (
                               <button 
                                 onClick={() => {
-                                  setEditingNotesId(`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`);
+                                  setEditingNotesId(`${subItem.parent.id}-${subItem.originalIndex}`);
                                   setEditingNotesText(subItem.notes);
                                 }}
                                 style={{ background: 'none', border: 'none', color: '#6366f1', cursor: 'pointer', padding: '0 4px', marginLeft: '4px' }}
@@ -165,19 +166,19 @@ export default function ProcurementTable({
                   </td>
                   {showActions && (
                     <td style={{ textAlign: 'center' }}>
-                      {subItem.status === 'pending' || revisingItems[`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`] ? (
+                      {subItem.status === 'pending' || revisingItems[`${subItem.parent.id}-${subItem.originalIndex}`] ? (
                         <div className="action-decision-cell">
                           <button
                             type="button"
                             className="btn-approve-item"
-                            onClick={() => onApproveItem(subItem.parent.id, subItem.parent.items.indexOf(subItem))}
+                            onClick={() => onApproveItem(subItem.parent.id, subItem.originalIndex, subItem)}
                           >
                             <FiCheck size={14} /> Setuju
                           </button>
                           <button
                             type="button"
                             className="btn-reject-item"
-                            onClick={() => onRejectItem(subItem.parent.id, subItem.parent.items.indexOf(subItem))}
+                            onClick={() => onRejectItem(subItem.parent.id, subItem.originalIndex, subItem)}
                           >
                             <FiX size={14} /> Tolak
                           </button>
@@ -187,7 +188,7 @@ export default function ProcurementTable({
                           <button
                             type="button"
                             className="btn-revise-item"
-                            onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.parent.items.indexOf(subItem)}`]: true}))}
+                            onClick={() => setRevisingItems(prev => ({...prev, [`${subItem.parent.id}-${subItem.originalIndex}`]: true}))}
                           >
                             <FiEdit2 size={14} /> Revisi
                           </button>
@@ -327,7 +328,7 @@ export default function ProcurementTable({
                                             className="decision-btn-submit approve" 
                                             style={{ padding: '4px 8px', fontSize: '11px' }}
                                             onClick={() => {
-                                              onUpdateRejectNotes(item.id, index, editingNotesText);
+                                              onUpdateRejectNotes(item.id, index, editingNotesText, subItem);
                                               setEditingNotesId(null);
                                             }}
                                           >
@@ -362,14 +363,14 @@ export default function ProcurementTable({
                                       <button
                                         type="button"
                                         className="btn-approve-item"
-                                        onClick={() => onApproveItem(item.id, index)}
+                                        onClick={() => onApproveItem(item.id, index, subItem)}
                                       >
                                         <FiCheck size={14} /> Setuju
                                       </button>
                                       <button
                                         type="button"
                                         className="btn-reject-item"
-                                        onClick={() => onRejectItem(item.id, index)}
+                                        onClick={() => onRejectItem(item.id, index, subItem)}
                                       >
                                         <FiX size={14} /> Tolak
                                       </button>
