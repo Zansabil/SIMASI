@@ -7,6 +7,7 @@ use App\Models\LaporanKerusakan;
 use App\Models\Aset;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\StatusLaporanKerusakanMail;
+use App\Mail\LaporanKerusakanBaruMail;
 use App\Models\Pengguna;
 use App\Models\Notifikasi;
 use Illuminate\Support\Facades\Storage;
@@ -196,11 +197,12 @@ class LaporanKerusakanController extends Controller
             }
         }
 
-        $aset = Aset::find($request->id_aset);
+        $aset = Aset::with(['ruangan', 'lokasiUnit'])->find($request->id_aset);
+        $pelapor = auth()->user();
         
-        // Notifikasi untuk Pelapor
+        // Notifikasi sistem untuk Pelapor
         Notifikasi::create([
-            'id_pengguna'    => auth()->user()->id,
+            'id_pengguna'    => $pelapor->id,
             'tipe'           => 'Laporan Kerusakan',
             'pesan'          => 'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_aset : '') . ' berhasil dikirim dan menunggu validasi.',
             'terbaca'        => 0,
@@ -208,32 +210,57 @@ class LaporanKerusakanController extends Controller
             'tgl_dibuat'     => now()
         ]);
 
-        // Notifikasi untuk semua Petugas Perbaikan
-        $petugasList = Pengguna::whereHas('peran', function($q) {
-            $q->where('nama', 'Petugas Perbaikan');
-        })->get();
+        // Cek kode unit dari deskripsi jika ada format (Unit: ...)
+        $kodeUnit = null;
+        if ($request->deskripsi && preg_match('/\(Unit:\s*(.*?)\)/', $request->deskripsi, $matches)) {
+            $kodeUnit = trim($matches[1]);
+        }
+
+        // Notifikasi dan Email untuk semua Petugas Perbaikan (id_peran = 4 atau nama peran 'Petugas Perbaikan')
+        $petugasList = Pengguna::where(function($q) {
+            $q->where('id_peran', 4)
+              ->orWhereHas('peran', function($sub) {
+                  $sub->where('nama', 'Petugas Perbaikan');
+              });
+        })->where('status_aktif', 1)->get();
 
         foreach ($petugasList as $petugas) {
+            // 1. Notifikasi lonceng di website
             Notifikasi::create([
                 'id_pengguna'    => $petugas->id,
                 'tipe'           => 'Laporan Kerusakan Baru',
-                'pesan'          => auth()->user()->nama . ' melaporkan kerusakan pada aset: ' . ($aset ? $aset->nama_aset : ''),
+                'pesan'          => ($pelapor ? $pelapor->nama : 'Pengguna') . ' melaporkan kerusakan pada aset: ' . ($aset ? $aset->nama_aset : ''),
                 'terbaca'        => 0,
                 'waktu_terkirim' => now(),
                 'tgl_dibuat'     => now()
             ]);
+
+            // 2. Kirim email pemberitahuan ke Petugas Perbaikan
+            if (!empty($petugas->email)) {
+                try {
+                    Mail::to($petugas->email)->send(new LaporanKerusakanBaruMail(
+                        $laporan,
+                        $aset,
+                        $petugas,
+                        $pelapor,
+                        $kodeUnit
+                    ));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Email ke petugas {$petugas->email} gagal dikirim: " . $e->getMessage());
+                }
+            }
         }
 
-        $pengguna = auth()->user();
-        if ($pengguna && $pengguna->email) {
+        // Email konfirmasi untuk Pelapor
+        if ($pelapor && !empty($pelapor->email)) {
             try {
-                Mail::to($pengguna->email)->send(new StatusLaporanKerusakanMail(
+                Mail::to($pelapor->email)->send(new StatusLaporanKerusakanMail(
                     'Laporan kerusakan untuk aset ' . ($aset ? $aset->nama_aset : '') . ' berhasil dikirim dan menunggu validasi.',
                     'Laporan Kerusakan',
-                    $pengguna->nama
+                    $pelapor->nama
                 ));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Email gagal dikirim: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Email ke pelapor gagal dikirim: ' . $e->getMessage());
             }
         }
 
