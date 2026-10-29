@@ -17,6 +17,8 @@ export default function KelolaKodeRegistrasi() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newKode, setNewKode] = useState('');
   const [newKeterangan, setNewKeterangan] = useState('');
+  const [newIdPeran, setNewIdPeran] = useState('');
+  const [peranOptions, setPeranOptions] = useState([]);
 
   const pagedKodes = kodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   // Log Modal states
@@ -29,10 +31,18 @@ export default function KelolaKodeRegistrasi() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [kodeToDelete, setKodeToDelete] = useState(null);
 
-  // Fetch data on mount
-  useEffect(() => {
-    fetchKodes();
-  }, []);
+  // Ambil daftar peran yang boleh dipilih (Super Admin tidak termasuk)
+  const fetchPeranOptions = async () => {
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await axios.get(`${API_BASE_URL}/api/kode-registrasi/peran`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPeranOptions(response.data.data);
+    } catch {
+      setErrorMsg('Gagal mengambil daftar peran.');
+    }
+  };
 
   const fetchKodes = async () => {
     setIsLoading(true);
@@ -49,6 +59,19 @@ export default function KelolaKodeRegistrasi() {
     }
   };
 
+  // Fetch data on mount (diletakkan setelah deklarasi fungsi agar tidak diakses sebelum dideklarasikan)
+  useEffect(() => {
+    fetchKodes();
+    fetchPeranOptions();
+  }, []);
+
+  const closeCreateModal = () => {
+    setIsModalOpen(false);
+    setNewKode('');
+    setNewKeterangan('');
+    setNewIdPeran('');
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -57,17 +80,18 @@ export default function KelolaKodeRegistrasi() {
       const token = localStorage.getItem('auth_token');
       await axios.post(`${API_BASE_URL}/api/kode-registrasi`, {
         kode: newKode,
-        keterangan: newKeterangan
+        keterangan: newKeterangan,
+        id_peran: newIdPeran ? Number(newIdPeran) : null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSuccessMsg('Kode registrasi berhasil dibuat.');
-      setIsModalOpen(false);
-      setNewKode('');
-      setNewKeterangan('');
+      closeCreateModal();
       fetchKodes();
     } catch (err) {
-      const msg = err.response?.data?.message || 'Gagal membuat kode baru.';
+      const errors = err.response?.data?.errors;
+      const firstError = errors ? Object.values(errors)[0]?.[0] : null;
+      const msg = firstError || err.response?.data?.message || 'Gagal membuat kode baru.';
       setErrorMsg(msg);
     }
   };
@@ -134,7 +158,7 @@ export default function KelolaKodeRegistrasi() {
       <main className="dashboard-body">
         <DashboardHeader
           title="Kelola Kode Registrasi"
-          subtitle="Manajemen kode unik yang digunakan untuk registrasi pengguna baru"
+          subtitle="Manajemen kode unik per peran yang digunakan untuk registrasi pengguna baru"
         />
 
         <div className="content-container" style={{ padding: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -160,10 +184,11 @@ export default function KelolaKodeRegistrasi() {
               WebkitOverflowScrolling: 'touch', /* scroll halus di iOS */
               marginTop: '4px',
             }}>
-              <table style={{ width: '100%', minWidth: '560px', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Kode</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Peran</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Keterangan</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Status</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Pengguna</th>
@@ -173,12 +198,23 @@ export default function KelolaKodeRegistrasi() {
                 <tbody>
                   {kodes.length === 0 ? (
                     <tr>
-                      <td colSpan="5" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
+                      <td colSpan="6" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
                     </tr>
                   ) : (
                     pagedKodes.map(kode => (
                       <tr key={kode.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{kode.kode}</td>
+                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
+                          {kode.peran ? (
+                            <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', background: '#e0e7ff', color: '#3730a3' }}>
+                              {kode.peran.nama}
+                            </span>
+                          ) : (
+                            <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', background: '#f3f4f6', color: '#6b7280' }}>
+                              Belum ditentukan
+                            </span>
+                          )}
+                        </td>
                         <td style={{ padding: '10px' }}>{kode.keterangan || '-'}</td>
                         <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
                           <span style={{ 
@@ -253,6 +289,23 @@ export default function KelolaKodeRegistrasi() {
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', boxSizing: 'border-box' }}
                 />
               </div>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Peran Pendaftar <span style={{ color: '#ef4444' }}>*</span></label>
+                <select
+                  value={newIdPeran}
+                  onChange={e => setNewIdPeran(e.target.value)}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', boxSizing: 'border-box', background: 'white' }}
+                >
+                  <option value="">Pilih Peran</option>
+                  {peranOptions.map(p => (
+                    <option key={p.id} value={p.id}>{p.nama}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  Akun yang mendaftar dengan kode ini otomatis mendapat peran tersebut.
+                </div>
+              </div>
               <div style={{ marginBottom: '20px' }}>
                 <label style={{ display: 'block', marginBottom: '5px' }}>Keterangan</label>
                 <input 
@@ -264,7 +317,7 @@ export default function KelolaKodeRegistrasi() {
                 />
               </div>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #d1d5db', background: 'white', cursor: 'pointer' }}>Batal</button>
+                <button type="button" onClick={closeCreateModal} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #d1d5db', background: 'white', cursor: 'pointer' }}>Batal</button>
                 <button type="submit" style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#3b82f6', color: 'white', cursor: 'pointer' }}>Simpan</button>
               </div>
             </form>

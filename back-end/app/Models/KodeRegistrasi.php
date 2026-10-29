@@ -16,11 +16,18 @@ class KodeRegistrasi extends Model
     protected $fillable = [
         'kode',
         'keterangan',
+        'id_peran',
         'status_aktif'
     ];
 
     public function pengguna()
     {
         return $this->hasMany(Pengguna::class, 'id_kode_registrasi', 'id');
+    }
+
+    // Peran (role) yang akan diberikan kepada akun yang mendaftar dengan kode ini
+    public function peran()
+    {
+        return $this->belongsTo(Peran::class, 'id_peran', 'id');
     }
 }

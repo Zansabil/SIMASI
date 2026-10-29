@@ -84,8 +84,6 @@ class AuthController extends Controller
             'password'      => 'required|min:8', 
             'area'          => 'nullable|string|max:100',
             'kode_registrasi' => 'required|string',
-            'jabatan'       => 'required|string',
-
         ], [
             'email.unique'         => 'Email ini sudah terdaftar.',
             'nama_pengguna.unique' => 'Username ini sudah dipakai orang lain.',
@@ -109,23 +107,17 @@ class AuthController extends Controller
             ], 403);
         }
 
-        // Menentukan id_peran berdasarkan jabatan
-        $idPeran = 5; // Default guru
-        switch ($request->jabatan) {
-            case 'kepala-yayasan': 
-                $idPeran = 2; 
-                break;
-            case 'admin': 
-                $idPeran = 3; 
-                break;
-            case 'petugas-perbaikan': 
-                $idPeran = 4; 
-                break;
-            case 'guru':
-            default: 
-                $idPeran = 5; 
-                break;
+        // Peran akun ditentukan sepenuhnya oleh kode registrasi yang dibuat Super Admin,
+        // bukan dipilih oleh pendaftar. Input 'jabatan' dari klien diabaikan.
+        $peranKode = $kodeDb->peran;
+        if (!$kodeDb->id_peran || !$peranKode || $peranKode->nama === 'Super Admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode Registrasi Yayasan ini belum ditentukan perannya. Silakan hubungi Super Admin.'
+            ], 403);
         }
+
+        $idPeran = $kodeDb->id_peran;
 
         $user = Pengguna::create([
             'nama'          => $request->nama,
@@ -141,7 +133,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Pendaftaran berhasil! Silakan login dengan akun baru Anda.',
+            'message' => 'Pendaftaran berhasil sebagai ' . $peranKode->nama . '! Silakan login dengan akun baru Anda.',
             'data'    => $user
         ], 201); // 201 = Created (Data berhasil dibuat)
     }

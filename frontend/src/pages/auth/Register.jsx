@@ -12,7 +12,6 @@ export default function Register() {
   const [namaLengkap, setNamaLengkap] = useState('');
   const [email, setEmail] = useState('');
   const [noTelepon, setNoTelepon] = useState('');
-  const [jabatan, setJabatan] = useState('');
   const [unitKerja, setUnitKerja] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -65,17 +64,16 @@ export default function Register() {
         no_telepon: noTelepon,
         password: password,
         area: unitKerja,
-        kode_registrasi: kodeRegistrasi,
-        jabatan: jabatan
+        kode_registrasi: kodeRegistrasi
       });
 
-      setSuccessMsg('Pendaftaran berhasil! Mengalihkan ke halaman login...');
+      // Peran ditentukan oleh kode registrasi, tampilkan pesan dari server (berisi nama peran)
+      setSuccessMsg(`${response.data?.message || 'Pendaftaran berhasil!'} Mengalihkan ke halaman login...`);
       
       // Reset form
       setNamaLengkap('');
       setEmail('');
       setNoTelepon('');
-      setJabatan('');
       setUnitKerja('');
       setUsername('');
       setPassword('');
@@ -188,39 +186,20 @@ export default function Register() {
             <div className="form-section">
               <h3 className="section-heading">Data Kepegawaian</h3>
               
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label" htmlFor="jabatan">Jabatan <span className="required-asterisk">*</span></label>
-                  <select
-                    id="jabatan"
-                    className="form-select"
-                    required
-                    value={jabatan}
-                    onChange={(e) => setJabatan(e.target.value)}
-                  >
-                    <option value="">Pilih Jabatan</option>
-                    <option value="guru">Guru</option>
-                    <option value="admin">Admin Aset</option>
-                    <option value="petugas-perbaikan">Petugas Perbaikan</option>
-                    <option value="kepala-yayasan">Kepala Yayasan</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" htmlFor="unitKerja">Unit Kerja <span className="required-asterisk">*</span></label>
-                  <select
-                    id="unitKerja"
-                    className="form-select"
-                    required
-                    value={unitKerja}
-                    onChange={(e) => setUnitKerja(e.target.value)}
-                  >
-                    <option value="">Pilih Unit Kerja</option>
-                    {lokasiUnits.map(unit => (
-                      <option key={unit.id} value={unit.nama_unit}>{unit.nama_unit}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="unitKerja">Unit Kerja <span className="required-asterisk">*</span></label>
+                <select
+                  id="unitKerja"
+                  className="form-select"
+                  required
+                  value={unitKerja}
+                  onChange={(e) => setUnitKerja(e.target.value)}
+                >
+                  <option value="">Pilih Unit Kerja</option>
+                  {lokasiUnits.map(unit => (
+                    <option key={unit.id} value={unit.nama_unit}>{unit.nama_unit}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -239,7 +218,7 @@ export default function Register() {
                   value={kodeRegistrasi}
                   onChange={(e) => setKodeRegistrasi(e.target.value)}
                 />
-                <div className="input-note">Dapatkan kode ini dari Administrator / Grup WhatsApp Resmi Yayasan</div>
+                <div className="input-note">Dapatkan kode ini dari Administrator / Grup WhatsApp Resmi Yayasan. Jabatan/peran akun Anda ditentukan otomatis oleh kode ini.</div>
               </div>
               
               <div className="form-group">

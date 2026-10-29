@@ -38,6 +38,12 @@ import SuperProfile from './pages/super-admin/Profile';
 import SuperNotifikasi from './pages/super-admin/Notifikasi';
 import SuperKelolaKodeRegistrasi from './pages/super-admin/KelolaKodeRegistrasi';
 
+import GuruRiwayatAset from './pages/guru/RiwayatAset';
+import AdminRiwayatAset from './pages/admin/RiwayatAset';
+import PetugasRiwayatAset from './pages/petugas-perbaikan/RiwayatAset';
+import YayasanRiwayatAset from './pages/kepala-yayasan/RiwayatAset';
+import SuperRiwayatAset from './pages/super-admin/RiwayatAset';
+
 import ProtectedRoute from './routes/ProtectedRoute';
 
 export default function App() {
@@ -55,6 +61,7 @@ export default function App() {
           <Route path="/guru/daftar-aset" element={<GuruDaftarAset />} />
           <Route path="/guru/pengadaan" element={<GuruPengadaanAset />} />
           <Route path="/guru/perbaikan" element={<GuruPerbaikanAset />} />
+          <Route path="/guru/riwayat-aset" element={<GuruRiwayatAset />} />
           <Route path="/guru/profile" element={<GuruProfile />} />
           <Route path="/guru/notifikasi" element={<GuruNotifikasi />} />
         </Route>
@@ -65,6 +72,7 @@ export default function App() {
           <Route path="/admin/daftar-aset" element={<DaftarAset />} />
           <Route path="/admin/pengadaan" element={<AdminPengadaanAset />} />
           <Route path="/admin/perbaikan" element={<PerbaikanAset />} />
+          <Route path="/admin/riwayat-aset" element={<AdminRiwayatAset />} />
           <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/notifikasi" element={<AdminNotifikasi />} />
         </Route>
@@ -77,6 +85,7 @@ export default function App() {
           <Route path="/petugas-perbaikan/profile" element={<PetugasProfile />} />
           <Route path="/petugas-perbaikan/notifikasi" element={<PetugasNotifikasi />} />
           <Route path="/petugas-perbaikan/perbaikan" element={<PetugasPerbaikanAset />} />
+          <Route path="/petugas-perbaikan/riwayat-aset" element={<PetugasRiwayatAset />} />
         </Route>
 
         {/* Kepala Yayasan Routes */}
@@ -85,6 +94,7 @@ export default function App() {
           <Route path="/kepala-yayasan/daftar-aset" element={<YayasanDaftarAset />} />
           <Route path="/kepala-yayasan/persetujuan" element={<YayasanPersetujuanPengadaan />} />
           <Route path="/kepala-yayasan/perbaikan" element={<YayasanPerbaikanAset />} />
+          <Route path="/kepala-yayasan/riwayat-aset" element={<YayasanRiwayatAset />} />
           <Route path="/kepala-yayasan/profile" element={<YayasanProfile />} />
           <Route path="/kepala-yayasan/notifikasi" element={<YayasanNotifikasi />} />
         </Route>
@@ -95,6 +105,7 @@ export default function App() {
           <Route path="/super-admin/daftar-aset" element={<SuperDaftarAset />} />
           <Route path="/super-admin/pengadaan" element={<SuperPengadaanAset />} />
           <Route path="/super-admin/perbaikan" element={<SuperPerbaikanAset />} />
+          <Route path="/super-admin/riwayat-aset" element={<SuperRiwayatAset />} />
           <Route path="/super-admin/manajemen-pengguna" element={<SuperManajemenPengguna />} />
           <Route path="/super-admin/kelola-kode-registrasi" element={<SuperKelolaKodeRegistrasi />} />
           <Route path="/super-admin/profile" element={<SuperProfile />} />

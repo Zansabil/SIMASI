@@ -29,7 +29,7 @@ class RiwayatAset extends Model
     // Membantu kita mengetahui riwayat ini milik aset yang mana
     public function aset()
     {
-        return $this->belongsTo(Aset::class, 'id_aset', 'id');
+        return $this->belongsTo(Aset::class, 'id_aset', 'id')->withTrashed();
     }
 
     // 5. Relasi ke tabel 'pengguna'

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoWide from '../../assets/logo-wide.png';
-import { FiHome, FiList, FiShoppingCart, FiTool, FiUsers, FiKey } from 'react-icons/fi';
+import { FiHome, FiList, FiShoppingCart, FiTool, FiUsers, FiKey, FiClock } from 'react-icons/fi';
 
 // Sidebar Menu Configuration based on Role
 const MENU_CONFIG = {
@@ -9,31 +9,36 @@ const MENU_CONFIG = {
     { path: '/guru/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/guru/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/guru/pengadaan', label: 'Pengadaan Aset', icon: FiShoppingCart },
-    { path: '/guru/perbaikan', label: 'Perbaikan Aset', icon: FiTool }
+    { path: '/guru/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
+    { path: '/guru/riwayat-aset', label: 'Riwayat Aset', icon: FiClock }
   ],
   'admin': [
     { path: '/admin/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/admin/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/admin/pengadaan', label: 'Pengadaan Aset', icon: FiShoppingCart },
-    { path: '/admin/perbaikan', label: 'Perbaikan Aset', icon: FiTool }
+    { path: '/admin/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
+    { path: '/admin/riwayat-aset', label: 'Riwayat Aset', icon: FiClock }
   ],
   'petugas-perbaikan': [
     { path: '/petugas-perbaikan/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/petugas-perbaikan/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/petugas-perbaikan/pengadaan', label: 'Pengadaan Aset', icon: FiShoppingCart },
-    { path: '/petugas-perbaikan/perbaikan', label: 'Perbaikan Aset', icon: FiTool }
+    { path: '/petugas-perbaikan/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
+    { path: '/petugas-perbaikan/riwayat-aset', label: 'Riwayat Aset', icon: FiClock }
   ],
   'kepala-yayasan': [
     { path: '/kepala-yayasan/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/kepala-yayasan/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/kepala-yayasan/persetujuan', label: 'Persetujuan Pengadaan', icon: FiShoppingCart },
-    { path: '/kepala-yayasan/perbaikan', label: 'Perbaikan Aset', icon: FiTool }
+    { path: '/kepala-yayasan/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
+    { path: '/kepala-yayasan/riwayat-aset', label: 'Riwayat Aset', icon: FiClock }
   ],
   'super-admin': [
     { path: '/super-admin/dashboard', label: 'Dashboard', icon: FiHome },
     { path: '/super-admin/daftar-aset', label: 'Daftar Aset', icon: FiList },
     { path: '/super-admin/pengadaan', label: 'Pengadaan Aset', icon: FiShoppingCart },
     { path: '/super-admin/perbaikan', label: 'Perbaikan Aset', icon: FiTool },
+    { path: '/super-admin/riwayat-aset', label: 'Riwayat Aset', icon: FiClock },
     { path: '/super-admin/manajemen-pengguna', label: 'Manajemen Pengguna', icon: FiUsers },
     { path: '/super-admin/kelola-kode-registrasi', label: 'Kode Registrasi', icon: FiKey }
   ]

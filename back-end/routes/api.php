@@ -117,6 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Route Kode Registrasi (Super Admin)
     Route::get('/kode-registrasi', [KodeRegistrasiController::class, 'index']);
+    Route::get('/kode-registrasi/peran', [KodeRegistrasiController::class, 'peranOptions']);
     Route::post('/kode-registrasi', [KodeRegistrasiController::class, 'store']);
     Route::patch('/kode-registrasi/{id}/status', [KodeRegistrasiController::class, 'updateStatus']);
     Route::delete('/kode-registrasi/{id}', [KodeRegistrasiController::class, 'destroy']);
