@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AssetTable from './AssetTable';
 import Pagination from './Pagination';
 import DashboardLayout from '../layout/DashboardLayout';
 import StatusModal from '../ui/StatusModal';
 import AssetFormModal from './AssetFormModal';
 import AssetDetailModal from './AssetDetailModal';
+import ExportPdfModal from './ExportPdfModal';
+import ImportExcelModal from './ImportExcelModal';
 import PageHeader from '../ui/PageHeader';
 import SearchBar from '../ui/SearchBar';
 import FilterSelect from '../ui/FilterSelect';
-import { FiPlus, FiGrid, FiList } from 'react-icons/fi';
+import { FiPlus, FiGrid, FiList, FiPrinter, FiUploadCloud } from 'react-icons/fi';
 import GroupedAssetView from './GroupedAssetView';
 import useAssetList from '../../hooks/useAssetList';
 import './AssetListPage.css';
@@ -49,8 +51,26 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     handleDeleteSubAssetClick,
     processDeleteSubAsset,
     confirmSubAssetDelete,
-    setConfirmSubAssetDelete
+    setConfirmSubAssetDelete,
+    refreshAssets
   } = useAssetList();
+
+  // State untuk Modal Ekspor PDF & Impor Excel
+  const [isExportPdfOpen, setIsExportPdfOpen] = useState(false);
+  const [isImportExcelOpen, setIsImportExcelOpen] = useState(false);
+
+  // Handler setelah impor Excel berhasil
+  const handleImportSuccess = (message) => {
+    if (refreshAssets) {
+      refreshAssets();
+    }
+    setStatusModal({
+      isOpen: true,
+      type: 'success',
+      title: 'Impor Berhasil',
+      message: message || 'Data aset berhasil diimpor ke sistem.'
+    });
+  };
 
   return (
     <DashboardLayout role={role} currentPath={currentPath}>
@@ -59,10 +79,45 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
         <PageHeader
           title="Daftar Aset"
           subtitle="Kelola dan pantau seluruh data aset sekolah"
-          actionLabel={hasWriteAccess ? "Tambah Aset" : null}
-          onActionClick={handleTambahAsetClick}
-          actionIcon={FiPlus}
-          actionClassName="btn-tambah-aset"
+          actions={(
+            <div className="asset-header-actions">
+              {/* Tombol Ekspor PDF dengan Filter Periode */}
+              <button 
+                type="button" 
+                className="btn-action-pdf"
+                onClick={() => setIsExportPdfOpen(true)}
+                title="Cetak & Ekspor ke PDF dengan filter rentang waktu"
+              >
+                <FiPrinter size={16} />
+                <span>Ekspor PDF</span>
+              </button>
+
+              {/* Tombol Impor Excel (Khusus Hak Akses Tulis) */}
+              {hasWriteAccess && (
+                <button 
+                  type="button" 
+                  className="btn-action-excel"
+                  onClick={() => setIsImportExcelOpen(true)}
+                  title="Impor data aset secara massal dari file Excel"
+                >
+                  <FiUploadCloud size={17} />
+                  <span>Impor Excel</span>
+                </button>
+              )}
+
+              {/* Tombol Tambah Aset Biasa (Khusus Hak Akses Tulis) */}
+              {hasWriteAccess && (
+                <button 
+                  type="button" 
+                  className="btn-tambah-aset"
+                  onClick={handleTambahAsetClick}
+                >
+                  <FiPlus size={18} />
+                  <span>Tambah Aset</span>
+                </button>
+              )}
+            </div>
+          )}
         >
           <div className="view-mode-row">
             <div className="view-mode-toggle">
@@ -157,12 +212,29 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           />
         )}
 
+        {/* MODAL 2: DETAIL ASET */}
         <AssetDetailModal 
           isOpen={isDetailOpen}
           onClose={() => setIsDetailOpen(false)}
           asset={assetToView}
         />
 
+        {/* MODAL 3: EKSPOR PDF DENGAN FILTER PERIODE */}
+        <ExportPdfModal
+          isOpen={isExportPdfOpen}
+          onClose={() => setIsExportPdfOpen(false)}
+        />
+
+        {/* MODAL 4: IMPOR DARI EXCEL */}
+        {hasWriteAccess && (
+          <ImportExcelModal
+            isOpen={isImportExcelOpen}
+            onClose={() => setIsImportExcelOpen(false)}
+            onSuccess={handleImportSuccess}
+          />
+        )}
+
+        {/* MODAL 5: STATUS NOTIFIKASI */}
         <StatusModal
           isOpen={statusModal.isOpen}
           type={statusModal.type}
@@ -171,6 +243,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           onConfirm={() => setStatusModal({ ...statusModal, isOpen: false })}
         />
 
+        {/* MODAL 6: KONFIRMASI HAPUS ASET */}
         <StatusModal
           isOpen={confirmModal.isOpen}
           type="confirm"
@@ -182,6 +255,7 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           onCancel={() => setConfirmModal({ isOpen: false, asset: null })}
         />
 
+        {/* MODAL 7: KONFIRMASI HAPUS SUB-ASET */}
         <StatusModal
           isOpen={confirmSubAssetDelete.isOpen}
           type="confirm"

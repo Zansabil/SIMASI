@@ -44,6 +44,9 @@ export default function useAssetList() {
   const [availableCategories, setAvailableCategories] = useState(DEFAULT_CATEGORIES);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'grouped'
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refreshAssets = () => setRefreshTrigger(prev => prev + 1);
 
   // Debounce search query to prevent excessive API requests
   useEffect(() => {
@@ -89,7 +92,7 @@ export default function useAssetList() {
     return () => {
       controller.abort();
     };
-  }, [debouncedSearchQuery, selectedFilterField]);
+  }, [debouncedSearchQuery, selectedFilterField, refreshTrigger]);
 
   // Fetch static dropdown choices once on mount using Promise.all and Service Layer
   useEffect(() => {
@@ -163,7 +166,7 @@ export default function useAssetList() {
   // Reset Halaman ke 1 saat melakukan pencarian atau mengganti kategori filter
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedFilterField]);
+  }, [debouncedSearchQuery, selectedFilterField, refreshTrigger]);
 
   // Derived state for client-side pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -342,6 +345,7 @@ export default function useAssetList() {
     handleDeleteSubAssetClick,
     processDeleteSubAsset,
     confirmSubAssetDelete,
-    setConfirmSubAssetDelete
+    setConfirmSubAssetDelete,
+    refreshAssets
   };
 }

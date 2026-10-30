@@ -1,3 +1,87 @@
+/* ============================================
+   Header Action Buttons: Ekspor PDF, Impor Excel, Tambah Aset
+   ============================================ */
+
+/* Container untuk deretan tombol aksi di header */
+.asset-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Tombol Ekspor PDF (Biru) */
+.btn-action-pdf {
+  align-items: center;
+  background-color: #ffffff;
+  border: 1.5px solid #2563eb;
+  border-radius: 8px;
+  color: #2563eb;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  gap: 7px;
+  padding: 9px 16px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-pdf:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-action-pdf:active {
+  transform: translateY(0);
+}
+
+/* Tombol Impor Excel (Hijau) */
+.btn-action-excel {
+  align-items: center;
+  background-color: #ffffff;
+  border: 1.5px solid #059669;
+  border-radius: 8px;
+  color: #059669;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  gap: 7px;
+  padding: 9px 16px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-action-excel:hover {
+  background-color: #059669;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.btn-action-excel:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .asset-header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-action-pdf,
+  .btn-action-excel {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Page Header Layout with orange Tambah Aset button */
 .btn-tambah-aset {
   align-items: center;
