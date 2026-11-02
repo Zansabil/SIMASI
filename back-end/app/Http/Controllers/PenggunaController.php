@@ -13,8 +13,8 @@ class PenggunaController extends Controller
     {
         Gate::authorize('kelola-user');
         
-        // Mengambil semua pengguna termasuk akun Super Admin
-        $penggunas = Pengguna::with('peran')->orderBy('id', 'asc')->get();
+        // Mengambil semua pengguna termasuk akun Super Admin beserta peran & kode registrasinya
+        $penggunas = Pengguna::with(['peran', 'kodeRegistrasi'])->orderBy('id', 'asc')->get();
         
         return response()->json([
             'success' => true,
@@ -34,6 +34,7 @@ class PenggunaController extends Controller
             'email'         => 'required|string|email|unique:pengguna,email|max:255',
             'password'      => 'required|string|min:8',
             'id_peran'      => 'required|integer',
+            'jabatan'       => 'nullable|string|max:255',
             'status_aktif'  => 'required|boolean',
             'area'          => 'nullable|string|max:50'
         ]);
@@ -44,6 +45,7 @@ class PenggunaController extends Controller
             'email'         => $request->email,
             'password'      => Hash::make($request->password), // Enkripsi password baru
             'id_peran'      => $request->id_peran,
+            'jabatan'       => $request->jabatan,
             'status_aktif'  => $request->status_aktif,
             'area'          => $request->area
         ]);
@@ -51,7 +53,7 @@ class PenggunaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pengguna baru bernama ' . $request->nama . ' berhasil ditambahkan!',
-            'data'    => $pengguna
+            'data'    => $pengguna->load(['peran', 'kodeRegistrasi'])
         ], 201); // 201 Created
     }
 
@@ -65,6 +67,7 @@ class PenggunaController extends Controller
             'nama_pengguna' => 'required|string|max:255|unique:pengguna,nama_pengguna,'.$id,
             'email'         => 'required|string|email|max:255|unique:pengguna,email,'.$id,
             'id_peran'      => 'required|integer',
+            'jabatan'       => 'nullable|string|max:255',
             'status_aktif'  => 'required|boolean',
             'area'          => 'nullable|string|max:50'
         ]);
@@ -80,6 +83,10 @@ class PenggunaController extends Controller
             'area'          => $request->area
         ];
 
+        if ($request->has('jabatan')) {
+            $data['jabatan'] = $request->jabatan;
+        }
+
         if ($request->filled('password')) {
             $request->validate([
                 'password' => 'string|min:8'
@@ -92,7 +99,7 @@ class PenggunaController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data pengguna ' . $pengguna->nama . ' berhasil diperbarui!',
-            'data'    => $pengguna->fresh(['peran'])
+            'data'    => $pengguna->fresh(['peran', 'kodeRegistrasi'])
         ], 200);
     }
 

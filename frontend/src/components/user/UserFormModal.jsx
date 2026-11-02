@@ -12,7 +12,6 @@ const getRoleDefaultAccess = (role) => {
   switch (role) {
     case 'Super Admin':
     case 'Administrator':
-    case 'Super Admin':
       return {
         dashboard: true,
         daftarAset: true,
@@ -70,6 +69,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
   const [formName, setFormName] = useState('');
   const [formEmail, setFormEmail] = useState('');
   const [formRole, setFormRole] = useState('');
+  const [formJabatan, setFormJabatan] = useState('');
   const [formUnit, setFormUnit] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formStatus, setFormStatus] = useState('Aktif');
@@ -98,6 +98,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         setFormName(editingUser.name);
         setFormEmail(editingUser.email);
         setFormRole(editingUser.role);
+        setFormJabatan(editingUser.jabatan || editingUser.role);
         setFormUnit(editingUser.unit || 'Yayasan / Global');
         setFormPassword(''); // optional on edit
         setFormStatus(editingUser.status || 'Aktif');
@@ -107,6 +108,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         setFormName('');
         setFormEmail('');
         setFormRole('');
+        setFormJabatan('');
         setFormUnit('Yayasan / Global');
         setFormPassword('');
         setFormStatus('Aktif');
@@ -177,12 +179,13 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         formName,
         formEmail,
         formRole,
+        formJabatan,
         formUnit,
         formStatus,
         formAccess
       };
       
-      const hasContent = formUsername || formName || formEmail || formRole || formUnit || 
+      const hasContent = formUsername || formName || formEmail || formRole || formJabatan || formUnit || 
                          (formStatus && formStatus !== 'Aktif') || 
                          Object.values(formAccess).some(val => val === true);
       
@@ -192,7 +195,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         localStorage.removeItem('simasi_draft_user');
       }
     }
-  }, [isOpen, editingUser, hasCheckedDraft, formUsername, formName, formEmail, formRole, formUnit, formStatus, formAccess]);
+  }, [isOpen, editingUser, hasCheckedDraft, formUsername, formName, formEmail, formRole, formJabatan, formUnit, formStatus, formAccess]);
 
   const handleRestoreDraft = () => {
     if (tempDraft) {
@@ -200,6 +203,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
       setFormName(tempDraft.formName || '');
       setFormEmail(tempDraft.formEmail || '');
       setFormRole(tempDraft.formRole || '');
+      setFormJabatan(tempDraft.formJabatan || '');
       setFormUnit(tempDraft.formUnit || '');
       setFormStatus(tempDraft.formStatus || 'Aktif');
       setFormAccess(tempDraft.formAccess || {
@@ -239,6 +243,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
         name: formName,
         email: formEmail,
         role: formRole,
+        jabatan: formJabatan || formRole,
         unit: formUnit,
         password: formPassword,
         status: formStatus,
@@ -310,7 +315,7 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
           </div>
 
           <div className="modal-form-group">
-            <label className="modal-form-label">Role Akses <span className="req-star">*</span></label>
+            <label className="modal-form-label">Role Akses (Peran) <span className="req-star">*</span></label>
             <select
               className="modal-form-select"
               required
@@ -320,6 +325,26 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
               <option value="">Pilih Role Akses</option>
               <option value="Super Admin">Super Admin</option>
               <option value="Kepala Yayasan">Kepala Yayasan</option>
+              <option value="Admin">Admin</option>
+              <option value="Petugas Perbaikan">Petugas Perbaikan</option>
+              <option value="Guru">Guru</option>
+            </select>
+          </div>
+
+          <div className="modal-form-group">
+            <label className="modal-form-label">Jabatan <span className="req-star">*</span></label>
+            <select
+              className="modal-form-select"
+              required
+              value={formJabatan}
+              onChange={(e) => setFormJabatan(e.target.value)}
+            >
+              <option value="">Pilih Jabatan</option>
+              <option value="Super Admin">Super Admin</option>
+              <option value="Kepala Yayasan">Kepala Yayasan</option>
+              <option value="Kepala Sekolah">Kepala Sekolah</option>
+              <option value="Wakil Kesiswaan">Wakil Kesiswaan</option>
+              <option value="Admin Unit">Admin Unit</option>
               <option value="Admin">Admin</option>
               <option value="Petugas Perbaikan">Petugas Perbaikan</option>
               <option value="Guru">Guru</option>

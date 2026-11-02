@@ -142,6 +142,7 @@ export default function UserListPage({ role, currentPath }) {
             name: u.nama || 'Tanpa Nama',
             email: u.email || '-',
             role: mappedRole,
+            jabatan: u.nama_jabatan || u.jabatan || mappedRole,
             unit: u.area || 'Yayasan / Global',
             status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: isCurrent,
@@ -220,6 +221,7 @@ export default function UserListPage({ role, currentPath }) {
       email: formData.email,
       nama_pengguna: formData.username,
       id_peran: id_peran,
+      jabatan: formData.jabatan || formData.role,
       area: formData.unit && formData.unit !== 'Yayasan / Global' ? formData.unit : null,
       status_aktif: formData.status === 'Aktif' ? 1 : 0
     };
@@ -248,6 +250,7 @@ export default function UserListPage({ role, currentPath }) {
             name: u.nama,
             email: u.email,
             role: mappedRole,
+            jabatan: u.nama_jabatan || u.jabatan || mappedRole,
             unit: u.area || 'Yayasan / Global',
             status: u.status_aktif ? 'Aktif' : 'Non-Aktif',
             is_current: editingUser.is_current,
@@ -260,6 +263,7 @@ export default function UserListPage({ role, currentPath }) {
             localStorage.setItem('user_name', u.nama);
             localStorage.setItem('user_email', u.email);
             localStorage.setItem('user_username', u.nama_pengguna);
+            localStorage.setItem('user_jabatan', u.jabatan || mappedRole);
             const roleSlug = mappedRole === 'Super Admin' ? 'super-admin' : (mappedRole === 'Kepala Yayasan' ? 'kepala-yayasan' : (mappedRole === 'Petugas Perbaikan' ? 'petugas-perbaikan' : (mappedRole === 'Guru' ? 'guru' : 'admin')));
             localStorage.setItem('user_role', roleSlug);
           }

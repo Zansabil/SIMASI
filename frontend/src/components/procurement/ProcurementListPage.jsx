@@ -258,6 +258,14 @@ export default function ProcurementListPage({ role, currentPath, hasWriteAccess 
       }
 
       if (response.data && response.data.success && response.data.data) {
+        const currentUserId = localStorage.getItem('user_id');
+        if (currentUserId && Array.isArray(response.data.data)) {
+          const ownRecord = response.data.data.find(r => String(r.idpengguna) === String(currentUserId) && r.pengguna?.jabatan);
+          if (ownRecord) {
+            localStorage.setItem('user_jabatan', ownRecord.pengguna.jabatan);
+            setUserRole(ownRecord.pengguna.jabatan);
+          }
+        }
         const grouped = groupBackendData(response.data.data);
         setProcurements(grouped);
         setIsUsingBackend(true);

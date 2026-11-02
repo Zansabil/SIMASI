@@ -25,8 +25,8 @@ class AuthController extends Controller
         $identifier = $request->identifier;
 
         // Cari pengguna berdasarkan email, nama_pengguna, atau no_telepon
-        // Gunakan eager loading untuk relasi 'peran' agar tidak lazy-load saat akses jabatan
-        $user = Pengguna::with('peran')
+        // Gunakan eager loading untuk relasi 'peran' dan 'kodeRegistrasi'
+        $user = Pengguna::with(['peran', 'kodeRegistrasi'])
             ->where('email', $identifier)
             ->orWhere('nama_pengguna', $identifier)
             ->orWhere('no_telepon', $identifier)
@@ -46,14 +46,9 @@ class AuthController extends Controller
         // Jika benar, buatkan Token API (Kunci Masuk) baru menggunakan Sanctum
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // Bangun string jabatan langsung dari relasi yang sudah di-eager-load
+        // Ambil peran (fungsi akses sistem) dan jabatan (tampilan jabatan pengguna)
         $namaPeran = $user->peran ? $user->peran->nama : 'Unknown';
-        $jabatan = $namaPeran;
-        if ($user->area && $user->area !== '-') {
-            $jabatan = ($namaPeran === 'Admin Unit') 
-                ? 'Admin ' . $user->area 
-                : $namaPeran . ' ' . $user->area;
-        }
+        $jabatan = $user->jabatan;
 
         return response()->json([
             'success'      => true,
@@ -66,6 +61,7 @@ class AuthController extends Controller
                 'nama_pengguna'   => $user->nama_pengguna,
                 'email'           => $user->email,
                 'id_peran'        => $user->id_peran,
+                'peran'           => $namaPeran,
                 'area'            => $user->area,
                 'jabatan'         => $jabatan,
                 'foto_profil_url' => $user->foto_profil ? url('api/avatars/' . $user->foto_profil) : null,
@@ -118,6 +114,7 @@ class AuthController extends Controller
         }
 
         $idPeran = $kodeDb->id_peran;
+        $namaJabatan = $kodeDb->jabatan ?: $peranKode->nama;
 
         $user = Pengguna::create([
             'nama'          => $request->nama,
@@ -126,14 +123,19 @@ class AuthController extends Controller
             'no_telepon'    => $request->no_telepon,
             'password'      => Hash::make($request->password), 
             'area'          => $request->area,
+            'jabatan'       => $namaJabatan,
             'status_aktif'  => 1, 
             'id_peran'      => $idPeran, 
             'id_kode_registrasi' => $kodeDb->id,
         ]);
 
+        $infoPeran = ($namaJabatan !== $peranKode->nama)
+            ? $namaJabatan . ' (Peran: ' . $peranKode->nama . ')'
+            : $namaJabatan;
+
         return response()->json([
             'success' => true,
-            'message' => 'Pendaftaran berhasil sebagai ' . $peranKode->nama . '! Silakan login dengan akun baru Anda.',
+            'message' => 'Pendaftaran berhasil sebagai ' . $infoPeran . '! Silakan login dengan akun baru Anda.',
             'data'    => $user
         ], 201); // 201 = Created (Data berhasil dibuat)
     }

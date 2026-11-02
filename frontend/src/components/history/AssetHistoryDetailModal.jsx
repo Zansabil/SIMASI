@@ -114,6 +114,12 @@ export default function AssetHistoryDetailModal({ isOpen, onClose, item }) {
                 </span>
               </div>
               <div className="history-detail-item">
+                <span className="history-detail-label">Jabatan</span>
+                <span className="history-detail-val">
+                  {user?.jabatan || user?.peran?.nama || '-'}
+                </span>
+              </div>
+              <div className="history-detail-item">
                 <span className="history-detail-label">Peran</span>
                 <span className="history-detail-val">
                   {user?.peran?.nama || '-'}

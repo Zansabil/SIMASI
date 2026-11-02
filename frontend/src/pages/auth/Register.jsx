@@ -12,11 +12,17 @@ export default function Register() {
   const [namaLengkap, setNamaLengkap] = useState('');
   const [email, setEmail] = useState('');
   const [noTelepon, setNoTelepon] = useState('');
+  const [jabatan, setJabatan] = useState('');
   const [unitKerja, setUnitKerja] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [konfirmasiPassword, setKonfirmasiPassword] = useState('');
   const [kodeRegistrasi, setKodeRegistrasi] = useState('');
+
+  // State pengecekan kode registrasi otomatis
+  const [isCheckingKode, setIsCheckingKode] = useState(false);
+  const [kodeStatus, setKodeStatus] = useState(null); // null | 'valid' | 'invalid'
+  const [kodeStatusMsg, setKodeStatusMsg] = useState('');
 
   const [lokasiUnits, setLokasiUnits] = useState([]);
 
@@ -33,6 +39,56 @@ export default function Register() {
     };
     fetchLokasiUnits();
   }, []);
+
+  // Cek kode registrasi secara otomatis saat pengguna mengetik kode
+  useEffect(() => {
+    const trimmedKode = kodeRegistrasi.trim();
+    if (!trimmedKode) {
+      setJabatan('');
+      setKodeStatus(null);
+      setKodeStatusMsg('');
+      setIsCheckingKode(false);
+      return;
+    }
+
+    let isCancelled = false;
+    setIsCheckingKode(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/kode-registrasi/cek`, {
+          params: { kode: trimmedKode }
+        });
+        if (!isCancelled && response.data && response.data.success) {
+          const detectedJabatan = response.data.data?.jabatan || response.data.data?.peran || '';
+          const detectedPeran = response.data.data?.peran || '';
+          setJabatan(detectedJabatan);
+          setKodeStatus('valid');
+          const detailPeran = detectedPeran && detectedPeran !== detectedJabatan
+            ? ` (Peran: ${detectedPeran})`
+            : '';
+          setKodeStatusMsg(`Kode valid — Jabatan: ${detectedJabatan}${detailPeran}`);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setJabatan('');
+          setKodeStatus('invalid');
+          setKodeStatusMsg(
+            err.response?.data?.message || 'Kode Registrasi Yayasan tidak ditemukan atau tidak aktif.'
+          );
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsCheckingKode(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [kodeRegistrasi]);
   
   // Feedback states
   const [isLoading, setIsLoading] = useState(false);
@@ -51,8 +107,6 @@ export default function Register() {
       return;
     }
 
-
-
     setIsLoading(true);
 
     try {
@@ -64,22 +118,24 @@ export default function Register() {
         no_telepon: noTelepon,
         password: password,
         area: unitKerja,
-        kode_registrasi: kodeRegistrasi
+        kode_registrasi: kodeRegistrasi.trim()
       });
 
-      // Peran ditentukan oleh kode registrasi, tampilkan pesan dari server (berisi nama peran)
+      // Peran & jabatan ditentukan oleh kode registrasi
       setSuccessMsg(`${response.data?.message || 'Pendaftaran berhasil!'} Mengalihkan ke halaman login...`);
       
       // Reset form
       setNamaLengkap('');
       setEmail('');
       setNoTelepon('');
+      setJabatan('');
       setUnitKerja('');
       setUsername('');
       setPassword('');
       setKonfirmasiPassword('');
       setKodeRegistrasi('');
-
+      setKodeStatus(null);
+      setKodeStatusMsg('');
 
       // Redirect to login after 2 seconds
       setTimeout(() => {
@@ -186,20 +242,46 @@ export default function Register() {
             <div className="form-section">
               <h3 className="section-heading">Data Kepegawaian</h3>
               
-              <div className="form-group">
-                <label className="form-label" htmlFor="unitKerja">Unit Kerja <span className="required-asterisk">*</span></label>
-                <select
-                  id="unitKerja"
-                  className="form-select"
-                  required
-                  value={unitKerja}
-                  onChange={(e) => setUnitKerja(e.target.value)}
-                >
-                  <option value="">Pilih Unit Kerja</option>
-                  {lokasiUnits.map(unit => (
-                    <option key={unit.id} value={unit.nama_unit}>{unit.nama_unit}</option>
-                  ))}
-                </select>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="jabatan">Nama Jabatan <span className="required-asterisk">*</span></label>
+                  <input
+                    id="jabatan"
+                    type="text"
+                    className="form-input"
+                    placeholder={isCheckingKode ? 'Mengecek kode registrasi...' : 'Otomatis terisi sesuai Kode Registrasi'}
+                    value={jabatan}
+                    readOnly
+                    style={{
+                      backgroundColor: jabatan ? '#f0fdf4' : '#f8fafc',
+                      borderColor: jabatan ? '#86efac' : '#cbd5e1',
+                      color: jabatan ? '#166534' : '#64748b',
+                      fontWeight: jabatan ? '600' : '400',
+                      cursor: 'not-allowed'
+                    }}
+                  />
+                  <div className="input-note">
+                    {jabatan
+                      ? `Terisi otomatis sesuai Kode Registrasi (${jabatan})`
+                      : 'Terisi otomatis setelah Kode Registrasi Yayasan diisi'}
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="unitKerja">Unit Kerja <span className="required-asterisk">*</span></label>
+                  <select
+                    id="unitKerja"
+                    className="form-select"
+                    required
+                    value={unitKerja}
+                    onChange={(e) => setUnitKerja(e.target.value)}
+                  >
+                    <option value="">Pilih Unit Kerja</option>
+                    {lokasiUnits.map(unit => (
+                      <option key={unit.id} value={unit.nama_unit}>{unit.nama_unit}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -218,7 +300,26 @@ export default function Register() {
                   value={kodeRegistrasi}
                   onChange={(e) => setKodeRegistrasi(e.target.value)}
                 />
-                <div className="input-note">Dapatkan kode ini dari Administrator / Grup WhatsApp Resmi Yayasan. Jabatan/peran akun Anda ditentukan otomatis oleh kode ini.</div>
+                {isCheckingKode && (
+                  <div className="input-note" style={{ color: '#2563eb' }}>
+                    Memeriksa kode registrasi...
+                  </div>
+                )}
+                {!isCheckingKode && kodeStatus === 'valid' && (
+                  <div className="input-note" style={{ color: '#16a34a', fontWeight: '600' }}>
+                    ✓ {kodeStatusMsg}
+                  </div>
+                )}
+                {!isCheckingKode && kodeStatus === 'invalid' && (
+                  <div className="input-note" style={{ color: '#dc2626', fontWeight: '600' }}>
+                    ✕ {kodeStatusMsg}
+                  </div>
+                )}
+                {!isCheckingKode && !kodeStatus && (
+                  <div className="input-note">
+                    Dapatkan kode ini dari Administrator / Grup WhatsApp Resmi Yayasan. Nama jabatan Anda akan otomatis terisi sesuai kode ini.
+                  </div>
+                )}
               </div>
               
               <div className="form-group">
@@ -268,8 +369,6 @@ export default function Register() {
 
           {/* Form Footer */}
           <div className="form-footer">
-
-
             <button type="submit" className="btn-primary" disabled={isLoading}>
               {isLoading ? 'Mendaftarkan...' : 'Daftar Sekarang'}
             </button>

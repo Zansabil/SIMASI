@@ -36,6 +36,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 // Data Master Publik
 Route::get('/lokasi_unit', [LokasiUnitController::class, 'index']);
+Route::get('/kode-registrasi/cek', [KodeRegistrasiController::class, 'cekKode']);
 
 // Route untuk mengambil foto profil secara langsung
 Route::get('/avatars/{filename}', [ProfileController::class, 'getAvatar']);

@@ -16,13 +16,18 @@ const MenuIcon = () => (
 export default function Navbar({ role, onToggleMobileMenu }) {
   const navigate = useNavigate();
   const [userName, setUserName] = useState('User');
+  const [userJabatan, setUserJabatan] = useState('');
   const [userAvatar, setUserAvatar] = useState('');
 
   useEffect(() => {
     const storedName = localStorage.getItem('user_name');
+    const storedJabatan = localStorage.getItem('user_jabatan');
     const storedAvatar = localStorage.getItem('user_avatar');
     if (storedName) {
       setUserName(storedName);
+    }
+    if (storedJabatan) {
+      setUserJabatan(storedJabatan);
     }
     if (storedAvatar) {
       setUserAvatar(storedAvatar);
@@ -53,18 +58,28 @@ export default function Navbar({ role, onToggleMobileMenu }) {
       {/* Right Action Icons */}
       <div className="nav-actions">
         <NotificationBell role={role} />
-        <div 
-          className="nav-profile-circle" 
-          title={userName} 
-          aria-label="Profil" 
-          style={{ cursor: 'pointer', padding: userAvatar ? '0' : undefined, overflow: 'hidden' }} 
+        <div
           onClick={handleProfileClick}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          title={userJabatan ? `${userName} (${userJabatan})` : userName}
         >
-          {userAvatar ? (
-            <img src={userAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <FiUser size={22} />
-          )}
+          <div style={{ textAlign: 'right', lineHeight: '1.2' }}>
+            <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>{userName}</div>
+            {userJabatan && (
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '500' }}>{userJabatan}</div>
+            )}
+          </div>
+          <div 
+            className="nav-profile-circle" 
+            aria-label="Profil" 
+            style={{ cursor: 'pointer', padding: userAvatar ? '0' : undefined, overflow: 'hidden' }} 
+          >
+            {userAvatar ? (
+              <img src={userAvatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <FiUser size={22} />
+            )}
+          </div>
         </div>
       </div>
     </header>

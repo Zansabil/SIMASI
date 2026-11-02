@@ -11,8 +11,9 @@ class RiwayatAsetController extends Controller
     public function index(Request $request)
     {
         $query = RiwayatAset::with([
-            'pengguna:id,nama,nama_pengguna,email,area,id_peran',
+            'pengguna:id,nama,nama_pengguna,email,area,id_peran,jabatan,id_kode_registrasi',
             'pengguna.peran:id,nama',
+            'pengguna.kodeRegistrasi:id,jabatan',
             'aset' => function ($q) {
                 $q->withTrashed()->with(['lokasiUnit:id,nama_unit', 'ruangan:id,nama_ruangan']);
             }

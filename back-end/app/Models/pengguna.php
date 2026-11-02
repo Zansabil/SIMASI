@@ -25,27 +25,45 @@ class Pengguna extends Authenticatable
         'password',
         'foto_profil',
         'area',
+        'jabatan',
         'status_aktif',
         'id_peran',
         'id_kode_registrasi'
     ];
 
-    // 2.5 Tambahkan attribute virtual 'jabatan' ke output JSON
-    protected $appends = ['jabatan'];
+    // 2.5 Tambahkan attribute virtual 'jabatan' dan 'nama_jabatan' ke output JSON
+    protected $appends = ['jabatan', 'nama_jabatan'];
+
+    public function getNamaJabatanAttribute()
+    {
+        // Utamakan kolom jabatan yang tersimpan pada tabel pengguna (misal dari kode registrasi)
+        $rawJabatan = $this->attributes['jabatan'] ?? null;
+        if (!empty($rawJabatan)) {
+            return $rawJabatan;
+        }
+
+        // Fallback ke jabatan pada kode registrasi jika relasi sudah dimuat
+        if ($this->relationLoaded('kodeRegistrasi') && $this->kodeRegistrasi && !empty($this->kodeRegistrasi->jabatan)) {
+            return $this->kodeRegistrasi->jabatan;
+        }
+
+        return $this->peran ? $this->peran->nama : 'Unknown';
+    }
 
     public function getJabatanAttribute()
     {
-        // Cegah N+1 query jika peran tidak di-load, kembalikan string kosong atau ambil peran
-        $namaPeran = $this->peran ? $this->peran->nama : 'Unknown';
-        
+        $baseJabatan = $this->nama_jabatan;
+
         if ($this->area && $this->area !== '-') {
-            if ($namaPeran === 'Admin Unit') {
+            if ($baseJabatan === 'Admin Unit') {
                 return 'Admin ' . $this->area;
             }
-            return $namaPeran . ' ' . $this->area;
+            if (!str_ends_with(strtolower($baseJabatan), ' ' . strtolower($this->area))) {
+                return $baseJabatan . ' ' . $this->area;
+            }
         }
-        
-        return $namaPeran;
+
+        return $baseJabatan;
     }
 
     // 3. Sembunyikan kolom sensitif agar tidak bocor saat data dipanggil via API

@@ -43,6 +43,8 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('user_jabatan');
+    localStorage.removeItem('user_peran_name');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_avatar');
     navigate('/login');
@@ -52,6 +54,8 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
   const [profileName, setProfileName]         = useState('');
   const [profileUsername, setProfileUsername] = useState('');
   const [profileEmail, setProfileEmail]       = useState('');
+  const [profileJabatan, setProfileJabatan]   = useState('');
+  const [profilePeran, setProfilePeran]       = useState('');
   const [avatarSrc, setAvatarSrc]             = useState('');
   const [avatarFile, setAvatarFile]           = useState(null);
   const [isSaving, setIsSaving]               = useState(false);
@@ -76,6 +80,8 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     setProfileName(localStorage.getItem('user_name') || defaultRoleName || 'User');
     setProfileUsername(localStorage.getItem('user_username') || role || 'user');
     setProfileEmail(localStorage.getItem('user_email') || `${role || 'user'}@simas.sch.id`);
+    setProfileJabatan(localStorage.getItem('user_jabatan') || defaultRoleName || 'User');
+    setProfilePeran(localStorage.getItem('user_peran_name') || defaultRoleName || 'User');
     setAvatarSrc(localStorage.getItem('user_avatar') || '');
   }, [role, defaultRoleName]);
 
@@ -238,6 +244,16 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
               <div className="profile-form-group">
                 <label className="profile-form-label">Username</label>
                 <input className="profile-form-input readonly" type="text" value={profileUsername} readOnly />
+              </div>
+
+              <div className="profile-form-group">
+                <label className="profile-form-label">Jabatan</label>
+                <input className="profile-form-input readonly" type="text" value={profileJabatan} readOnly />
+              </div>
+
+              <div className="profile-form-group">
+                <label className="profile-form-label">Peran Sistem (Hak Akses)</label>
+                <input className="profile-form-input readonly" type="text" value={profilePeran} readOnly />
               </div>
 
               <div className="profile-form-group">

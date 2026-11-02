@@ -71,13 +71,14 @@ export default function Login() {
         localStorage.setItem('auth_token', token);
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_jabatan', user.jabatan || role);
+        localStorage.setItem('user_peran_name', user.peran || '');
         localStorage.setItem('user_name', name);
         localStorage.setItem('user_email', user.email);
         localStorage.setItem('user_username', user.nama_pengguna);
         localStorage.setItem('user_id', user.id);
         localStorage.setItem('user_avatar', user.foto_profil_url || '');
         
-        // Redirect based on role immediately
+        // Redirect based on role immediately (fungsi mengikuti peran)
         if (role === 'super-admin') navigate('/super-admin/dashboard');
         else if (role === 'admin') navigate('/admin/dashboard');
         else if (role === 'guru') navigate('/guru/dashboard');

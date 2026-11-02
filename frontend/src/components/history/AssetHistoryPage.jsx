@@ -407,7 +407,7 @@ export default function AssetHistoryPage({ role, currentPath }) {
                                 {user?.nama || 'Sistem / Dihapus'}
                               </span>
                               <span className="history-user-role">
-                                {user?.peran?.nama || user?.jabatan || '-'}
+                                {user?.jabatan || user?.peran?.nama || '-'}
                               </span>
                             </div>
                           </div>

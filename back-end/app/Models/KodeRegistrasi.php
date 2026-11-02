@@ -17,6 +17,7 @@ class KodeRegistrasi extends Model
         'kode',
         'keterangan',
         'id_peran',
+        'jabatan',
         'status_aktif'
     ];
 

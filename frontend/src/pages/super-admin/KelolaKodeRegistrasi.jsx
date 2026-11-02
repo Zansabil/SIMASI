@@ -5,6 +5,15 @@ import axios from 'axios';
 import Pagination from '../../components/asset/Pagination';
 import { API_BASE_URL } from '../../config';
 
+const JABATAN_OPTIONS = [
+  'Kepala Yayasan',
+  'Kepala Sekolah',
+  'Wakil Kesiswaan',
+  'Admin Unit',
+  'Petugas Perbaikan',
+  'Guru'
+];
+
 export default function KelolaKodeRegistrasi() {
   const [kodes, setKodes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +27,7 @@ export default function KelolaKodeRegistrasi() {
   const [newKode, setNewKode] = useState('');
   const [newKeterangan, setNewKeterangan] = useState('');
   const [newIdPeran, setNewIdPeran] = useState('');
+  const [newJabatan, setNewJabatan] = useState('');
   const [peranOptions, setPeranOptions] = useState([]);
 
   const pagedKodes = kodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -65,11 +75,21 @@ export default function KelolaKodeRegistrasi() {
     fetchPeranOptions();
   }, []);
 
+  // Super Admin bebas memilih peran (fungsi akses) dan jabatan (tampilan jabatan) secara terpisah
+  const handlePeranChange = (e) => {
+    setNewIdPeran(e.target.value);
+  };
+
+  const handleJabatanChange = (e) => {
+    setNewJabatan(e.target.value);
+  };
+
   const closeCreateModal = () => {
     setIsModalOpen(false);
     setNewKode('');
     setNewKeterangan('');
     setNewIdPeran('');
+    setNewJabatan('');
   };
 
   const handleCreate = async (e) => {
@@ -81,7 +101,8 @@ export default function KelolaKodeRegistrasi() {
       await axios.post(`${API_BASE_URL}/api/kode-registrasi`, {
         kode: newKode,
         keterangan: newKeterangan,
-        id_peran: newIdPeran ? Number(newIdPeran) : null
+        id_peran: newIdPeran ? Number(newIdPeran) : null,
+        jabatan: newJabatan || null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -158,7 +179,7 @@ export default function KelolaKodeRegistrasi() {
       <main className="dashboard-body">
         <DashboardHeader
           title="Kelola Kode Registrasi"
-          subtitle="Manajemen kode unik per peran yang digunakan untuk registrasi pengguna baru"
+          subtitle="Manajemen kode unik per peran dan jabatan yang digunakan untuk registrasi pengguna baru"
         />
 
         <div className="content-container" style={{ padding: '20px', background: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
@@ -184,11 +205,12 @@ export default function KelolaKodeRegistrasi() {
               WebkitOverflowScrolling: 'touch', /* scroll halus di iOS */
               marginTop: '4px',
             }}>
-              <table style={{ width: '100%', minWidth: '680px', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Kode</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Peran</th>
+                    <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Jabatan</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Keterangan</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Status</th>
                     <th style={{ padding: '10px', whiteSpace: 'nowrap' }}>Pengguna</th>
@@ -198,60 +220,74 @@ export default function KelolaKodeRegistrasi() {
                 <tbody>
                   {kodes.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
+                      <td colSpan="7" style={{ padding: '10px', textAlign: 'center' }}>Tidak ada data kode registrasi.</td>
                     </tr>
                   ) : (
-                    pagedKodes.map(kode => (
-                      <tr key={kode.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{kode.kode}</td>
-                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
-                          {kode.peran ? (
-                            <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', background: '#e0e7ff', color: '#3730a3' }}>
-                              {kode.peran.nama}
+                    pagedKodes.map(kode => {
+                      const namaJabatan = kode.jabatan || (kode.peran ? kode.peran.nama : null);
+                      return (
+                        <tr key={kode.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                          <td style={{ padding: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{kode.kode}</td>
+                          <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
+                            {kode.peran ? (
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', background: '#e0e7ff', color: '#3730a3' }}>
+                                {kode.peran.nama}
+                              </span>
+                            ) : (
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', background: '#f3f4f6', color: '#6b7280' }}>
+                                Belum ditentukan
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
+                            {namaJabatan ? (
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', background: '#dbeafe', color: '#1e40af' }}>
+                                {namaJabatan}
+                              </span>
+                            ) : (
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', background: '#f3f4f6', color: '#6b7280' }}>
+                                Belum ditentukan
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '10px' }}>{kode.keterangan || '-'}</td>
+                          <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
+                            <span style={{ 
+                              padding: '4px 8px', 
+                              borderRadius: '12px', 
+                              fontSize: '12px',
+                              background: kode.status_aktif ? '#d1fae5' : '#fee2e2',
+                              color: kode.status_aktif ? '#065f46' : '#991b1b'
+                            }}>
+                              {kode.status_aktif ? 'Aktif' : 'Nonaktif'}
                             </span>
-                          ) : (
-                            <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '12px', background: '#f3f4f6', color: '#6b7280' }}>
-                              Belum ditentukan
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: '10px' }}>{kode.keterangan || '-'}</td>
-                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>
-                          <span style={{ 
-                            padding: '4px 8px', 
-                            borderRadius: '12px', 
-                            fontSize: '12px',
-                            background: kode.status_aktif ? '#d1fae5' : '#fee2e2',
-                            color: kode.status_aktif ? '#065f46' : '#991b1b'
-                          }}>
-                            {kode.status_aktif ? 'Aktif' : 'Nonaktif'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{kode.pengguna_count} Orang</td>
-                        <td style={{ padding: '10px' }}>
-                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
-                            <button 
-                              onClick={() => handleViewLogs(kode)}
-                              style={{ padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                            >
-                              Lihat Log
-                            </button>
-                            <button 
-                              onClick={() => handleToggleStatus(kode.id)}
-                              style={{ padding: '4px 8px', background: kode.status_aktif ? '#f59e0b' : '#3b82f6', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                            >
-                              {kode.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(kode.id)}
-                              style={{ padding: '4px 8px', background: '#ef4444', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td style={{ padding: '10px', whiteSpace: 'nowrap' }}>{kode.pengguna_count} Orang</td>
+                          <td style={{ padding: '10px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
+                              <button 
+                                onClick={() => handleViewLogs(kode)}
+                                style={{ padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                              >
+                                Lihat Log
+                              </button>
+                              <button 
+                                onClick={() => handleToggleStatus(kode.id)}
+                                style={{ padding: '4px 8px', background: kode.status_aktif ? '#f59e0b' : '#3b82f6', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                              >
+                                {kode.status_aktif ? 'Nonaktifkan' : 'Aktifkan'}
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(kode.id)}
+                                style={{ padding: '4px 8px', background: '#ef4444', color: 'white', borderRadius: '4px', border: 'none', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}
+                              >
+                                Hapus
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -275,11 +311,11 @@ export default function KelolaKodeRegistrasi() {
       {/* Modal Tambah Kode */}
       {isModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
-          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', width: '400px' }}>
+          <div style={{ background: 'white', padding: '24px', borderRadius: '8px', width: '420px', maxWidth: '92vw' }}>
             <h3 style={{ marginTop: 0, fontSize: '18px', fontWeight: 'bold' }}>Buat Kode Registrasi Baru</h3>
             <form onSubmit={handleCreate}>
               <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px' }}>Kode Registrasi</label>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Kode Registrasi <span style={{ color: '#ef4444' }}>*</span></label>
                 <input 
                   type="text" 
                   value={newKode} 
@@ -293,7 +329,7 @@ export default function KelolaKodeRegistrasi() {
                 <label style={{ display: 'block', marginBottom: '5px' }}>Peran Pendaftar <span style={{ color: '#ef4444' }}>*</span></label>
                 <select
                   value={newIdPeran}
-                  onChange={e => setNewIdPeran(e.target.value)}
+                  onChange={handlePeranChange}
                   required
                   style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', boxSizing: 'border-box', background: 'white' }}
                 >
@@ -303,7 +339,24 @@ export default function KelolaKodeRegistrasi() {
                   ))}
                 </select>
                 <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                  Akun yang mendaftar dengan kode ini otomatis mendapat peran tersebut.
+                  Menentukan fungsi & hak akses sistem yang didapat pengguna saat login.
+                </div>
+              </div>
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>Jabatan <span style={{ color: '#ef4444' }}>*</span></label>
+                <select
+                  value={newJabatan}
+                  onChange={handleJabatanChange}
+                  required
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', boxSizing: 'border-box', background: 'white' }}
+                >
+                  <option value="">Pilih Jabatan</option>
+                  {JABATAN_OPTIONS.map(jabatan => (
+                    <option key={jabatan} value={jabatan}>{jabatan}</option>
+                  ))}
+                </select>
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                  Bebas dipilih untuk tampilan jabatan pengguna (fungsi tetap mengikuti Peran Pendaftar).
                 </div>
               </div>
               <div style={{ marginBottom: '20px' }}>
