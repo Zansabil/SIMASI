@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Aset;
+use App\Models\KategoriAset;
+use App\Models\Ruangan;
+use App\Models\LokasiUnit;
 use App\Exports\AsetExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf; 
@@ -85,13 +88,36 @@ class AsetController extends Controller
             $ruanganInput = $request->id_ruangan;
             if (!is_numeric($ruanganInput)) {
                 $namaRuangan = strip_tags($ruanganInput);
-                $ruangan = \App\Models\Ruangan::firstOrCreate([
+                $ruangan = Ruangan::firstOrCreate([
                     'nama_ruangan' => $namaRuangan
                 ], [
                     'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99)
                 ]);
                 $request->merge(['id_ruangan' => $ruangan->id]);
             }
+        }
+
+        if ($request->has('jenis_aset') && !empty(trim($request->jenis_aset))) {
+            $namaKategori = trim(strip_tags($request->jenis_aset));
+            $kategori = KategoriAset::where('nama_kategori', $namaKategori)->first();
+            if (!$kategori) {
+                $cleanCode = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaKategori), 0, 4));
+                if (empty($cleanCode)) {
+                    $cleanCode = 'KAT';
+                }
+                $kodeKategori = $cleanCode;
+                $counter = 1;
+                while (KategoriAset::where('kode_kategori', $kodeKategori)->exists()) {
+                    $kodeKategori = $cleanCode . $counter;
+                    $counter++;
+                }
+
+                KategoriAset::create([
+                    'nama_kategori' => $namaKategori,
+                    'kode_kategori' => $kodeKategori
+                ]);
+            }
+            $request->merge(['jenis_aset' => $namaKategori]);
         }
         
         $request->validate([
@@ -204,13 +230,36 @@ class AsetController extends Controller
             $ruanganInput = $request->id_ruangan;
             if (!is_numeric($ruanganInput)) {
                 $namaRuangan = strip_tags($ruanganInput);
-                $ruangan = \App\Models\Ruangan::firstOrCreate([
+                $ruangan = Ruangan::firstOrCreate([
                     'nama_ruangan' => $namaRuangan
                 ], [
                     'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99)
                 ]);
                 $request->merge(['id_ruangan' => $ruangan->id]);
             }
+        }
+
+        if ($request->has('jenis_aset') && !empty(trim($request->jenis_aset))) {
+            $namaKategori = trim(strip_tags($request->jenis_aset));
+            $kategori = KategoriAset::where('nama_kategori', $namaKategori)->first();
+            if (!$kategori) {
+                $cleanCode = strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaKategori), 0, 4));
+                if (empty($cleanCode)) {
+                    $cleanCode = 'KAT';
+                }
+                $kodeKategori = $cleanCode;
+                $counter = 1;
+                while (KategoriAset::where('kode_kategori', $kodeKategori)->exists()) {
+                    $kodeKategori = $cleanCode . $counter;
+                    $counter++;
+                }
+
+                KategoriAset::create([
+                    'nama_kategori' => $namaKategori,
+                    'kode_kategori' => $kodeKategori
+                ]);
+            }
+            $request->merge(['jenis_aset' => $namaKategori]);
         }
 
         $request->validate([

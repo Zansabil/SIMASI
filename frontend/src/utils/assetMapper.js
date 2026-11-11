@@ -8,6 +8,7 @@ export const mapAssetResponse = (item) => {
     id: item.id,
     name: item.nama_aset,
     asset_code: item.kode_inventaris,
+    category: item.jenis_aset || item.category || 'Umum',
     location: item.ruangan?.nama_ruangan || item.lokasi_aset || '-',
     unit: item.lokasi_unit?.nama_unit || item.lokasiUnit?.nama_unit || '-',
     quantity: item.jumlah_aset,

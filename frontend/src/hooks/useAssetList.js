@@ -252,6 +252,14 @@ export default function useAssetList() {
       }
     }
 
+    if (formData.category) {
+      const trimmedCat = formData.category.trim();
+      setAvailableCategories(prev => {
+        const exists = prev.some(c => (typeof c === 'string' ? c : (c.nama_kategori || c.name || '')).toLowerCase() === trimmedCat.toLowerCase());
+        return exists ? prev : [...prev, trimmedCat];
+      });
+    }
+
     setIsFormOpen(false);
     setStatusModal({ 
       isOpen: true, 

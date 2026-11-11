@@ -6,6 +6,7 @@ import { useFormDraft } from '../../hooks/useFormDraft';
 import { parseLocation } from '../../utils/locationHelper';
 import { useForm } from 'react-hook-form';
 import { formatToRupiah } from '../../utils/currency';
+import { DEFAULT_CATEGORIES } from '../../config';
 
 export default function AssetFormModal({
   isOpen,
@@ -14,7 +15,7 @@ export default function AssetFormModal({
   assetToEdit = null,
   availableUnits = ['TK', 'SD', 'SMP', 'SMA', 'MA'], // Pilihan Unit default jika tidak dikirim dari parent
   availableRooms = [], // Pilihan Ruangan dari Master Data
-  availableCategories = ['Elektronik', 'Mebel / Furnitur', 'Alat Tulis Kantor / Perlengkapan', 'Umum'], // Pilihan Kategori default
+  availableCategories = DEFAULT_CATEGORIES, // Pilihan Kategori default
   existingSources = [] // Daftar sumber dana unik yang diambil dari data aset yang ada
 }) {
   // --- STATE LOKAL ---
@@ -333,16 +334,21 @@ export default function AssetFormModal({
           {/* Input: Kategori Barang */}
           <div className="modal-form-group">
             <label className="modal-form-label">Kategori Barang <span className="req-star">*</span></label>
-            <select
+            <input
+              type="text"
               id="asset-category"
-              className={`modal-form-select ${errors.category ? 'input-error' : ''}`}
+              list="kategori-options"
+              placeholder="Pilih atau ketik kategori baru..."
+              autoComplete="off"
+              className={`modal-form-input ${errors.category ? 'input-error' : ''}`}
               {...register('category', { required: 'Kategori wajib diisi' })}
-            >
-              <option value="" disabled hidden>Pilih Kategori</option>
-              {availableCategories.map((cat, i) => (
-                <option key={i} value={cat}>{cat}</option>
-              ))}
-            </select>
+            />
+            <datalist id="kategori-options">
+              {availableCategories.length > 0 && availableCategories.map((cat, i) => {
+                const val = typeof cat === 'object' ? (cat.nama_kategori || cat.name) : cat;
+                return <option key={i} value={val} />;
+              })}
+            </datalist>
             {errors.category && <span className="error-text">{errors.category.message}</span>}
           </div>
 
