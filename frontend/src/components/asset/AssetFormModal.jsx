@@ -120,9 +120,34 @@ export default function AssetFormModal({
   );
 
   // --- OPSI DATALIST SUMBER DANA ---
-  // Menggabungkan pilihan sumber dana bawaan dengan data dinamis yang sudah ada dari database agar tidak duplikat
-  const defaultSources = ['Dana Yayasan', 'Dana BOS'];
+  // Menggabungkan pilihan sumber dana standar (BOS, Yayasan, Hibah/Wakaf, Komite Sekolah, Lainnya) dengan data dinamis dari database
+  const defaultSources = ['Dana BOS', 'Dana Yayasan', 'Hibah / Wakaf', 'Komite Sekolah', 'Lainnya'];
   const combinedSources = [...new Set([...defaultSources, ...(existingSources || [])])];
+
+  // --- PRATINJAU KODE BARANG OTOMATIS (UNIT-SUMBERDANA-ddmmyyyy-0001) ---
+  const selectedUnitObj = adminUnit || availableUnits.find(u => String(u.id || u) === String(watchedValues.unit));
+  const previewUnit = selectedUnitObj
+    ? String(selectedUnitObj.nama_unit || selectedUnitObj).toUpperCase().trim()
+    : 'UNIT';
+  const previewDate = watchedValues.purchaseDate && /^\d{4}-\d{2}-\d{2}$/.test(watchedValues.purchaseDate)
+    ? watchedValues.purchaseDate.split('-').reverse().join('')
+    : 'ddmmyyyy';
+  const rawSourceLower = String(watchedValues.source || '').trim().toLowerCase();
+  let previewDana = 'UMM';
+  if (!rawSourceLower) {
+    previewDana = 'DANA';
+  } else if (rawSourceLower.includes('bos')) {
+    previewDana = 'BOS';
+  } else if (rawSourceLower.includes('yayasan') || rawSourceLower === 'yys') {
+    previewDana = 'YYS';
+  } else if (rawSourceLower.includes('hibah') || rawSourceLower.includes('wakaf') || rawSourceLower === 'hbh') {
+    previewDana = 'HBH';
+  } else if (rawSourceLower.includes('komite') || rawSourceLower === 'kmt') {
+    previewDana = 'KMT';
+  } else {
+    previewDana = 'UMM';
+  }
+  const codeFormatPreview = `${previewUnit}-${previewDana}-${previewDate}-0001`;
 
   // --- REGISTRASI FIELD KUSTOM ---
   // ImageUploader bukan input HTML biasa, jadi kita mendaftarkannya secara manual ke RHF setelah form di-reset (di dalam useEffect sync modal)
@@ -683,8 +708,12 @@ export default function AssetFormModal({
               className="modal-form-input"
               readOnly
               {...register('code')}
-              placeholder={isEditing ? '' : 'Dibuat otomatis oleh server setelah disimpan'}
+              placeholder={isEditing ? '' : `Otomatis (Contoh: ${codeFormatPreview})`}
             />
+            <span className="manual-category-hint">
+              Format penomoran otomatis berdasarkan Unit, Tanggal, Sumber Dana & Jumlah: <strong>{codeFormatPreview}</strong>
+              {Number(watchedValues.quantity) > 0 ? ` (Unit: -1 s/d -${watchedValues.quantity})` : ''}
+            </span>
           </div>
 
           {/* Input: Jumlah Barang */}

@@ -104,8 +104,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/pengadaan_aset/batch-delete', [PengadaanAsetController::class, 'destroyBatch']);
     Route::apiResource('pengadaan_aset', PengadaanAsetController::class);
     
-    // Route Riwayat Aset
-    Route::apiResource('riwayat_aset', RiwayatAsetController::class)->only(['index', 'destroy']);
+    // Route Riwayat Aset (Read-only sebagai jejak audit permanen)
+    Route::apiResource('riwayat_aset', RiwayatAsetController::class)->only(['index']);
     
     // Route Notifikasi
     // Rute untuk mengambil data notifikasi

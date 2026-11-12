@@ -32,6 +32,62 @@
   box-sizing: border-box;
 }
 
+.status-modal-card.with-reason {
+  width: 440px;
+}
+
+.status-modal-reason-box {
+  width: 100%;
+  margin-top: 16px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-modal-reason-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.status-modal-req {
+  color: #ef4444;
+}
+
+.status-modal-reason-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13.5px;
+  color: #0f172a;
+  background-color: #f8fafc;
+  resize: vertical;
+  min-height: 76px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.status-modal-reason-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.status-modal-reason-textarea.has-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.status-modal-reason-error {
+  font-size: 12px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
 .status-icon-wrapper {
   margin-bottom: 20px;
   display: flex;

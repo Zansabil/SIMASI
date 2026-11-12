@@ -58,6 +58,9 @@
         .text-center {
             text-align: center !important;
         }
+        .text-right {
+            text-align: right !important;
+        }
         .empty-row {
             text-align: center;
             padding: 16px;
@@ -99,15 +102,17 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th width="4%">No</th>
-                <th width="16%">Kode Inventaris</th>
-                <th width="20%">Nama Aset</th>
-                <th width="13%">Kategori</th>
-                <th width="10%">Unit</th>
-                <th width="15%">Ruangan</th>
-                <th width="6%">Jumlah</th>
+                <th width="3%">No</th>
+                <th width="13%">Kode Inventaris</th>
+                <th width="16%">Nama Aset</th>
+                <th width="11%">Kategori</th>
+                <th width="7%">Unit</th>
+                <th width="12%">Ruangan</th>
+                <th width="5%">Jumlah</th>
                 <th width="8%">Kondisi</th>
                 <th width="8%">Tgl Perolehan</th>
+                <th width="8%">Sumber Dana</th>
+                <th width="9%">Harga Barang</th>
             </tr>
         </thead>
         <tbody>
@@ -122,10 +127,12 @@
                 <td class="text-center">{{ $item->jumlah_aset }}</td>
                 <td class="text-center">{{ ucfirst($item->kondisi_aset) }}</td>
                 <td class="text-center">{{ $item->tgl_diperoleh ? \Carbon\Carbon::parse($item->tgl_diperoleh)->format('d-m-Y') : '-' }}</td>
+                <td class="text-center">{{ !empty($item->sumber_dana) ? $item->sumber_dana : '-' }}</td>
+                <td class="text-right">{{ ($item->harga_aset && (int) $item->harga_aset > 0) ? 'Rp ' . number_format((int) $item->harga_aset, 0, ',', '.') : '-' }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="empty-row">Tidak ada data aset untuk filter yang dipilih.</td>
+                <td colspan="11" class="empty-row">Tidak ada data aset untuk filter yang dipilih.</td>
             </tr>
             @endforelse
         </tbody>

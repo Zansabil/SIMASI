@@ -217,15 +217,15 @@ export default function useAssetList() {
     setConfirmModal({ isOpen: true, asset });
   };
 
-  const processDelete = async () => {
+  const processDelete = async (alasan = '') => {
     const asset = confirmModal.asset;
     setConfirmModal({ isOpen: false, asset: null });
     if (!asset) return;
 
     try {
-      await assetService.deleteAsset(asset.id);
+      await assetService.deleteAsset(asset.id, alasan);
       setAllAssets(prev => prev.filter(item => item.id !== asset.id));
-      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Aset berhasil dihapus.' });
+      setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: 'Aset berhasil dihapus dan alasan penghapusan telah dicatat di Riwayat Aset.' });
     } catch (err) {
       console.error("Backend API error, deleting asset failed.", err);
       const errorMsg = err.response?.data?.message || 'Gagal menghapus aset dari server.';
@@ -375,13 +375,13 @@ export default function useAssetList() {
     setConfirmSubAssetDelete({ isOpen: true, subAsset, parentAssetId });
   };
 
-  const processDeleteSubAsset = async () => {
+  const processDeleteSubAsset = async (alasan = '') => {
     const { subAsset, parentAssetId } = confirmSubAssetDelete;
     setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null });
     if (!subAsset) return;
 
     try {
-      const response = await assetService.deleteSubAsset(subAsset.id);
+      const response = await assetService.deleteSubAsset(subAsset.id, alasan);
       if (response && response.success) {
         setAllAssets(prevAssets => prevAssets.map(asset => {
           if (asset.id === parentAssetId) {
@@ -395,7 +395,7 @@ export default function useAssetList() {
           }
           return asset;
         }));
-        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: `Unit ${subAsset.kode_sub_aset} berhasil dihapus.` });
+        setStatusModal({ isOpen: true, type: 'success', title: 'Berhasil', message: `Unit ${subAsset.kode_sub_aset} berhasil dihapus dan alasan penghapusan telah dicatat di Riwayat Aset.` });
       }
     } catch (err) {
       console.error("Gagal menghapus unit:", err);

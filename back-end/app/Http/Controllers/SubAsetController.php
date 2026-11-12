@@ -84,9 +84,9 @@ class SubAsetController extends Controller
     }
 
     /**
-     * Menghapus satu unit spesifik (Sub-Aset) dari aset induk
+     * Menghapus satu unit spesifik (Sub-Aset) dari aset induk beserta alasan penghapusan
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             // Hanya admin (peran 1) dan sarpras (peran 3) yang boleh menghapus
@@ -97,7 +97,15 @@ class SubAsetController extends Controller
                 ], 403);
             }
 
-            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $alasan = trim(strip_tags((string) ($request->input('alasan_penghapusan') ?? $request->input('alasan') ?? '')));
+            if ($alasan === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Alasan penghapusan unit wajib diisi sebelum menghapus.'
+                ], 422);
+            }
+
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($id, $alasan) {
                 $subAset = SubAset::where('id', $id)->lockForUpdate()->firstOrFail();
                 $aset = \App\Models\Aset::where('id', $subAset->id_aset)->lockForUpdate()->firstOrFail();
 
@@ -119,6 +127,7 @@ class SubAsetController extends Controller
 
                 $kodeSubAset = $subAset->kode_sub_aset;
                 $idAset = $subAset->id_aset;
+                $jumlahAwal = $aset->jumlah_aset;
 
                 // Hapus sub-aset
                 $subAset->delete();
@@ -127,12 +136,12 @@ class SubAsetController extends Controller
                 $aset->jumlah_aset = $aset->jumlah_aset - 1;
                 $aset->save();
 
-                // Catat riwayat
+                // Catat riwayat beserta alasan penghapusan
                 RiwayatAset::create([
                     'id_aset'     => $idAset,
                     'aksi'        => 'Penghapusan',
                     'id_pengguna' => auth()->user()->id,
-                    'keterangan'  => "Unit {$kodeSubAset} telah dihapus dari aset {$aset->nama_aset}",
+                    'keterangan'  => "Unit {$kodeSubAset} telah dihapus dari aset {$aset->nama_aset} (Jumlah: {$jumlahAwal} → {$aset->jumlah_aset}). Alasan penghapusan: {$alasan}",
                     'waktu'       => now()
                 ]);
 

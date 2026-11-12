@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './StatusModal.css';
 
 // SVGs for Icons
@@ -40,13 +40,39 @@ export default function StatusModal({
   message,
   confirmText,
   cancelText = 'Batal',
+  requireReason = false,
+  reasonLabel = 'Alasan Penghapusan',
+  reasonPlaceholder = 'Masukkan alasan penghapusan...',
   onConfirm,
   onCancel
 }) {
+  const [reason, setReason] = useState('');
+  const [reasonError, setReasonError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setReason('');
+      setReasonError('');
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   // Resolve defaults based on type
   const resolvedConfirmText = confirmText || (type === 'error' ? 'Coba Lagi' : 'OK');
+
+  const handleConfirmClick = () => {
+    if (requireReason) {
+      const trimmed = reason.trim();
+      if (!trimmed) {
+        setReasonError('Alasan penghapusan wajib diisi sebelum menghapus.');
+        return;
+      }
+      if (onConfirm) onConfirm(trimmed);
+      return;
+    }
+    if (onConfirm) onConfirm();
+  };
   
   const getIcon = () => {
     switch (type) {
@@ -64,7 +90,7 @@ export default function StatusModal({
 
   return (
     <div className="status-modal-overlay">
-      <div className="status-modal-card">
+      <div className={`status-modal-card ${requireReason ? 'with-reason' : ''}`}>
         <div className={`status-icon-wrapper ${type}`}>
           {getIcon()}
         </div>
@@ -72,19 +98,40 @@ export default function StatusModal({
         <h3 className="status-modal-title">{title}</h3>
         <p className="status-modal-message">{message}</p>
 
+        {requireReason && (
+          <div className="status-modal-reason-box">
+            <label className="status-modal-reason-label">
+              {reasonLabel} <span className="status-modal-req">*</span>
+            </label>
+            <textarea
+              className={`status-modal-reason-textarea ${reasonError ? 'has-error' : ''}`}
+              rows={3}
+              placeholder={reasonPlaceholder}
+              value={reason}
+              onChange={(e) => {
+                setReason(e.target.value);
+                if (reasonError) setReasonError('');
+              }}
+            />
+            {reasonError && (
+              <span className="status-modal-reason-error">{reasonError}</span>
+            )}
+          </div>
+        )}
+
         {onCancel ? (
           <div className="status-modal-btn-group">
             <button className="status-modal-btn cancel" onClick={onCancel}>
               {cancelText}
             </button>
-            <button className={`status-modal-btn ${type}`} onClick={onConfirm}>
+            <button className={`status-modal-btn ${type}`} onClick={handleConfirmClick}>
               {resolvedConfirmText}
             </button>
           </div>
         ) : (
           <button 
             className={`status-modal-btn ${type}`} 
-            onClick={onConfirm}
+            onClick={handleConfirmClick}
           >
             {resolvedConfirmText}
           </button>

@@ -26,10 +26,12 @@ export const updateAsset = async (id, payload) => {
 };
 
 /**
- * Menghapus data aset secara permanen dari server
+ * Menghapus data aset secara permanen dari server beserta alasan penghapusan
  */
-export const deleteAsset = async (id) => {
-  const response = await api.delete(`/api/aset/${id}`);
+export const deleteAsset = async (id, alasan = '') => {
+  const response = await api.delete(`/api/aset/${id}`, {
+    data: { alasan_penghapusan: alasan }
+  });
   return response.data;
 };
 
@@ -90,10 +92,12 @@ export const updateSubAssetCondition = async (id, payload) => {
 };
 
 /**
- * Menghapus satu unit spesifik (sub-aset) dari server
+ * Menghapus satu unit spesifik (sub-aset) dari server beserta alasan penghapusan
  */
-export const deleteSubAsset = async (id) => {
-  const response = await api.delete(`/api/sub_aset/${id}`);
+export const deleteSubAsset = async (id, alasan = '') => {
+  const response = await api.delete(`/api/sub_aset/${id}`, {
+    data: { alasan_penghapusan: alasan }
+  });
   return response.data;
 };
 

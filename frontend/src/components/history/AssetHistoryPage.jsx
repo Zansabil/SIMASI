@@ -16,7 +16,8 @@ import {
   FiRefreshCw, 
   FiEye, 
   FiInbox,
-  FiMapPin
+  FiMapPin,
+  FiArchive
 } from 'react-icons/fi';
 import './AssetHistoryPage.css';
 
@@ -29,14 +30,15 @@ const ACTION_OPTIONS = [
 ];
 
 export default function AssetHistoryPage({ role, currentPath }) {
-  const isSuperAdmin = role === 'super-admin';
-
   // Data states
   const [historyItems, setHistoryItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [availableUnits, setAvailableUnits] = useState([{ value: 'semua', label: 'Semua Unit Kerja' }]);
-  
-  // Filters & Pagination
+  const [availableYears, setAvailableYears] = useState([]);
+
+  // Filters, Tabs & Pagination
+  const [activeTab, setActiveTab] = useState('aktif'); // 'aktif' | 'arsip' | 'semua'
+  const [selectedPeriod, setSelectedPeriod] = useState('tahun_ini'); // default tampil tahun berjalan agar ringan & lengkap
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState('semua');
   const [selectedUnit, setSelectedUnit] = useState('semua');
@@ -50,18 +52,35 @@ export default function AssetHistoryPage({ role, currentPath }) {
     total: 0,
     penambahan: 0,
     perubahan: 0,
-    penghapusan: 0
+    penghapusan: 0,
+    active_count: 0,
+    archive_count: 0
   });
 
   // Modals
   const [detailItem, setDetailItem] = useState(null);
-  const [deleteItem, setDeleteItem] = useState(null);
   const [statusModal, setStatusModal] = useState({
     isOpen: false,
     type: 'success',
     title: '',
     message: ''
   });
+
+  // Pilihan Filter Periode / Tahun
+  const periodOptions = [
+    ...(activeTab !== 'arsip'
+      ? [
+          { value: '3_bulan', label: '3 Bulan Terakhir' },
+          { value: '6_bulan', label: '6 Bulan Terakhir' },
+          { value: 'tahun_ini', label: `Tahun Ini (${new Date().getFullYear()})` }
+        ]
+      : []),
+    { value: 'semua', label: activeTab === 'arsip' ? 'Semua Tahun Arsip' : 'Semua Periode' },
+    ...availableYears.map((yr) => ({
+      value: String(yr),
+      label: `Tahun ${yr}`
+    }))
+  ];
 
   // Fetch Lokasi Unit untuk Filter
   useEffect(() => {
@@ -92,7 +111,9 @@ export default function AssetHistoryPage({ role, currentPath }) {
       const token = localStorage.getItem('auth_token');
       const params = {
         page: currentPage,
-        per_page: itemsPerPage
+        per_page: itemsPerPage,
+        tab: activeTab,
+        periode: selectedPeriod
       };
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (selectedAction !== 'semua') params.aksi = selectedAction;
@@ -110,22 +131,20 @@ export default function AssetHistoryPage({ role, currentPath }) {
         setTotalItems(pagedData.total || items.length);
         setTotalPages(pagedData.last_page || Math.ceil((pagedData.total || items.length) / itemsPerPage));
 
-        // Hitung ringkasan statistik
-        let countTambah = 0;
-        let countUbah = 0;
-        let countHapus = 0;
-        items.forEach(it => {
-          const a = (it.aksi || '').toLowerCase();
-          if (a.includes('tambah')) countTambah++;
-          else if (a.includes('ubah') || a.includes('pindah')) countUbah++;
-          else if (a.includes('hapus')) countHapus++;
-        });
-        setStats({
-          total: pagedData.total || items.length,
-          penambahan: countTambah,
-          perubahan: countUbah,
-          penghapusan: countHapus
-        });
+        if (Array.isArray(res.data.available_years)) {
+          setAvailableYears(res.data.available_years);
+        }
+
+        if (res.data.stats) {
+          setStats({
+            total: res.data.stats.total ?? 0,
+            penambahan: res.data.stats.penambahan ?? 0,
+            perubahan: res.data.stats.perubahan ?? 0,
+            penghapusan: res.data.stats.penghapusan ?? 0,
+            active_count: res.data.stats.active_count ?? 0,
+            archive_count: res.data.stats.archive_count ?? 0
+          });
+        }
       }
     } catch (err) {
       console.error('Gagal mengambil riwayat aset:', err);
@@ -138,11 +157,28 @@ export default function AssetHistoryPage({ role, currentPath }) {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, itemsPerPage, searchQuery, selectedAction, selectedUnit]);
+  }, [currentPage, itemsPerPage, activeTab, selectedPeriod, searchQuery, selectedAction, selectedUnit]);
 
   useEffect(() => {
     fetchHistory();
   }, [fetchHistory]);
+
+  // Handle Tab Change
+  const handleTabChange = (nextTab) => {
+    setActiveTab(nextTab);
+    if (nextTab === 'arsip') {
+      setSelectedPeriod('semua');
+    } else if (nextTab === 'aktif' && selectedPeriod === 'semua') {
+      setSelectedPeriod('3_bulan');
+    }
+    setCurrentPage(1);
+  };
+
+  // Handle Period Filter Change
+  const handlePeriodChange = (val) => {
+    setSelectedPeriod(val);
+    setCurrentPage(1);
+  };
 
   // Handle Search Input Change
   const handleSearchChange = (val) => {
@@ -178,38 +214,11 @@ export default function AssetHistoryPage({ role, currentPath }) {
 
   const getActionBadgeClass = (aksi) => {
     const lower = (aksi || '').toLowerCase();
-    if (lower.includes('tambah')) return 'tambah';
+    if (lower.includes('tambah') || lower.includes('nambah')) return 'tambah';
     if (lower.includes('ubah')) return 'ubah';
-    if (lower.includes('pindah')) return 'pindah';
+    if (lower.includes('pindah') || lower.includes('mindah')) return 'pindah';
     if (lower.includes('hapus')) return 'hapus';
     return 'default';
-  };
-
-  // Delete Action (Super Admin only)
-  const handleConfirmDelete = async () => {
-    if (!deleteItem) return;
-    try {
-      const token = localStorage.getItem('auth_token');
-      await axios.delete(`${API_BASE_URL}/api/riwayat_aset/${deleteItem.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setDeleteItem(null);
-      setStatusModal({
-        isOpen: true,
-        type: 'success',
-        title: 'Berhasil',
-        message: 'Data riwayat aset berhasil dihapus.'
-      });
-      fetchHistory();
-    } catch (err) {
-      setDeleteItem(null);
-      setStatusModal({
-        isOpen: true,
-        type: 'error',
-        title: 'Gagal Menghapus',
-        message: err.response?.data?.message || 'Gagal menghapus data riwayat aset.'
-      });
-    }
   };
 
   return (
@@ -218,23 +227,65 @@ export default function AssetHistoryPage({ role, currentPath }) {
         {/* Header Section */}
         <PageHeader
           title="Riwayat Aset"
-          subtitle="Log jejak audit & riwayat seluruh aktivitas aset dalam sistem"
+          subtitle="Log jejak audit permanen seluruh aktivitas aset dalam sistem"
           actionLabel="Segarkan Data"
           onActionClick={fetchHistory}
           actionIcon={FiRefreshCw}
           actionClassName="btn-history-detail"
         >
+          {/* Tab Pemisah: Riwayat Aktif vs Arsip Lama */}
+          <div className="history-tabs-row">
+            <div className="history-tabs-group">
+              <button
+                type="button"
+                className={`history-tab-btn ${activeTab === 'aktif' ? 'active' : ''}`}
+                onClick={() => handleTabChange('aktif')}
+                title="Menampilkan log aktivitas dalam 1 tahun terakhir"
+              >
+                <FiClock size={15} />
+                <span>Riwayat Aktif</span>
+                <span className="history-tab-count">{stats.active_count}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`history-tab-btn ${activeTab === 'arsip' ? 'active' : ''}`}
+                onClick={() => handleTabChange('arsip')}
+                title="Menampilkan arsip log aktivitas yang berusia lebih dari 1 tahun"
+              >
+                <FiArchive size={15} />
+                <span>Arsip Lama (&gt; 1 Tahun)</span>
+                <span className="history-tab-count">{stats.archive_count}</span>
+              </button>
+
+              <button
+                type="button"
+                className={`history-tab-btn ${activeTab === 'semua' ? 'active' : ''}`}
+                onClick={() => handleTabChange('semua')}
+                title="Menampilkan seluruh riwayat dari awal hingga sekarang"
+              >
+                <span>Semua Riwayat</span>
+              </button>
+            </div>
+          </div>
+
           {/* Filters Bar */}
           <div className="history-filter-bar">
             <div className="history-search-wrapper">
               <SearchBar
                 value={searchQuery}
                 onChange={handleSearchChange}
-                placeholder="Cari aset, kode inventaris, nama user, atau keterangan..."
+                placeholder="Cari aset, kode inventaris, nama user, atau alasan penghapusan..."
               />
             </div>
 
             <div className="history-filter-select-group">
+              <FilterSelect
+                value={selectedPeriod}
+                onChange={handlePeriodChange}
+                options={periodOptions}
+              />
+
               <FilterSelect
                 value={selectedAction}
                 onChange={handleActionChange}
@@ -258,7 +309,7 @@ export default function AssetHistoryPage({ role, currentPath }) {
             </div>
             <div className="history-stat-content">
               <span className="history-stat-value">{stats.total}</span>
-              <span className="history-stat-label">Total Log Aktivitas</span>
+              <span className="history-stat-label">Total Log (Sesuai Filter)</span>
             </div>
           </div>
 
@@ -306,7 +357,7 @@ export default function AssetHistoryPage({ role, currentPath }) {
                   <th style={{ width: '120px' }}>Jenis Aksi</th>
                   <th style={{ width: '180px' }}>Pelaku</th>
                   <th>Keterangan</th>
-                  <th style={{ width: '110px', textAlign: 'center' }}>Aksi</th>
+                  <th style={{ width: '90px', textAlign: 'center' }}>Detail</th>
                 </tr>
               </thead>
               <tbody>
@@ -323,11 +374,15 @@ export default function AssetHistoryPage({ role, currentPath }) {
                         <div className="history-empty-icon">
                           <FiInbox />
                         </div>
-                        <div className="history-empty-title">Tidak Ada Riwayat Aset</div>
+                        <div className="history-empty-title">
+                          {activeTab === 'arsip' ? 'Belum Ada Arsip Riwayat Lama' : 'Tidak Ada Riwayat Aset'}
+                        </div>
                         <div className="history-empty-desc">
-                          {searchQuery || selectedAction !== 'semua' || selectedUnit !== 'semua'
+                          {activeTab === 'arsip'
+                            ? 'Riwayat yang berusia lebih dari 1 tahun akan otomatis dipindahkan ke tab Arsip ini agar tabel utama tetap ringan.'
+                            : searchQuery || selectedAction !== 'semua' || selectedUnit !== 'semua'
                             ? 'Tidak ada log aktivitas yang cocok dengan filter pencarian.'
-                            : 'Belum ada aktivitas transaksi atau perubahan aset yang tercatat.'}
+                            : 'Belum ada aktivitas pada periode ini. Anda dapat memilih "Semua Periode" untuk melihat log lebih lama.'}
                         </div>
                       </div>
                     </td>
@@ -339,6 +394,14 @@ export default function AssetHistoryPage({ role, currentPath }) {
                     const aset = item.aset;
                     const user = item.pengguna;
                     const badgeClass = getActionBadgeClass(item.aksi);
+                    const isBulkImport = typeof item.keterangan === 'string' && item.keterangan.startsWith('Impor Excel Massal');
+                    const bulkImportMatch = isBulkImport
+                      ? item.keterangan.match(/^Impor Excel Massal\s*\(([^)]+)\)/i)
+                      : null;
+                    const bulkSummary = bulkImportMatch ? bulkImportMatch[1] : null;
+                    const displayKeterangan = isBulkImport
+                      ? item.keterangan.split('\n')[0].replace(/:$/, '') + ' — Klik Detail untuk daftar barang'
+                      : (item.keterangan || '-');
 
                     return (
                       <tr key={item.id}>
@@ -358,14 +421,23 @@ export default function AssetHistoryPage({ role, currentPath }) {
                         {/* Aset */}
                         <td>
                           <div className="history-asset-cell">
-                            {aset?.nama_aset ? (
+                            {isBulkImport ? (
+                              <>
+                                <span className="history-asset-name" style={{ color: '#059669' }}>
+                                  Impor Excel Massal
+                                </span>
+                                <span className="history-asset-code">
+                                  {bulkSummary || 'Banyak Aset'}
+                                </span>
+                              </>
+                            ) : aset?.nama_aset ? (
                               <>
                                 <span className="history-asset-name">{aset.nama_aset}</span>
                                 <span className="history-asset-code">{aset.kode_inventaris || '-'}</span>
                               </>
                             ) : (
                               <span className="history-asset-deleted">
-                                Aset telah dihapus permanen
+                                Aset telah dihapus
                               </span>
                             )}
                           </div>
@@ -416,11 +488,11 @@ export default function AssetHistoryPage({ role, currentPath }) {
                         {/* Keterangan */}
                         <td>
                           <div className="history-desc-cell" title={item.keterangan}>
-                            {item.keterangan || '-'}
+                            {displayKeterangan}
                           </div>
                         </td>
 
-                        {/* Action Buttons */}
+                        {/* Action Button (Read-only Detail) */}
                         <td>
                           <div className="history-actions" style={{ justifyContent: 'center' }}>
                             <button
@@ -431,18 +503,6 @@ export default function AssetHistoryPage({ role, currentPath }) {
                             >
                               <FiEye size={13} /> Detail
                             </button>
-
-                            {isSuperAdmin && (
-                              <button
-                                type="button"
-                                className="btn-history-delete"
-                                onClick={() => setDeleteItem(item)}
-                                title="Hapus Log Riwayat (Super Admin)"
-                                aria-label="Hapus Log Riwayat"
-                              >
-                                <FiTrash2 size={13} />
-                              </button>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -456,7 +516,10 @@ export default function AssetHistoryPage({ role, currentPath }) {
           {/* Table Footer */}
           <div className="history-table-footer">
             <span>
-              Menampilkan {historyItems.length} dari {totalItems} total riwayat
+              Menampilkan {historyItems.length} dari {totalItems} log riwayat
+            </span>
+            <span className="history-audit-note">
+              Jejak audit bersifat permanen &amp; diarsipkan otomatis setelah 1 tahun
             </span>
           </div>
         </div>
@@ -483,20 +546,6 @@ export default function AssetHistoryPage({ role, currentPath }) {
           onClose={() => setDetailItem(null)}
           item={detailItem}
         />
-
-        {/* Delete Confirmation Modal (Super Admin only) */}
-        {isSuperAdmin && (
-          <StatusModal
-            isOpen={!!deleteItem}
-            type="confirm"
-            title="Konfirmasi Hapus Riwayat"
-            message={`Apakah Anda yakin ingin menghapus data riwayat log #${deleteItem?.id} untuk aksi "${deleteItem?.aksi}"? Tindakan ini tidak dapat dibatalkan.`}
-            confirmText="Ya, Hapus"
-            cancelText="Batal"
-            onConfirm={handleConfirmDelete}
-            onCancel={() => setDeleteItem(null)}
-          />
-        )}
 
         {/* General Alert Modal */}
         <StatusModal

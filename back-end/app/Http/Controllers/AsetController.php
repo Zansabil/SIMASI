@@ -24,6 +24,80 @@ class AsetController extends Controller
         return $user->resolveLokasiUnit();
     }
 
+    /**
+     * Mengubah teks Sumber Dana menjadi singkatan 3 huruf sesuai standar:
+     * - Dana BOS -> BOS
+     * - Yayasan / Dana Yayasan -> YYS
+     * - Hibah / Wakaf -> HBH
+     * - Komite Sekolah -> KMT
+     * - Lainnya -> UMM
+     */
+    public static function formatKodeSumberDana(?string $sumberDana): string
+    {
+        $clean = mb_strtolower(trim(strip_tags((string) $sumberDana)));
+        if ($clean === '' || $clean === '-') {
+            return 'UMM';
+        }
+
+        if (str_contains($clean, 'bos')) {
+            return 'BOS';
+        }
+        if (str_contains($clean, 'yayasan') || $clean === 'yys') {
+            return 'YYS';
+        }
+        if (str_contains($clean, 'hibah') || str_contains($clean, 'wakaf') || $clean === 'hbh') {
+            return 'HBH';
+        }
+        if (str_contains($clean, 'komite') || $clean === 'kmt') {
+            return 'KMT';
+        }
+
+        return 'UMM';
+    }
+
+    /**
+     * Membentuk prefix kode inventaris dengan format: UNIT-SUMBERDANA-ddmmyyyy-
+     * Contoh: SMP-BOS-12112026- atau SMA-YYS-12112026-
+     */
+    public static function buildPrefixKodeInventaris($idUnit, $tglDiperoleh, ?string $sumberDana): string
+    {
+        $unitModel = \App\Models\LokasiUnit::find($idUnit);
+        $unitName = $unitModel ? strtoupper(trim($unitModel->nama_unit)) : 'UNKNOWN';
+        $tanggal = \Carbon\Carbon::parse($tglDiperoleh)->format('dmY');
+        $kodeDana = self::formatKodeSumberDana($sumberDana);
+
+        return "{$unitName}-{$kodeDana}-{$tanggal}-";
+    }
+
+    /**
+     * Menghasilkan kode inventaris unik dengan format: UNIT-SUMBERDANA-ddmmyyyy-XXXX
+     */
+    private function generateKodeInventaris($idUnit, $tglDiperoleh, ?string $sumberDana, ?int $excludeAsetId = null): string
+    {
+        $prefix = self::buildPrefixKodeInventaris($idUnit, $tglDiperoleh, $sumberDana);
+
+        $latestQuery = Aset::withTrashed()
+            ->where('kode_inventaris', 'like', "{$prefix}%");
+        if ($excludeAsetId) {
+            $latestQuery->where('id', '!=', $excludeAsetId);
+        }
+
+        $existingCodes = $latestQuery->lockForUpdate()->pluck('kode_inventaris');
+        $maxSeq = 0;
+        foreach ($existingCodes as $code) {
+            $seqStr = substr($code, strlen($prefix));
+            if (is_numeric($seqStr)) {
+                $seq = (int) $seqStr;
+                if ($seq > $maxSeq) {
+                    $maxSeq = $seq;
+                }
+            }
+        }
+
+        $nextSeq = $maxSeq + 1;
+        return $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+    }
+
     // 1. READ: Menampilkan semua data aset (Format JSON)
     public function index(Request $request)
     {
@@ -371,6 +445,9 @@ class AsetController extends Controller
 
         $importedCount = \Illuminate\Support\Facades\DB::transaction(function () use ($preparedRows, $userId) {
             $count = 0;
+            $totalUnitsImported = 0;
+            $firstAset = null;
+            $rincianImpor = [];
 
             foreach ($preparedRows as $item) {
                 // 1. Pastikan kategori tersimpan di tabel kategori_aset
@@ -400,23 +477,13 @@ class AsetController extends Controller
                     ]);
                 }
 
-                // 3. Buat kode inventaris unik berdasarkan unit & tanggal perolehan
+                // 3. Buat kode inventaris unik berdasarkan unit, tanggal perolehan, & sumber dana
                 $unitModel = $item['unit_model'];
-                $unitName = strtoupper(trim($unitModel->nama_unit));
-                $tanggal = \Carbon\Carbon::parse($item['tgl_diperoleh'])->format('dmY');
-                $prefix = "{$unitName}-{$tanggal}-";
-
-                $latestAset = Aset::where('kode_inventaris', 'like', "{$prefix}%")
-                    ->orderBy('kode_inventaris', 'desc')
-                    ->lockForUpdate()
-                    ->first();
-
-                $nextSeq = 1;
-                if ($latestAset) {
-                    $seqString = substr($latestAset->kode_inventaris, strlen($prefix));
-                    $nextSeq = ((int) $seqString) + 1;
-                }
-                $kodeInventaris = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+                $kodeInventaris = $this->generateKodeInventaris(
+                    $unitModel->id,
+                    $item['tgl_diperoleh'],
+                    $item['sumber_dana']
+                );
 
                 // 4. Simpan data aset utama
                 $createdAset = Aset::create([
@@ -444,16 +511,27 @@ class AsetController extends Controller
                     ]);
                 }
 
-                // 6. Catat di riwayat aset
+                if (!$firstAset) {
+                    $firstAset = $createdAset;
+                }
+                $rincianImpor[] = "{$createdAset->nama_aset} [{$kodeInventaris}] ({$unitModel->nama_unit} - {$ruangan->nama_ruangan}, {$createdAset->jumlah_aset} unit)";
+                $totalUnitsImported += (int) $createdAset->jumlah_aset;
+                $count++;
+            }
+
+            // 6. Catat 1 log ringkasan terkompaksi di riwayat_aset agar tabel tidak membengkak saat impor massal
+            if ($firstAset) {
+                $keteranganImpor = $count === 1
+                    ? "Menambahkan aset melalui Impor Excel: {$rincianImpor[0]}"
+                    : "Impor Excel Massal ({$count} jenis aset, {$totalUnitsImported} total unit):\n- " . implode("\n- ", $rincianImpor);
+
                 RiwayatAset::create([
-                    'id_aset'     => $createdAset->id,
+                    'id_aset'     => $firstAset->id,
                     'aksi'        => 'Penambahan',
                     'id_pengguna' => $userId,
-                    'keterangan'  => 'Menambahkan aset melalui Impor Excel: ' . $createdAset->nama_aset,
+                    'keterangan'  => $keteranganImpor,
                     'waktu'       => now(),
                 ]);
-
-                $count++;
             }
 
             return $count;
@@ -579,29 +657,11 @@ class AsetController extends Controller
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
         $aset = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $dataAset) {
-            // Kita butuh nama unit untuk prefix kode inventaris
-            $unitModel = \App\Models\LokasiUnit::find($request->id_unit);
-            $unitName = $unitModel ? strtoupper(trim($unitModel->nama_unit)) : 'UNKNOWN';
-            
-            $tanggal = \Carbon\Carbon::parse($request->tgl_diperoleh)->format('dmY');
-            $prefix = "{$unitName}-{$tanggal}-";
-
-            // Find the highest sequence number for this prefix with a lock
-            $latestAset = Aset::where('kode_inventaris', 'like', "{$prefix}%")
-                ->orderBy('kode_inventaris', 'desc')
-                ->lockForUpdate()
-                ->first();
-
-            $nextSeq = 1;
-            if ($latestAset) {
-                // Extract sequence from the latest code
-                $lastCode = $latestAset->kode_inventaris;
-                $seqString = substr($lastCode, strlen($prefix));
-                $lastSeq = (int) $seqString;
-                $nextSeq = $lastSeq + 1;
-            }
-
-            $kodeInventaris = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+            $kodeInventaris = $this->generateKodeInventaris(
+                $request->id_unit,
+                $request->tgl_diperoleh,
+                $dataAset['sumber_dana'] ?? null
+            );
             $dataAset['kode_inventaris'] = $kodeInventaris;
 
             $createdAset = Aset::create($dataAset);
@@ -728,8 +788,26 @@ class AsetController extends Controller
         }
 
         $oldJumlah = $aset->jumlah_aset;
+        $oldKodeInventaris = $aset->kode_inventaris;
         
-        $aset->fill($request->except(['_token', '_method']));
+        $aset->fill($request->except(['_token', '_method', 'kode_inventaris']));
+
+        // Cek apakah prefix kode inventaris perlu diperbarui (karena perubahan unit, tanggal, sumber dana, atau format lama)
+        $expectedPrefix = self::buildPrefixKodeInventaris($aset->id_unit, $aset->tgl_diperoleh, $aset->sumber_dana);
+        $needsKodeUpdate = isset($aset->getDirty()['id_unit'])
+            || isset($aset->getDirty()['tgl_diperoleh'])
+            || isset($aset->getDirty()['sumber_dana'])
+            || !str_starts_with((string) $oldKodeInventaris, $expectedPrefix);
+
+        if ($needsKodeUpdate) {
+            $aset->kode_inventaris = $this->generateKodeInventaris(
+                $aset->id_unit,
+                $aset->tgl_diperoleh,
+                $aset->sumber_dana,
+                $aset->id
+            );
+        }
+
         $perubahan = $aset->getDirty();
 
         if (count($perubahan) > 0) {
@@ -771,8 +849,36 @@ class AsetController extends Controller
             $keterangan_final = "Aset telah diedit. Detail: " . implode(', ', $teksPerubahan);
             
             // Wrap semua operasi dalam transaction agar atomic (all-or-nothing)
-            \Illuminate\Support\Facades\DB::transaction(function () use ($aset, $oldJumlah, $perubahan, $keterangan_final, $id) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($aset, $oldJumlah, $oldKodeInventaris, $perubahan, $keterangan_final, $id) {
                 $aset->save();
+
+                // Jika kode_inventaris berubah, sinkronkan seluruh kode_sub_aset dan referensi laporan kerusakan
+                if (isset($perubahan['kode_inventaris']) && $oldKodeInventaris !== $aset->kode_inventaris) {
+                    $subList = \App\Models\SubAset::where('id_aset', $aset->id)->orderBy('id', 'asc')->get();
+                    $oldPrefix = $oldKodeInventaris . '-';
+                    foreach ($subList as $idx => $sub) {
+                        $oldSubCode = $sub->kode_sub_aset;
+                        if (str_starts_with($oldSubCode, $oldPrefix)) {
+                            $unitSeq = substr($oldSubCode, strlen($oldPrefix));
+                        } else {
+                            $lastDash = strrpos($oldSubCode, '-');
+                            $unitSeq = $lastDash !== false ? substr($oldSubCode, $lastDash + 1) : ($idx + 1);
+                        }
+                        $newSubCode = "{$aset->kode_inventaris}-{$unitSeq}";
+                        if ($oldSubCode !== $newSubCode) {
+                            $sub->kode_sub_aset = $newSubCode;
+                            $sub->save();
+
+                            \App\Models\LaporanKerusakan::where('id_aset', $aset->id)
+                                ->where('deskripsi', 'LIKE', "%(Unit: {$oldSubCode})%")
+                                ->get()
+                                ->each(function ($lk) use ($oldSubCode, $newSubCode) {
+                                    $lk->deskripsi = str_replace("(Unit: {$oldSubCode})", "(Unit: {$newSubCode})", $lk->deskripsi);
+                                    $lk->save();
+                                });
+                        }
+                    }
+                }
 
                 // Sync sub_aset if jumlah_aset changed
                 if (isset($perubahan['jumlah_aset'])) {
@@ -909,12 +1015,20 @@ class AsetController extends Controller
         ], 200);
     }
 
-    // 5. DELETE: Menghapus data aset
-    public function destroy($id)
+    // 5. DELETE: Menghapus data aset beserta alasan penghapusan
+    public function destroy(Request $request, $id)
     {
         if (!in_array(auth()->user()->id_peran, [1, 3])) {
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
+
+        $alasan = trim(strip_tags((string) ($request->input('alasan_penghapusan') ?? $request->input('alasan') ?? '')));
+        if ($alasan === '') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Alasan penghapusan aset wajib diisi sebelum menghapus.'
+            ], 422);
+        }
 
         $aset = Aset::findOrFail($id);
 
@@ -942,7 +1056,7 @@ class AsetController extends Controller
             'id_aset'     => $id,
             'aksi'        => 'Penghapusan',
             'id_pengguna' => auth()->user()->id,
-            'keterangan'  => 'Menghapus aset bernama: ' . $aset->nama_aset,
+            'keterangan'  => "Menghapus aset '{$aset->nama_aset}' ({$aset->kode_inventaris}). Alasan penghapusan: {$alasan}",
             'waktu'       => now()
         ]);
 

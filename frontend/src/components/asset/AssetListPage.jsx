@@ -309,6 +309,9 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           message={`Apakah Anda yakin ingin menghapus aset "${confirmModal.asset?.name}" secara permanen? Data yang dihapus tidak dapat dikembalikan.`}
           confirmText="Ya, Hapus"
           cancelText="Batal"
+          requireReason={true}
+          reasonLabel="Alasan Penghapusan Aset"
+          reasonPlaceholder="Masukkan alasan penghapusan aset (contoh: Rusak berat dan tidak dapat diperbaiki, hilang, kadaluarsa, dll)..."
           onConfirm={processDelete}
           onCancel={() => setConfirmModal({ isOpen: false, asset: null })}
         />
@@ -321,6 +324,9 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           message={`Apakah Anda yakin ingin menghapus unit "${confirmSubAssetDelete.subAsset?.kode_sub_aset}"? Jumlah barang pada aset induk akan otomatis berkurang.`}
           confirmText="Ya, Hapus"
           cancelText="Batal"
+          requireReason={true}
+          reasonLabel="Alasan Penghapusan Unit"
+          reasonPlaceholder="Masukkan alasan penghapusan unit barang ini (contoh: Rusak berat, hilang, tidak layak pakai)..."
           onConfirm={processDeleteSubAsset}
           onCancel={() => setConfirmSubAssetDelete({ isOpen: false, subAsset: null, parentAssetId: null })}
         />
