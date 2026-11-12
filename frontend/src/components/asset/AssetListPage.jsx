@@ -20,6 +20,11 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     // 🔍 Pencarian & Kategori Filter
     searchQuery, setSearchQuery,
     selectedFilterField, setSelectedFilterField,
+    selectedUnitFilter, setSelectedUnitFilter,
+    selectedRoomFilter, setSelectedRoomFilter,
+    adminUnit,
+    printingRoomKey,
+    handlePrintRoom,
 
     // 📄 Halaman (Pagination) & Mode Tampilan
     currentPage, setCurrentPage,
@@ -28,8 +33,9 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
     isLoading, hasMore,
 
     // 📦 Data Aset & Pilihan Dropdown
-    allAssets, paginatedAssets,
-    availableUnits, availableCategories, availableRooms,
+    allAssets, filteredAssets, paginatedAssets,
+    availableUnits, availableCategories, categoryObjects, availableRooms,
+    handleAddCategory, handleUpdateCategory, handleDeleteCategory,
 
     // 📝 Popup Modal Form & Aksi Simpan
     isFormOpen, setIsFormOpen, assetToEdit, handleFormSubmit,
@@ -58,6 +64,25 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
   // State untuk Modal Ekspor PDF & Impor Excel
   const [isExportPdfOpen, setIsExportPdfOpen] = useState(false);
   const [isImportExcelOpen, setIsImportExcelOpen] = useState(false);
+
+  // Pilihan filter Unit Pendidikan
+  const unitFilterOptions = [
+    { value: 'all', label: 'Semua Unit Pendidikan' },
+    ...availableUnits.map((u) => {
+      const name = u.nama_unit || u;
+      return { value: name, label: `Unit ${name}` };
+    })
+  ];
+
+  // Pilihan filter Ruangan (gabungan master ruangan + ruangan pada data aset yang tampil)
+  const roomNamesSet = new Set([
+    ...availableRooms.map(r => r.nama_ruangan || r).filter(Boolean),
+    ...allAssets.map(a => a.location || a.room).filter(r => r && r !== '-')
+  ]);
+  const roomFilterOptions = [
+    { value: 'all', label: 'Semua Ruangan' },
+    ...[...roomNamesSet].sort().map(rName => ({ value: rName, label: rName }))
+  ];
 
   // Handler setelah impor Excel berhasil
   const handleImportSuccess = (message) => {
@@ -136,6 +161,12 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
                 <FiGrid /> Per Ruangan
               </button>
             </div>
+
+            {adminUnit && (
+              <div className="admin-unit-active-badge">
+                Unit Tanggung Jawab: <strong>{adminUnit.nama_unit}</strong>
+              </div>
+            )}
           </div>
 
           {/* Filter Row: Search & Dropdown Filter Fields */}
@@ -146,11 +177,25 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               placeholder="Cari Barang..."
             />
 
+            {!adminUnit && (
+              <FilterSelect
+                value={selectedUnitFilter}
+                onChange={setSelectedUnitFilter}
+                options={unitFilterOptions}
+              />
+            )}
+
+            <FilterSelect
+              value={selectedRoomFilter}
+              onChange={setSelectedRoomFilter}
+              options={roomFilterOptions}
+            />
+
             <FilterSelect
               value={selectedFilterField}
               onChange={setSelectedFilterField}
               options={[
-                { value: 'all', label: 'Semua Kategori' },
+                { value: 'all', label: 'Semua Kolom' },
                 { value: 'name', label: 'Nama Barang' },
                 { value: 'code', label: 'Kode Barang' },
                 { value: 'location', label: 'Lokasi Barang' }
@@ -179,13 +224,13 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
               onPageChange={setCurrentPage}
               onItemsPerPageChange={setItemsPerPage}
               hasMore={hasMore}
-              totalPages={Math.ceil(allAssets.length / itemsPerPage)}
-              totalItems={allAssets.length}
+              totalPages={Math.ceil(filteredAssets.length / itemsPerPage)}
+              totalItems={filteredAssets.length}
             />
           </>
         ) : (
           <GroupedAssetView
-            assets={allAssets}
+            assets={filteredAssets}
             isLoading={isLoading}
             showActions={hasWriteAccess}
             onView={handleView}
@@ -195,6 +240,8 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onDeleteSubAsset={handleDeleteSubAssetClick}
             activeRepairCodes={activeRepairCodes}
             inProgressRepairCodes={inProgressRepairCodes}
+            onPrintRoom={handlePrintRoom}
+            printingRoomKey={printingRoomKey}
           />
         )}
 
@@ -206,8 +253,14 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
             onSubmit={handleFormSubmit}
             assetToEdit={assetToEdit}
             availableUnits={availableUnits}
+            adminUnit={adminUnit}
             availableRooms={availableRooms}
             availableCategories={availableCategories}
+            categoryObjects={categoryObjects}
+            canManageCategories={role === 'admin'}
+            onAddCategory={handleAddCategory}
+            onUpdateCategory={handleUpdateCategory}
+            onDeleteCategory={handleDeleteCategory}
             existingSources={allAssets ? [...new Set(allAssets.map(a => a.source_of_funds).filter(Boolean))] : []}
           />
         )}
@@ -219,10 +272,15 @@ export default function AssetListPage({ role, hasWriteAccess, currentPath }) {
           asset={assetToView}
         />
 
-        {/* MODAL 3: EKSPOR PDF DENGAN FILTER PERIODE */}
+        {/* MODAL 3: EKSPOR PDF DENGAN FILTER PERIODE, UNIT & RUANGAN */}
         <ExportPdfModal
           isOpen={isExportPdfOpen}
           onClose={() => setIsExportPdfOpen(false)}
+          availableUnits={availableUnits}
+          availableRooms={[...roomNamesSet].sort()}
+          adminUnit={adminUnit}
+          defaultUnit={selectedUnitFilter}
+          defaultRoom={selectedRoomFilter}
         />
 
         {/* MODAL 4: IMPOR DARI EXCEL */}

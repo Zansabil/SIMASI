@@ -109,4 +109,25 @@ class Pengguna extends Authenticatable
     {
         return $this->belongsTo(KodeRegistrasi::class, 'id_kode_registrasi', 'id');
     }
+
+    /**
+     * Mencari data LokasiUnit yang sesuai dengan kolom area pada pengguna.
+     */
+    public function resolveLokasiUnit(): ?LokasiUnit
+    {
+        $area = trim((string) ($this->attributes['area'] ?? ''));
+        if ($area === '' || $area === '-' || strtolower($area) === 'yayasan / global') {
+            return null;
+        }
+
+        $pemetaanLama = [
+            'tk'  => 'TK 1',
+            'sd'  => 'SD 1',
+            'smp' => 'SMP 1',
+        ];
+        $target = $pemetaanLama[strtolower($area)] ?? $area;
+
+        return LokasiUnit::whereRaw('LOWER(TRIM(nama_unit)) = ?', [strtolower($target)])->first()
+            ?: LokasiUnit::whereRaw('LOWER(TRIM(nama_unit)) = ?', [strtolower($area)])->first();
+    }
 }

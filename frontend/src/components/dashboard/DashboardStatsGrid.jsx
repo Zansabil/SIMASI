@@ -1,41 +1,102 @@
 import React from 'react';
 import {
-  FiDatabase, FiCheckCircle, FiTool, FiMonitor, FiTable,
+  FiDatabase,
+  FiCheckCircle,
+  FiTool,
+  FiMonitor,
+  FiTable,
+  FiZap,
+  FiDroplet,
+  FiBriefcase,
+  FiLayers,
+  FiTag,
 } from 'react-icons/fi';
 import StatCard from './StatCard';
 
 /**
- * Konfigurasi kartu statistik — daftar yang mendefinisikan urutan dan
- * properti setiap kartu pada grid statistik dashboard.
+ * Konfigurasi kartu statistik utama (status aset).
  */
-const STAT_CARD_CONFIG = [
-  { key: 'total_aset',  label: 'Total Aset',    icon: FiDatabase,    colorClass: 'stat-total'     },
-  { key: 'aset_aktif',  label: 'Aset Aktif',    icon: FiCheckCircle, colorClass: 'stat-active'    },
-  { key: 'perbaikan',   label: 'Perbaikan',      icon: FiTool,        colorClass: 'stat-repair'    },
-  { key: 'elektronik',  label: 'Elektronik',     icon: FiMonitor,     colorClass: 'stat-computer'  },
-  { key: 'furnitur',    label: 'Furnitur',       icon: FiTable,       colorClass: 'stat-furniture' },
+const MAIN_STAT_CARDS = [
+  { key: 'total_aset', label: 'Total Aset', icon: FiDatabase,    colorClass: 'stat-total'  },
+  { key: 'aset_aktif', label: 'Aset Aktif', icon: FiCheckCircle, colorClass: 'stat-active' },
+  { key: 'perbaikan',  label: 'Perbaikan',  icon: FiTool,        colorClass: 'stat-repair' },
+];
+
+const FALLBACK_COLORS = [
+  'stat-computer',
+  'stat-furniture',
+  'stat-electric',
+  'stat-cleaning',
+  'stat-office',
+  'stat-general',
 ];
 
 /**
- * Grid berisi 5 kartu statistik untuk halaman dashboard.
- * Menerima objek `stats` dan merender semua kartu secara otomatis
- * berdasarkan STAT_CARD_CONFIG di atas.
+ * Menentukan ikon dan warna kartu berdasarkan nama kategori aset.
+ */
+function resolveCategoryVisual(namaKategori = '', index = 0) {
+  const lower = namaKategori.toLowerCase();
+
+  if (lower.includes('elektronik') || lower.includes('komputer')) {
+    return { icon: FiMonitor, colorClass: 'stat-computer' };
+  }
+  if (lower.includes('mebel') || lower.includes('furnitur')) {
+    return { icon: FiTable, colorClass: 'stat-furniture' };
+  }
+  if (lower.includes('listrik') || lower.includes('kelistrikan')) {
+    return { icon: FiZap, colorClass: 'stat-electric' };
+  }
+  if (lower.includes('bersih') || lower.includes('kebersihan')) {
+    return { icon: FiDroplet, colorClass: 'stat-cleaning' };
+  }
+  if (lower.includes('kantor') || lower.includes('tulis')) {
+    return { icon: FiBriefcase, colorClass: 'stat-office' };
+  }
+  if (lower.includes('umum')) {
+    return { icon: FiLayers, colorClass: 'stat-general' };
+  }
+
+  return {
+    icon: FiTag,
+    colorClass: FALLBACK_COLORS[index % FALLBACK_COLORS.length],
+  };
+}
+
+/**
+ * Grid kartu statistik untuk halaman dashboard.
+ * Menampilkan 3 kartu ringkasan utama serta seluruh kategori aset
+ * yang tersimpan di database (termasuk kategori yang diinput manual).
  *
  * @param {object} props
  * @param {object} props.stats - Objek data statistik dari useDashboardData
  */
 export default function DashboardStatsGrid({ stats }) {
+  const kategoriList = Array.isArray(stats?.kategori) ? stats.kategori : [];
+
   return (
     <section className="statistics-grid">
-      {STAT_CARD_CONFIG.map(({ key, label, icon, colorClass }) => (
+      {MAIN_STAT_CARDS.map(({ key, label, icon, colorClass }) => (
         <StatCard
           key={key}
           label={label}
-          value={stats[key] ?? 0}
+          value={stats?.[key] ?? 0}
           icon={icon}
           colorClass={colorClass}
         />
       ))}
+
+      {kategoriList.map((kat, idx) => {
+        const { icon, colorClass } = resolveCategoryVisual(kat.nama, idx);
+        return (
+          <StatCard
+            key={`kat-${kat.id ?? kat.nama}`}
+            label={kat.nama}
+            value={kat.jumlah ?? 0}
+            icon={icon}
+            colorClass={colorClass}
+          />
+        );
+      })}
     </section>
   );
 }

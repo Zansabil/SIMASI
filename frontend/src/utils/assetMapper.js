@@ -3,15 +3,22 @@
  */
 export const mapAssetResponse = (item) => {
   if (!item) return null;
+  const unitName = item.lokasi_unit?.nama_unit || item.lokasiUnit?.nama_unit || '-';
+  const roomName = item.ruangan?.nama_ruangan || item.lokasi_aset || '-';
   return {
     ...item,
     id: item.id,
     name: item.nama_aset,
+    category: item.jenis_aset || item.category || 'Umum',
     asset_code: item.kode_inventaris,
-    location: item.ruangan?.nama_ruangan || item.lokasi_aset || '-',
-    unit: item.lokasi_unit?.nama_unit || item.lokasiUnit?.nama_unit || '-',
+    unit_id: item.id_unit || item.lokasi_unit?.id || item.lokasiUnit?.id || '',
+    room_id: item.id_ruangan || item.ruangan?.id || '',
+    unit: unitName,
+    room: roomName !== '-' ? roomName : '',
+    location: roomName,
+    purchase_date: item.tgl_diperoleh ? String(item.tgl_diperoleh).split('T')[0] : '',
     quantity: item.jumlah_aset,
-    condition: item.kondisi_aset,
+    condition: item.kondisi_aset ? String(item.kondisi_aset).toLowerCase() : 'baik',
     source_of_funds: item.sumber_dana || item.source_of_funds || 'Dana Yayasan',
     price: item.harga_aset || item.price || 0,
     image_path: item.foto || item.image_path
@@ -30,9 +37,10 @@ export const mapAssetListResponse = (list) => {
  * Mengubah format React (Form/State) ke format Request Payload yang dipahami Laravel
  */
 export const mapAssetForRequest = (formData, existingAssetCode = null) => {
-  const parsedPrice = typeof formData.price === 'string' 
-    ? Number(formData.price.replace(/\D/g, '')) 
-    : Number(formData.price);
+  const rawPriceStr = formData.price !== null && formData.price !== undefined
+    ? String(formData.price).replace(/\D/g, '')
+    : '';
+  const parsedPrice = rawPriceStr !== '' ? Number(rawPriceStr) : 0;
   
   const resolvedDate = formData.purchaseDate || new Date().toISOString().split('T')[0];
 

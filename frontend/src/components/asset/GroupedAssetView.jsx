@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import AssetTable from './AssetTable';
-import { FiChevronDown, FiChevronRight, FiMapPin } from 'react-icons/fi';
+import { FiChevronDown, FiChevronRight, FiMapPin, FiPrinter } from 'react-icons/fi';
 import { groupAssetsByLocation } from '../../utils/groupAssetsByLocation';
 import './GroupedAssetView.css';
 
-export default function GroupedAssetView({ assets = [], isLoading, onView, onEdit, onDelete, showActions = true, onNavigateToRepair, onDeleteSubAsset, activeRepairCodes = [], inProgressRepairCodes = [] }) {
+export default function GroupedAssetView({
+  assets = [],
+  isLoading,
+  onView,
+  onEdit,
+  onDelete,
+  showActions = true,
+  onNavigateToRepair,
+  onDeleteSubAsset,
+  activeRepairCodes = [],
+  inProgressRepairCodes = [],
+  onPrintRoom,
+  printingRoomKey = null,
+}) {
 
   const [expandedGroups, setExpandedGroups] = useState({});
 
@@ -38,6 +51,12 @@ export default function GroupedAssetView({ assets = [], isLoading, onView, onEdi
     <div className="grouped-asset-container">
       {sortedGroupedData.map(([location, items]) => {
         const isExpanded = !!expandedGroups[location];
+        const firstAsset = items[0] || {};
+        const unitName = firstAsset.unit && firstAsset.unit !== '-' ? firstAsset.unit : '';
+        const roomName = firstAsset.location && firstAsset.location !== '-' ? firstAsset.location : location;
+        const totalUnits = items.reduce((sum, item) => sum + (Number(item.quantity || item.jumlah_aset) || 0), 0);
+        const isPrintingThis = printingRoomKey === location;
+
         return (
           <div key={location} className="asset-group-card">
             <div 
@@ -47,9 +66,30 @@ export default function GroupedAssetView({ assets = [], isLoading, onView, onEdi
               <div className="asset-group-title">
                 {isExpanded ? <FiChevronDown size={20} /> : <FiChevronRight size={20} />}
                 <FiMapPin className="location-icon" />
-                <h3>{location}</h3>
+                {unitName && <span className="group-unit-badge">{unitName}</span>}
+                <h3>{roomName}</h3>
               </div>
-              <span className="asset-count-badge">{items.length} Aset</span>
+
+              <div className="asset-group-right">
+                <span className="asset-count-badge">
+                  {items.length} Jenis Aset ({totalUnits} Unit)
+                </span>
+                {onPrintRoom && (
+                  <button
+                    type="button"
+                    className="btn-print-room"
+                    title={`Cetak PDF daftar aset ruangan ${location}`}
+                    disabled={isPrintingThis}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPrintRoom(unitName, roomName, location);
+                    }}
+                  >
+                    <FiPrinter size={14} />
+                    <span>{isPrintingThis ? 'Mencetak...' : 'Cetak Ruangan'}</span>
+                  </button>
+                )}
+              </div>
             </div>
             
             {isExpanded && (
@@ -83,4 +123,6 @@ GroupedAssetView.propTypes = {
   onView: PropTypes.func,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
+  onPrintRoom: PropTypes.func,
+  printingRoomKey: PropTypes.string,
 };

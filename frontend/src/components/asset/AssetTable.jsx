@@ -43,8 +43,8 @@ function AssetTable({ assets = [], isLoading, onView, onEdit, onDelete, showActi
             <th className="col-no">No.</th>
             <th className="col-name">Nama Barang</th>
             <th className="col-code hide-on-mobile">Kode Barang</th>
-            <th className="col-unit hide-on-mobile">Unit</th>
-            <th className="col-location hide-on-mobile">Lokasi Penempatan</th>
+            <th className="col-unit hide-on-mobile">Unit Pendidikan</th>
+            <th className="col-location hide-on-mobile">Ruangan</th>
             <th className="col-qty">Jumlah<span className="hide-on-mobile"> Barang</span></th>
             <th className="col-condition hide-on-mobile">Kondisi Barang</th>
             <th className="col-source hide-on-mobile">Sumber Dana</th>

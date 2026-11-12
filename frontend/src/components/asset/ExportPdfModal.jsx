@@ -11,13 +11,31 @@ const PRESET_OPTIONS = [
   { id: 'custom', label: 'Pilih Tanggal Bebas', desc: 'Tentukan rentang tanggal awal & akhir' }
 ];
 
-export default function ExportPdfModal({ isOpen, onClose }) {
+export default function ExportPdfModal({
+  isOpen,
+  onClose,
+  availableUnits = [],
+  availableRooms = [],
+  adminUnit = null,
+  defaultUnit = 'all',
+  defaultRoom = 'all',
+}) {
   const [selectedPreset, setSelectedPreset] = useState('all');
   const [dateField, setDateField] = useState('tgl_diperoleh'); // 'tgl_diperoleh' | 'tgl_dibuat'
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedUnit, setSelectedUnit] = useState(adminUnit?.nama_unit || defaultUnit || 'all');
+  const [selectedRoom, setSelectedRoom] = useState(defaultRoom || 'all');
   const [isExporting, setIsExporting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedUnit(adminUnit?.nama_unit || defaultUnit || 'all');
+      setSelectedRoom(defaultRoom || 'all');
+      setErrorMessage('');
+    }
+  }, [isOpen, adminUnit, defaultUnit, defaultRoom]);
 
   if (!isOpen) return null;
 
@@ -71,6 +89,14 @@ export default function ExportPdfModal({ isOpen, onClose }) {
         date_field: dateField
       };
 
+      const effectiveUnit = adminUnit?.nama_unit || selectedUnit;
+      if (effectiveUnit && effectiveUnit !== 'all') {
+        params.id_unit = effectiveUnit;
+      }
+      if (selectedRoom && selectedRoom !== 'all') {
+        params.id_ruangan = selectedRoom;
+      }
+
       if (selectedPreset !== 'all' && startDate && endDate) {
         params.start_date = startDate;
         params.end_date = endDate;
@@ -79,7 +105,9 @@ export default function ExportPdfModal({ isOpen, onClose }) {
       const blobData = await exportAssetPDF(params);
       
       const timeStamp = new Date().toISOString().slice(0, 10);
-      const filename = `Laporan_Aset_SIMASI_${selectedPreset}_${timeStamp}.pdf`;
+      const unitPart = effectiveUnit && effectiveUnit !== 'all' ? `_${String(effectiveUnit).replace(/\s+/g, '')}` : '';
+      const roomPart = selectedRoom && selectedRoom !== 'all' ? `_${String(selectedRoom).replace(/\s+/g, '_')}` : '';
+      const filename = `Laporan_Aset_SIMAS${unitPart}${roomPart}_${timeStamp}.pdf`;
 
       triggerBlobDownload(blobData, filename);
       onClose();
@@ -119,6 +147,55 @@ export default function ExportPdfModal({ isOpen, onClose }) {
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {/* Filter Unit Pendidikan & Ruangan */}
+          <div className="export-form-section">
+            <label className="export-section-label">Filter Unit Pendidikan & Ruangan:</label>
+            <div className="export-location-grid">
+              <div className="export-date-field">
+                <label>Unit Pendidikan</label>
+                {adminUnit ? (
+                  <input
+                    type="text"
+                    className="export-select-input locked"
+                    value={adminUnit.nama_unit}
+                    readOnly
+                  />
+                ) : (
+                  <select
+                    className="export-select-input"
+                    value={selectedUnit}
+                    onChange={(e) => setSelectedUnit(e.target.value)}
+                  >
+                    <option value="all">Semua Unit Pendidikan</option>
+                    {availableUnits.map((u, idx) => {
+                      const val = u.nama_unit || u;
+                      return (
+                        <option key={u.id || idx} value={val}>{val}</option>
+                      );
+                    })}
+                  </select>
+                )}
+              </div>
+
+              <div className="export-date-field">
+                <label>Ruangan</label>
+                <select
+                  className="export-select-input"
+                  value={selectedRoom}
+                  onChange={(e) => setSelectedRoom(e.target.value)}
+                >
+                  <option value="all">Semua Ruangan</option>
+                  {availableRooms.map((r, idx) => {
+                    const val = r.nama_ruangan || r;
+                    return (
+                      <option key={r.id || idx} value={val}>{val}</option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+          </div>
 
           {/* Basis Filter Tanggal */}
           <div className="export-form-section">

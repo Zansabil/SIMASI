@@ -68,6 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route Cetak PDF & Excel (ReactJS akan memanggil rute ini untuk mengunduh file)
     Route::get('/aset/cetak/pdf', [AsetController::class, 'cetakPDF']);
     Route::get('/aset/cetak/excel', [AsetController::class, 'cetakExcel']);
+
+    // Route Impor Excel & Unduh Template Impor Aset
+    Route::get('/aset/import/template', [AsetController::class, 'downloadTemplate']);
+    Route::post('/aset/import', [AsetController::class, 'importExcel']);
     
     // Rute untuk tabel Aset (Menggunakan apiResource)
     Route::apiResource('aset', AsetController::class);

@@ -373,6 +373,26 @@ textarea {
   color: #ea580c;
 }
 
+.stat-electric {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.stat-cleaning {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
+
+.stat-office {
+  background-color: #fce7f3;
+  color: #db2777;
+}
+
+.stat-general {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
 /* ── ActivityList Component ──────────────────────────────── */
 .activities-section {
   background-color: #ffffff;

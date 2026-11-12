@@ -18,6 +18,10 @@ export default function useAssetList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [selectedFilterField, setSelectedFilterField] = useState('all'); // all, name, code, location
+  const [selectedUnitFilter, setSelectedUnitFilter] = useState('all');
+  const [selectedRoomFilter, setSelectedRoomFilter] = useState('all');
+  const [adminUnit, setAdminUnit] = useState(null); // { id, nama_unit } jika login sebagai Admin Unit
+  const [printingRoomKey, setPrintingRoomKey] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,6 +46,9 @@ export default function useAssetList() {
   const [allAssets, setAllAssets] = useState([]);
   const [availableUnits, setAvailableUnits] = useState(DEFAULT_UNITS);
   const [availableCategories, setAvailableCategories] = useState(DEFAULT_CATEGORIES);
+  const [categoryObjects, setCategoryObjects] = useState(
+    DEFAULT_CATEGORIES.map((name, idx) => ({ id: idx + 1, nama_kategori: name }))
+  );
   const [availableRooms, setAvailableRooms] = useState([]);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'grouped'
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -73,6 +80,12 @@ export default function useAssetList() {
         if (responseData && Array.isArray(responseData.data)) {
           const mapped = mapAssetListResponse(responseData.data);
           setAllAssets(mapped);
+          if (responseData.user_unit) {
+            setAdminUnit(responseData.user_unit);
+            localStorage.setItem('user_area', responseData.user_unit.nama_unit || '');
+          } else {
+            setAdminUnit(null);
+          }
         } else {
           setAllAssets([]);
         }
@@ -113,6 +126,7 @@ export default function useAssetList() {
           const catList = categoriesData.data.map(c => c.nama_kategori);
           if (catList.length > 0) {
             setAvailableCategories(catList);
+            setCategoryObjects(categoriesData.data);
           }
         }
         if (roomsData && roomsData.success && roomsData.data) {
@@ -126,7 +140,7 @@ export default function useAssetList() {
     };
 
     fetchStaticData();
-  }, []);
+  }, [refreshTrigger]);
 
   // Fetch active repairs to prevent duplicate reporting on the same sub-asset
   useEffect(() => {
@@ -163,15 +177,30 @@ export default function useAssetList() {
     loadActiveRepairs();
   }, [allAssets]); // Reload when asset list changes
 
-  // Reset Halaman ke 1 saat melakukan pencarian atau mengganti kategori filter
+  // Reset Halaman ke 1 saat melakukan pencarian atau mengganti kategori/unit/ruangan filter
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchQuery, selectedFilterField, refreshTrigger]);
+  }, [debouncedSearchQuery, selectedFilterField, selectedUnitFilter, selectedRoomFilter, refreshTrigger]);
+
+  // Filter berdasarkan Unit Pendidikan & Ruangan
+  const filteredAssets = allAssets.filter(asset => {
+    if (selectedUnitFilter && selectedUnitFilter !== 'all') {
+      const matchId = String(asset.unit_id || asset.id_unit) === String(selectedUnitFilter);
+      const matchName = String(asset.unit || '').trim().toLowerCase() === String(selectedUnitFilter).trim().toLowerCase();
+      if (!matchId && !matchName) return false;
+    }
+    if (selectedRoomFilter && selectedRoomFilter !== 'all') {
+      const matchRoomId = String(asset.room_id || asset.id_ruangan) === String(selectedRoomFilter);
+      const matchRoomName = String(asset.location || asset.room || '').trim().toLowerCase() === String(selectedRoomFilter).trim().toLowerCase();
+      if (!matchRoomId && !matchRoomName) return false;
+    }
+    return true;
+  });
 
   // Derived state for client-side pagination
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAssets = allAssets.slice(startIndex, startIndex + itemsPerPage);
-  const hasMore = allAssets.length > currentPage * itemsPerPage;
+  const paginatedAssets = filteredAssets.slice(startIndex, startIndex + itemsPerPage);
+  const hasMore = filteredAssets.length > currentPage * itemsPerPage;
 
   // Actions handlers
   const handleView = (asset) => {
@@ -207,6 +236,46 @@ export default function useAssetList() {
   const handleTambahAsetClick = () => {
     setAssetToEdit(null);
     setIsFormOpen(true);
+  };
+
+  // Handler kelola kategori langsung dari form Daftar Aset (khusus Admin Unit)
+  const handleAddCategory = async (namaKategori) => {
+    const res = await assetService.createCategory(namaKategori);
+    if (res && res.success && res.data) {
+      const newCat = res.data;
+      setCategoryObjects(prev => [...prev, newCat]);
+      setAvailableCategories(prev =>
+        prev.includes(newCat.nama_kategori) ? prev : [...prev, newCat.nama_kategori]
+      );
+      return newCat;
+    }
+    throw new Error(res?.message || 'Gagal menambahkan kategori.');
+  };
+
+  const handleUpdateCategory = async (id, namaBaru, namaLama) => {
+    const res = await assetService.updateCategory(id, namaBaru);
+    if (res && res.success && res.data) {
+      const updated = res.data;
+      setCategoryObjects(prev => prev.map(c => c.id === id ? updated : c));
+      setAvailableCategories(prev => prev.map(name => name === namaLama ? updated.nama_kategori : name));
+      setAllAssets(prev => prev.map(asset =>
+        asset.category === namaLama
+          ? { ...asset, category: updated.nama_kategori, jenis_aset: updated.nama_kategori }
+          : asset
+      ));
+      return updated;
+    }
+    throw new Error(res?.message || 'Gagal memperbarui kategori.');
+  };
+
+  const handleDeleteCategory = async (id, namaKategori) => {
+    const res = await assetService.deleteCategory(id);
+    if (res && res.success) {
+      setCategoryObjects(prev => prev.filter(c => c.id !== id));
+      setAvailableCategories(prev => prev.filter(name => name !== namaKategori));
+      return true;
+    }
+    throw new Error(res?.message || 'Gagal menghapus kategori.');
   };
 
   const handleFormSubmit = async (formData) => {
@@ -249,6 +318,36 @@ export default function useAssetList() {
           message: 'Gagal menambahkan aset ke server.' 
         });
         return;
+      }
+    }
+
+    // Jika ada kategori baru yang tersimpan lewat form aset, sinkronkan daftar kategori
+    if (formData.category && !availableCategories.includes(formData.category)) {
+      try {
+        const categoriesData = await assetService.fetchCategories();
+        if (categoriesData && categoriesData.success && categoriesData.data) {
+          setAvailableCategories(categoriesData.data.map(c => c.nama_kategori));
+          setCategoryObjects(categoriesData.data);
+        }
+      } catch {
+        setAvailableCategories(prev => [...prev, formData.category]);
+      }
+    }
+
+    // Jika ada ruangan baru yang tersimpan lewat form aset, sinkronkan daftar ruangan
+    if (formData.room) {
+      const roomExists = availableRooms.some(
+        r => String(r.nama_ruangan || r).toLowerCase() === String(formData.room).toLowerCase()
+      );
+      if (!roomExists) {
+        try {
+          const roomsData = await assetService.fetchRooms();
+          if (roomsData?.success && roomsData?.data) {
+            setAvailableRooms(roomsData.data);
+          }
+        } catch {
+          // ignore
+        }
       }
     }
 
@@ -305,11 +404,44 @@ export default function useAssetList() {
     }
   };
 
+  // Cetak PDF langsung untuk ruangan tertentu (dari tampilan Per Ruangan)
+  const handlePrintRoom = async (unitName, roomName, groupKey) => {
+    const key = groupKey || `${unitName || ''}-${roomName || ''}`;
+    setPrintingRoomKey(key);
+    try {
+      const params = { periode: 'all' };
+      if (unitName && unitName !== '-' && unitName !== 'Tidak Diketahui') {
+        params.id_unit = unitName;
+      }
+      if (roomName && roomName !== '-' && roomName !== 'Tidak Diketahui') {
+        params.id_ruangan = roomName;
+      }
+      const blobData = await assetService.exportAssetPDF(params);
+      const safeUnit = (unitName || 'Unit').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeRoom = (roomName || 'Ruangan').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const timeStamp = new Date().toISOString().slice(0, 10);
+      assetService.triggerBlobDownload(blobData, `Daftar_Aset_${safeUnit}_${safeRoom}_${timeStamp}.pdf`);
+    } catch (err) {
+      console.error('Gagal mencetak daftar aset ruangan:', err);
+      const msg = err.response?.data?.message || 'Gagal mencetak PDF daftar aset ruangan.';
+      setStatusModal({ isOpen: true, type: 'error', title: 'Gagal Mencetak', message: msg });
+    } finally {
+      setPrintingRoomKey(null);
+    }
+  };
+
   return {
     searchQuery,
     setSearchQuery,
     selectedFilterField,
     setSelectedFilterField,
+    selectedUnitFilter,
+    setSelectedUnitFilter,
+    selectedRoomFilter,
+    setSelectedRoomFilter,
+    adminUnit,
+    printingRoomKey,
+    handlePrintRoom,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -326,9 +458,14 @@ export default function useAssetList() {
     confirmModal,
     setConfirmModal,
     allAssets,
+    filteredAssets,
     availableUnits,
     availableCategories,
+    categoryObjects,
     availableRooms,
+    handleAddCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
     viewMode,
     setViewMode,
     paginatedAssets,

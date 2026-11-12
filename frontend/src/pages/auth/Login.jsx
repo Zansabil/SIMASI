@@ -72,6 +72,7 @@ export default function Login() {
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_jabatan', user.jabatan || role);
         localStorage.setItem('user_peran_name', user.peran || '');
+        localStorage.setItem('user_area', user.area || '');
         localStorage.setItem('user_name', name);
         localStorage.setItem('user_email', user.email);
         localStorage.setItem('user_username', user.nama_pengguna);

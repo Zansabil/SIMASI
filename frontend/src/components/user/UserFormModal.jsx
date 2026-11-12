@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
+import { API_BASE_URL, DEFAULT_UNITS } from '../../config';
 import StatusModal from '../ui/StatusModal';
 
 const CloseIcon = () => (
@@ -83,7 +85,22 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
   });
   const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [unitOptions, setUnitOptions] = useState(DEFAULT_UNITS);
   const modalBodyRef = useRef(null);
+
+  useEffect(() => {
+    const loadUnits = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/lokasi_unit`);
+        if (res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
+          setUnitOptions(res.data.data.map(u => u.nama_unit));
+        }
+      } catch {
+        // gunakan DEFAULT_UNITS jika gagal
+      }
+    };
+    loadUnits();
+  }, []);
 
   const [isRestoreDraftOpen, setIsRestoreDraftOpen] = useState(false);
   const [tempDraft, setTempDraft] = useState(null);
@@ -359,11 +376,9 @@ export default function UserFormModal({ isOpen, onClose, onSubmit, editingUser }
               onChange={(e) => setFormUnit(e.target.value)}
             >
               <option value="Yayasan / Global">Yayasan / Global</option>
-              <option value="SD">SD</option>
-              <option value="SMP">SMP</option>
-              <option value="SMA">SMA</option>
-              <option value="MA">MA</option>
-              <option value="TK">TK</option>
+              {unitOptions.map((uName) => (
+                <option key={uName} value={uName}>{uName}</option>
+              ))}
             </select>
           </div>
 

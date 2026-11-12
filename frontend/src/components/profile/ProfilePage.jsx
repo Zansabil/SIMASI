@@ -45,6 +45,7 @@ export default function ProfilePage({ role, defaultRoleName, currentPath }) {
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_jabatan');
     localStorage.removeItem('user_peran_name');
+    localStorage.removeItem('user_area');
     localStorage.removeItem('user_name');
     localStorage.removeItem('user_avatar');
     navigate('/login');

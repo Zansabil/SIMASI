@@ -86,7 +86,11 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }) {
     setErrorMessage('');
     try {
       const blob = await downloadAssetTemplate();
-      triggerBlobDownload(blob, 'Template_Impor_Aset_SIMASI.csv');
+      const isCsv = blob?.type && blob.type.includes('csv');
+      const fileName = isCsv
+        ? 'Template_Impor_Aset_SIMAS.csv'
+        : 'Template_Impor_Aset_SIMAS.xlsx';
+      triggerBlobDownload(blob, fileName);
     } catch (err) {
       console.error('Gagal mengunduh template:', err);
       setErrorMessage('Gagal mengunduh template Excel. Silakan coba lagi.');
@@ -236,7 +240,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }) {
           <div className="import-columns-hint">
             <FiCheckCircle size={15} className="hint-icon" />
             <span className="hint-text">
-              Kolom wajib terisi: <strong>Nama Aset</strong>, <strong>Jenis Aset</strong>, <strong>Unit</strong>, <strong>Ruangan</strong>, <strong>Jumlah</strong>, <strong>Kondisi</strong>, dan <strong>Tanggal Diperoleh</strong>.
+              Kolom wajib terisi: <strong>Nama Aset</strong>, <strong>Jenis Aset</strong>, <strong>Unit</strong>, <strong>Ruangan</strong>, <strong>Jumlah</strong>, <strong>Kondisi</strong>, dan <strong>Tanggal Diperoleh</strong>. Kolom <strong>Harga Aset</strong> dan <strong>Sumber Dana</strong> bersifat opsional.
             </span>
           </div>
 

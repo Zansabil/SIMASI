@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Aset;
+use App\Models\KategoriAset;
 use App\Models\LaporanKerusakan;
 use App\Models\Pengguna;
 use App\Models\PengadaanAset;
@@ -13,22 +14,44 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Optimasi: 1 query untuk semua statistik alih-alih 4+ query terpisah
-        $stats = Aset::selectRaw("
-            SUM(jumlah_aset) as total_aset,
-            SUM(CASE WHEN kondisi_aset = 'Baik' THEN jumlah_aset ELSE 0 END) as aset_aktif,
-            SUM(CASE WHEN jenis_aset LIKE '%elektronik%' OR jenis_aset LIKE '%komputer%' THEN jumlah_aset ELSE 0 END) as elektronik,
-            SUM(CASE WHEN jenis_aset LIKE '%furnitur%' OR jenis_aset LIKE '%furniture%' OR jenis_aset LIKE '%meja%' OR jenis_aset LIKE '%kursi%' THEN jumlah_aset ELSE 0 END) as furnitur
-        ")->first();
+        $user = auth()->user();
+        $unitAdmin = ($user && (int) $user->id_peran === 3) ? $user->resolveLokasiUnit() : null;
+
+        // Optimasi: 1 query untuk statistik total (dibatasi ke unit Admin Unit jika berlaku)
+        $stats = Aset::when($unitAdmin, fn ($q) => $q->where('id_unit', $unitAdmin->id))
+            ->selectRaw("
+                SUM(jumlah_aset) as total_aset,
+                SUM(CASE WHEN kondisi_aset = 'Baik' THEN jumlah_aset ELSE 0 END) as aset_aktif
+            ")->first();
+
+        // Jumlah aset per kategori. Semua kategori di database ikut ditampilkan (termasuk yang
+        // baru ditambahkan Admin Unit dan belum punya aset), dicocokkan tanpa membedakan huruf besar/kecil.
+        $jumlahPerJenis = Aset::when($unitAdmin, fn ($q) => $q->where('id_unit', $unitAdmin->id))
+            ->selectRaw('LOWER(TRIM(jenis_aset)) as jenis, SUM(jumlah_aset) as jumlah')
+            ->groupByRaw('LOWER(TRIM(jenis_aset))')
+            ->pluck('jumlah', 'jenis');
+
+        $kategori = KategoriAset::orderBy('id')->get()->map(function ($k) use ($jumlahPerJenis) {
+            return [
+                'id'     => $k->id,
+                'nama'   => $k->nama_kategori,
+                'jumlah' => (int) ($jumlahPerJenis[mb_strtolower(trim($k->nama_kategori))] ?? 0),
+            ];
+        })->values();
 
         // Aset dalam Perbaikan (Sedang dikerjakan / status Diproses di Laporan Kerusakan)
-        $perbaikan = LaporanKerusakan::where('status_kerusakan', 'Diproses')->count();
+        $perbaikan = LaporanKerusakan::where('status_kerusakan', 'Diproses')
+            ->when($unitAdmin, function ($q) use ($unitAdmin) {
+                $q->whereHas('aset', fn ($aq) => $aq->where('id_unit', $unitAdmin->id));
+            })
+            ->count();
 
         // 6. Mengambil Aktivitas Terbaru dari Pengadaan, Perbaikan, dan Laporan Kerusakan (Maks 10 item)
         $activities = [];
 
         // Ambil pengadaan terbaru (maks 10)
-        $pengadaans = PengadaanAset::orderBy('tgl_pengajuan', 'desc')
+        $pengadaans = PengadaanAset::when($unitAdmin, fn ($q) => $q->where('id_unit', $unitAdmin->id))
+            ->orderBy('tgl_pengajuan', 'desc')
             ->limit(10)
             ->get();
         foreach ($pengadaans as $p) {
@@ -48,6 +71,9 @@ class DashboardController extends Controller
 
         // Ambil perbaikan terbaru (maks 10)
         $perbaikans = PerbaikanAset::with('laporan.aset')
+            ->when($unitAdmin, function ($q) use ($unitAdmin) {
+                $q->whereHas('laporan.aset', fn ($aq) => $aq->where('id_unit', $unitAdmin->id));
+            })
             ->orderBy('tgl_dibuat', 'desc')
             ->limit(10)
             ->get();
@@ -70,6 +96,9 @@ class DashboardController extends Controller
         // Ambil laporan kerusakan terbaru (yang belum tercatat di perbaikan)
         $idLaporanPerbaikan = $perbaikans->pluck('id_laporan')->filter()->toArray();
         $laporans = LaporanKerusakan::with('aset')
+            ->when($unitAdmin, function ($q) use ($unitAdmin) {
+                $q->whereHas('aset', fn ($aq) => $aq->where('id_unit', $unitAdmin->id));
+            })
             ->whereNotIn('id', $idLaporanPerbaikan)
             ->orderBy('tgl_dibuat', 'desc')
             ->limit(10)
@@ -106,9 +135,8 @@ class DashboardController extends Controller
                 'total_aset' => (int)($stats->total_aset ?? 0),
                 'aset_aktif' => (int)($stats->aset_aktif ?? 0),
                 'perbaikan'  => (int)$perbaikan,
-                'elektronik' => (int)($stats->elektronik ?? 0),
-                'furnitur'   => (int)($stats->furnitur ?? 0),
             ],
+            'kategori'   => $kategori,
             'activities' => $activities
         ], 200);
     }

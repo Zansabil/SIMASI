@@ -507,9 +507,22 @@
 /* Toggle Buttons for View Mode */
 .view-mode-row {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
   width: 100%;
+}
+
+.admin-unit-active-badge {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 8px;
 }
 
 .view-mode-toggle {
@@ -593,5 +606,230 @@
   margin-top: 0;
   text-align: left;
 }
+
+/* ============================================
+   Inline Category Input & Management (Admin Unit)
+   ============================================ */
+.category-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-category-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+  background-color: #eff6ff;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-category-inline:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.btn-category-inline.active {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-category-inline.secondary {
+  border-color: #e2e8f0;
+  background-color: #f8fafc;
+  color: #475569;
+}
+
+.btn-category-inline.secondary:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn-category-inline.secondary.active {
+  background-color: #334155;
+  border-color: #334155;
+  color: #ffffff;
+}
+
+.manual-category-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.manual-category-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.btn-save-category {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.btn-save-category:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.btn-save-category:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.manual-category-hint {
+  font-size: 12px;
+  color: #64748b;
+  text-align: left;
+}
+
+.category-feedback-msg {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.category-feedback-msg.success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+}
+
+.category-feedback-msg.error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.manage-categories-panel {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manage-categories-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-align: left;
+}
+
+.manage-categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.manage-category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 10px;
+  gap: 8px;
+}
+
+.manage-category-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e293b;
+  text-align: left;
+}
+
+.manage-category-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.manage-category-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.manage-category-edit-input {
+  padding: 5px 8px;
+  font-size: 13px;
+}
+
+.btn-cat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-cat-icon.edit {
+  color: #2563eb;
+}
+
+.btn-cat-icon.edit:hover {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.btn-cat-icon.delete {
+  color: #dc2626;
+}
+
+.btn-cat-icon.delete:hover {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.btn-cat-icon.save {
+  color: #16a34a;
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.btn-cat-icon.cancel {
+  color: #64748b;
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
 
 

@@ -49,6 +49,48 @@
   color: #3b82f6;
 }
 
+.group-unit-badge {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.2px;
+}
+
+.asset-group-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-print-room {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #ffffff;
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-print-room:hover:not(:disabled) {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+.btn-print-room:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .asset-count-badge {
   background-color: #f1f5f9;
   color: #475569;

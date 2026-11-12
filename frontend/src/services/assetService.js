@@ -50,6 +50,30 @@ export const fetchCategories = async () => {
 };
 
 /**
+ * Menambahkan kategori aset baru (input manual, khusus Admin Unit)
+ */
+export const createCategory = async (namaKategori) => {
+  const response = await api.post('/api/kategori_aset', { nama_kategori: namaKategori });
+  return response.data;
+};
+
+/**
+ * Memperbarui nama kategori aset (khusus Admin Unit)
+ */
+export const updateCategory = async (id, namaKategori) => {
+  const response = await api.put(`/api/kategori_aset/${id}`, { nama_kategori: namaKategori });
+  return response.data;
+};
+
+/**
+ * Menghapus kategori aset (khusus Admin Unit)
+ */
+export const deleteCategory = async (id) => {
+  const response = await api.delete(`/api/kategori_aset/${id}`);
+  return response.data;
+};
+
+/**
  * Mengambil data pilihan ruangan (dropdown)
  */
 export const fetchRooms = async () => {
@@ -109,12 +133,12 @@ export const downloadAssetTemplate = async () => {
     });
     return response.data;
   } catch (err) {
-    // Fallback: Jika endpoint backend belum dibuat, buatkan file template CSV yang kompatibel dengan Excel
+    // Fallback: Jika endpoint backend belum tersedia, buatkan file template CSV yang kompatibel dengan Excel
     console.warn("Backend template endpoint not yet available, using client-side CSV template fallback.", err);
     const csvContent = "\uFEFF" + [
       "Nama Aset,Jenis Aset,Unit,Ruangan,Jumlah,Kondisi,Tanggal Diperoleh (YYYY-MM-DD),Harga Aset,Sumber Dana",
-      "Laptop ASUS ExpertBook,Elektronik,SMA,Laboratorium Komputer,5,Baik,2026-10-01,8500000,BOS",
-      "Meja Siswa Kayu Jati,Mebel / Furnitur,SMP,Kelas 7A,20,Baik,2026-09-15,350000,Yayasan"
+      "Laptop ASUS ExpertBook,Elektronik,SMA,Laboratorium Komputer,5,Baik,2026-10-01,8500000,Dana BOS",
+      "Meja Siswa Kayu Jati (Aset Lama),Mebel / Furnitur,SMP 1,Kelas 7A,20,Baik,2021-07-15,,Dana Yayasan"
     ].join("\r\n");
     return new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   }

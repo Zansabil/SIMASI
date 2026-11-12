@@ -264,6 +264,7 @@ export default function UserListPage({ role, currentPath }) {
             localStorage.setItem('user_email', u.email);
             localStorage.setItem('user_username', u.nama_pengguna);
             localStorage.setItem('user_jabatan', u.jabatan || mappedRole);
+            localStorage.setItem('user_area', u.area || '');
             const roleSlug = mappedRole === 'Super Admin' ? 'super-admin' : (mappedRole === 'Kepala Yayasan' ? 'kepala-yayasan' : (mappedRole === 'Petugas Perbaikan' ? 'petugas-perbaikan' : (mappedRole === 'Guru' ? 'guru' : 'admin')));
             localStorage.setItem('user_role', roleSlug);
           }

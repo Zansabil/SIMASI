@@ -6,8 +6,7 @@ const EMPTY_STATS = {
   total_aset: 0,
   aset_aktif: 0,
   perbaikan: 0,
-  elektronik: 0,
-  furnitur: 0,
+  kategori: [],
 };
 
 /**
@@ -38,13 +37,12 @@ export default function useDashboardData() {
         );
 
         if (response.data) {
-          // Update stats dari response API
+          // Update stats & daftar kategori dinamis dari response API
           setStats({
-            total_aset:  Number(response.data.stats?.total_aset)  || 0,
-            aset_aktif:  Number(response.data.stats?.aset_aktif)  || 0,
-            perbaikan:   Number(response.data.stats?.perbaikan)   || 0,
-            elektronik:  Number(response.data.stats?.elektronik)  || 0,
-            furnitur:    Number(response.data.stats?.furnitur)    || 0,
+            total_aset: Number(response.data.stats?.total_aset) || 0,
+            aset_aktif: Number(response.data.stats?.aset_aktif) || 0,
+            perbaikan:  Number(response.data.stats?.perbaikan)  || 0,
+            kategori:   Array.isArray(response.data.kategori) ? response.data.kategori : [],
           });
 
           // Update aktivitas dari response API jika ada

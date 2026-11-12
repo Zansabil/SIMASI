@@ -13,7 +13,7 @@
 export const formatToRupiah = (value) => {
   if (value === null || value === undefined || value === '') return '';
   const cleanNumber = value.toString().replace(/[^0-9]/g, '');
-  if (!cleanNumber) return '';
+  if (!cleanNumber || Number(cleanNumber) === 0) return '';
   return 'Rp ' + Number(cleanNumber).toLocaleString('id-ID');
 };
 
@@ -25,7 +25,7 @@ export const formatToRupiah = (value) => {
  * @returns {string} String tampilan Rupiah
  */
 export const formatPrice = (price) => {
-  if (price === null || price === undefined || price === '') return '-';
+  if (price === null || price === undefined || price === '' || Number(price) <= 0) return '-';
   const cleanNumber = Math.round(Number(price));
   return 'Rp ' + cleanNumber.toLocaleString('id-ID');
 };

@@ -12,44 +12,141 @@ use Illuminate\Support\Facades\Gate;
 
 class AsetController extends Controller
 {
+    /**
+     * Mengambil unit tanggung jawab jika pengguna yang login adalah Admin Unit (id_peran = 3).
+     */
+    private function unitAdminAktif(): ?\App\Models\LokasiUnit
+    {
+        $user = auth()->user();
+        if (!$user || (int) $user->id_peran !== 3) {
+            return null;
+        }
+        return $user->resolveLokasiUnit();
+    }
+
     // 1. READ: Menampilkan semua data aset (Format JSON)
     public function index(Request $request)
     {
         $search = $request->search;
         $query = Aset::query();
 
+        // Admin Unit hanya menampilkan data aset sesuai unit yang menjadi tanggung jawabnya
+        $unitAdmin = $this->unitAdminAktif();
+        if ($unitAdmin) {
+            $query->where('id_unit', $unitAdmin->id);
+        } elseif ($request->filled('id_unit') && $request->id_unit !== 'all') {
+            $unitFilter = $request->id_unit;
+            if (is_numeric($unitFilter)) {
+                $query->where('id_unit', (int) $unitFilter);
+            } else {
+                $query->whereHas('lokasiUnit', function ($q) use ($unitFilter) {
+                    $q->whereRaw('LOWER(TRIM(nama_unit)) = ?', [strtolower(trim($unitFilter))]);
+                });
+            }
+        }
+
+        // Filter opsional berdasarkan ruangan
+        if ($request->filled('id_ruangan') && $request->id_ruangan !== 'all') {
+            $ruangFilter = $request->id_ruangan;
+            if (is_numeric($ruangFilter)) {
+                $query->where('id_ruangan', (int) $ruangFilter);
+            } else {
+                $query->whereHas('ruangan', function ($q) use ($ruangFilter) {
+                    $q->whereRaw('LOWER(TRIM(nama_ruangan)) = ?', [strtolower(trim($ruangFilter))]);
+                });
+            }
+        }
+
         if ($search) {
-            $query->where('nama_aset', 'like', "%{$search}%")
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_aset', 'like', "%{$search}%")
                   ->orWhere('kode_inventaris', 'like', "%{$search}%")
                   ->orWhere('jenis_aset', 'like', "%{$search}%")
-                  ->orWhereHas('lokasiUnit', function ($q) use ($search) {
-                      $q->where('nama_unit', 'like', "%{$search}%");
+                  ->orWhereHas('lokasiUnit', function ($uq) use ($search) {
+                      $uq->where('nama_unit', 'like', "%{$search}%");
                   })
-                  ->orWhereHas('ruangan', function ($q) use ($search) {
-                      $q->where('nama_ruangan', 'like', "%{$search}%");
+                  ->orWhereHas('ruangan', function ($rq) use ($search) {
+                      $rq->where('nama_ruangan', 'like', "%{$search}%");
                   });
+            });
         }
 
         $asets = $query->with(['ruangan', 'lokasiUnit', 'subAset.ruangan'])->orderBy('tgl_dibuat', 'desc')->get();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Daftar data aset berhasil diambil.',
-            'data'    => $asets
+            'success'   => true,
+            'message'   => 'Daftar data aset berhasil diambil.',
+            'user_unit' => $unitAdmin ? [
+                'id'        => $unitAdmin->id,
+                'nama_unit' => $unitAdmin->nama_unit,
+            ] : null,
+            'data'      => $asets
         ], 200);
     }
 
-    // CETAK PDF (Menghasilkan file stream untuk diunduh ReactJS)
-    public function cetakPDF()
+    // CETAK PDF (Menghasilkan file stream untuk diunduh ReactJS, mendukung filter unit, ruangan, dan periode)
+    public function cetakPDF(Request $request)
     {
-        if (!in_array(auth()->user()->id_peran, [1, 3])) {
-            return response()->json(['message' => 'This action is unauthorized.'], 403);
-        } 
+        $query = Aset::with(['ruangan', 'lokasiUnit']);
+        $filterUnitLabel = null;
+        $filterRuanganLabel = null;
+        $periodeLabel = 'Semua Waktu';
 
-        $asets = Aset::with(['ruangan', 'lokasiUnit'])->orderBy('tgl_dibuat', 'desc')->get();
-        $pdf = Pdf::loadView('aset.cetak', compact('asets'));
+        // Admin Unit hanya boleh mencetak aset dari unit tanggung jawabnya
+        $unitAdmin = $this->unitAdminAktif();
+        if ($unitAdmin) {
+            $query->where('id_unit', $unitAdmin->id);
+            $filterUnitLabel = $unitAdmin->nama_unit;
+        } elseif ($request->filled('id_unit') && $request->id_unit !== 'all') {
+            $unitInput = $request->id_unit;
+            if (is_numeric($unitInput)) {
+                $query->where('id_unit', (int) $unitInput);
+                $filterUnitLabel = \App\Models\LokasiUnit::find((int) $unitInput)?->nama_unit ?? $unitInput;
+            } else {
+                $query->whereHas('lokasiUnit', function ($q) use ($unitInput) {
+                    $q->whereRaw('LOWER(TRIM(nama_unit)) = ?', [strtolower(trim($unitInput))]);
+                });
+                $filterUnitLabel = trim($unitInput);
+            }
+        }
+
+        // Filter berdasarkan Ruangan (ID atau Nama Ruangan)
+        if ($request->filled('id_ruangan') && $request->id_ruangan !== 'all') {
+            $ruanganInput = $request->id_ruangan;
+            if (is_numeric($ruanganInput)) {
+                $query->where('id_ruangan', (int) $ruanganInput);
+                $filterRuanganLabel = \App\Models\Ruangan::find((int) $ruanganInput)?->nama_ruangan ?? $ruanganInput;
+            } else {
+                $query->whereHas('ruangan', function ($q) use ($ruanganInput) {
+                    $q->whereRaw('LOWER(TRIM(nama_ruangan)) = ?', [strtolower(trim($ruanganInput))]);
+                });
+                $filterRuanganLabel = trim($ruanganInput);
+            }
+        }
+
+        // Filter berdasarkan rentang tanggal jika dikirim
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $dateField = in_array($request->date_field, ['tgl_diperoleh', 'tgl_dibuat'], true)
+                ? $request->date_field
+                : 'tgl_diperoleh';
+            $query->whereDate($dateField, '>=', $request->start_date)
+                  ->whereDate($dateField, '<=', $request->end_date);
+            $periodeLabel = $request->start_date . ' s/d ' . $request->end_date;
+        }
+
+        $asets = $query->orderBy('id_unit', 'asc')
+                       ->orderBy('id_ruangan', 'asc')
+                       ->orderBy('nama_aset', 'asc')
+                       ->get();
+
+        $pdf = Pdf::loadView('aset.cetak', compact(
+            'asets',
+            'filterUnitLabel',
+            'filterRuanganLabel',
+            'periodeLabel'
+        ));
         $pdf->setPaper('A4', 'landscape');
-        
+
         return $pdf->stream('Laporan_Data_Aset.pdf');
     }
 
@@ -63,12 +160,356 @@ class AsetController extends Controller
         return Excel::download(new AsetExport, 'Laporan_Data_Aset.xlsx');
     }
 
+    // UNDUH TEMPLATE IMPOR EXCEL
+    public function downloadTemplate()
+    {
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        }
+
+        $unitAdmin = $this->unitAdminAktif();
+        $defaultUnit = $unitAdmin ? $unitAdmin->nama_unit : null;
+
+        return Excel::download(
+            new \App\Exports\AsetTemplateExport($defaultUnit),
+            'Template_Impor_Aset_SIMAS.xlsx'
+        );
+    }
+
+    // IMPOR DATA ASET DARI FILE EXCEL / CSV
+    public function importExcel(Request $request)
+    {
+        if (!in_array(auth()->user()->id_peran, [1, 3])) {
+            return response()->json(['message' => 'This action is unauthorized.'], 403);
+        }
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:5120',
+        ], [
+            'file.required' => 'Silakan pilih file Excel terlebih dahulu.',
+            'file.mimes'    => 'Format file tidak didukung. Harap unggah file .xlsx, .xls, atau .csv.',
+            'file.max'      => 'Ukuran file terlalu besar (maksimal 5MB).',
+        ]);
+
+        try {
+            $sheets = Excel::toArray(new \stdClass(), $request->file('file'));
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membaca file Excel: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        $rows = $sheets[0] ?? [];
+        if (count($rows) < 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File Excel kosong atau tidak memiliki baris data untuk diimpor.',
+            ], 422);
+        }
+
+        // Dukungan otomatis jika file CSV menggunakan pemisah titik koma (;) dari Microsoft Excel Indonesia
+        if (count($rows[0]) === 1 && str_contains((string) ($rows[0][0] ?? ''), ';')) {
+            $rows = array_map(function ($r) {
+                return str_getcsv((string) ($r[0] ?? ''), ';');
+            }, $rows);
+        }
+
+        // Petakan baris header (baris pertama) ke indeks kolom
+        $headerRow = $rows[0];
+        $colMap = [];
+        foreach ($headerRow as $idx => $cell) {
+            $cleanHeader = preg_replace('/^\xEF\xBB\xBF/', '', (string) $cell);
+            $h = mb_strtolower(trim(preg_replace('/\s+/', ' ', $cleanHeader)));
+
+            if (in_array($h, ['nama aset', 'nama barang', 'nama_aset', 'nama'], true)) {
+                $colMap['nama_aset'] = $idx;
+            } elseif (in_array($h, ['jenis aset', 'kategori aset', 'kategori barang', 'kategori', 'jenis_aset', 'jenis'], true)) {
+                $colMap['jenis_aset'] = $idx;
+            } elseif (in_array($h, ['unit', 'unit pendidikan', 'lokasi unit', 'id_unit'], true)) {
+                $colMap['unit'] = $idx;
+            } elseif (in_array($h, ['ruangan', 'nama ruangan', 'lokasi ruangan', 'lokasi penempatan', 'lokasi'], true)) {
+                $colMap['ruangan'] = $idx;
+            } elseif (in_array($h, ['jumlah', 'jumlah aset', 'jumlah barang', 'jumlah_aset', 'qty', 'kuantitas'], true)) {
+                $colMap['jumlah'] = $idx;
+            } elseif (in_array($h, ['kondisi', 'kondisi aset', 'kondisi barang', 'kondisi_aset'], true)) {
+                $colMap['kondisi'] = $idx;
+            } elseif (str_contains($h, 'tanggal') || str_contains($h, 'tgl') || $h === 'tahun' || str_contains($h, 'perolehan') || str_contains($h, 'pembelian')) {
+                $colMap['tgl_diperoleh'] = $idx;
+            } elseif (str_contains($h, 'harga') || $h === 'price') {
+                $colMap['harga_aset'] = $idx;
+            } elseif (str_contains($h, 'sumber') || str_contains($h, 'dana')) {
+                $colMap['sumber_dana'] = $idx;
+            }
+        }
+
+        $requiredCols = ['nama_aset', 'jenis_aset', 'ruangan', 'jumlah', 'kondisi', 'tgl_diperoleh'];
+        $missingCols = array_diff($requiredCols, array_keys($colMap));
+        if (!empty($missingCols)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Format kolom pada file tidak sesuai dengan template. Pastikan terdapat kolom: Nama Aset, Jenis Aset, Unit, Ruangan, Jumlah, Kondisi, dan Tanggal Diperoleh.',
+            ], 422);
+        }
+
+        $unitAdmin = $this->unitAdminAktif();
+        $userId = auth()->user()->id;
+        $preparedRows = [];
+
+        for ($i = 1; $i < count($rows); $i++) {
+            $row = $rows[$i];
+            $rowNumber = $i + 1;
+
+            // Lewati baris yang sepenuhnya kosong
+            $hasContent = false;
+            foreach ($row as $cellVal) {
+                if ($cellVal !== null && trim((string) $cellVal) !== '') {
+                    $hasContent = true;
+                    break;
+                }
+            }
+            if (!$hasContent) {
+                continue;
+            }
+
+            $namaAset = trim(strip_tags((string) ($row[$colMap['nama_aset']] ?? '')));
+            $jenisAset = preg_replace('/\s+/', ' ', trim(strip_tags((string) ($row[$colMap['jenis_aset']] ?? ''))));
+            $unitRaw = isset($colMap['unit']) ? trim(strip_tags((string) ($row[$colMap['unit']] ?? ''))) : '';
+            $ruanganRaw = trim(strip_tags((string) ($row[$colMap['ruangan']] ?? '')));
+            $jumlahRaw = trim((string) ($row[$colMap['jumlah']] ?? ''));
+            $kondisiRaw = trim(strip_tags((string) ($row[$colMap['kondisi']] ?? '')));
+            $tglRaw = $row[$colMap['tgl_diperoleh']] ?? null;
+            $hargaRaw = isset($colMap['harga_aset']) ? ($row[$colMap['harga_aset']] ?? null) : null;
+            $sumberRaw = isset($colMap['sumber_dana']) ? trim(strip_tags((string) ($row[$colMap['sumber_dana']] ?? ''))) : '';
+
+            if ($namaAset === '') {
+                return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Nama Aset' wajib diisi."], 422);
+            }
+            if ($jenisAset === '') {
+                return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Jenis Aset' wajib diisi."], 422);
+            }
+            if ($ruanganRaw === '') {
+                return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Ruangan' wajib diisi."], 422);
+            }
+
+            // Validasi Jumlah
+            $jumlahClean = preg_replace('/[^\d]/', '', $jumlahRaw);
+            $jumlahAset = $jumlahClean !== '' ? (int) $jumlahClean : 0;
+            if ($jumlahAset < 1) {
+                return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Jumlah' harus berupa angka minimal 1."], 422);
+            }
+
+            // Validasi & Normalisasi Kondisi
+            $kondisiLower = mb_strtolower($kondisiRaw);
+            if (in_array($kondisiLower, ['baik', 'bagus', 'normal'], true)) {
+                $kondisiAset = 'baik';
+            } elseif (str_contains($kondisiLower, 'berat') || $kondisiLower === 'rb') {
+                $kondisiAset = 'rusak berat';
+            } elseif (str_contains($kondisiLower, 'ringan') || $kondisiLower === 'rr' || $kondisiLower === 'rusak') {
+                $kondisiAset = 'rusak ringan';
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Baris {$rowNumber}: Kondisi '{$kondisiRaw}' tidak valid. Gunakan: Baik, Rusak Ringan, atau Rusak Berat.",
+                ], 422);
+            }
+
+            // Validasi & Parsing Tanggal Diperoleh
+            $tglDiperoleh = $this->parseImportDate($tglRaw);
+            if (!$tglDiperoleh) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Baris {$rowNumber}: Format 'Tanggal Diperoleh' tidak valid. Gunakan format YYYY-MM-DD (contoh: 2026-10-01) atau DD-MM-YYYY.",
+                ], 422);
+            }
+
+            // Resolusi Unit Pendidikan (dikunci otomatis jika yang mengimpor adalah Admin Unit)
+            if ($unitAdmin) {
+                $unitModel = $unitAdmin;
+            } else {
+                if ($unitRaw === '') {
+                    return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Unit' wajib diisi."], 422);
+                }
+                $unitClean = preg_replace('/^unit\s+/i', '', $unitRaw);
+                $legacyMap = ['tk' => 'TK 1', 'sd' => 'SD 1', 'smp' => 'SMP 1'];
+                $unitLookup = $legacyMap[mb_strtolower($unitClean)] ?? $unitClean;
+
+                $unitModel = \App\Models\LokasiUnit::whereRaw('LOWER(TRIM(nama_unit)) = ?', [mb_strtolower($unitLookup)])->first();
+                if (!$unitModel) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Baris {$rowNumber}: Unit '{$unitRaw}' tidak ditemukan. Pilihan unit: TK 1, TK 2, SD 1, SD 2, SMP 1, SMP 2, SMA, MA.",
+                    ], 422);
+                }
+            }
+
+            // Harga Aset bersifat opsional (boleh dikosongkan untuk aset lama)
+            $hargaClean = ($hargaRaw !== null && $hargaRaw !== '')
+                ? preg_replace('/\D/', '', (string) $hargaRaw)
+                : '';
+            $hargaAset = $hargaClean !== '' ? (int) $hargaClean : 0;
+
+            $preparedRows[] = [
+                'nama_aset'     => $namaAset,
+                'jenis_aset'    => $jenisAset,
+                'unit_model'    => $unitModel,
+                'nama_ruangan'  => $ruanganRaw,
+                'jumlah_aset'   => $jumlahAset,
+                'kondisi_aset'  => $kondisiAset,
+                'tgl_diperoleh' => $tglDiperoleh,
+                'harga_aset'    => $hargaAset,
+                'sumber_dana'   => $sumberRaw !== '' ? $sumberRaw : '-',
+            ];
+        }
+
+        if (empty($preparedRows)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada baris data aset yang valid untuk diimpor.',
+            ], 422);
+        }
+
+        $importedCount = \Illuminate\Support\Facades\DB::transaction(function () use ($preparedRows, $userId) {
+            $count = 0;
+
+            foreach ($preparedRows as $item) {
+                // 1. Pastikan kategori tersimpan di tabel kategori_aset
+                $namaKategori = $item['jenis_aset'];
+                $kategoriAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();
+                if (!$kategoriAda) {
+                    $huruf = strtoupper(preg_replace('/[^a-zA-Z]/', '', $namaKategori));
+                    $dasar = substr($huruf !== '' ? $huruf : 'KAT', 0, 3);
+                    $kode = $dasar;
+                    $suffix = 1;
+                    while (\App\Models\KategoriAset::where('kode_kategori', $kode)->exists()) {
+                        $kode = $dasar . $suffix++;
+                    }
+                    $kategoriAda = \App\Models\KategoriAset::create([
+                        'kode_kategori' => $kode,
+                        'nama_kategori' => $namaKategori,
+                    ]);
+                }
+
+                // 2. Pastikan ruangan tersimpan di tabel ruangan
+                $namaRuangan = $item['nama_ruangan'];
+                $ruangan = \App\Models\Ruangan::whereRaw('LOWER(TRIM(nama_ruangan)) = ?', [mb_strtolower($namaRuangan)])->first();
+                if (!$ruangan) {
+                    $ruangan = \App\Models\Ruangan::create([
+                        'nama_ruangan' => $namaRuangan,
+                        'kode_ruangan' => strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $namaRuangan), 0, 5)) . rand(10, 99),
+                    ]);
+                }
+
+                // 3. Buat kode inventaris unik berdasarkan unit & tanggal perolehan
+                $unitModel = $item['unit_model'];
+                $unitName = strtoupper(trim($unitModel->nama_unit));
+                $tanggal = \Carbon\Carbon::parse($item['tgl_diperoleh'])->format('dmY');
+                $prefix = "{$unitName}-{$tanggal}-";
+
+                $latestAset = Aset::where('kode_inventaris', 'like', "{$prefix}%")
+                    ->orderBy('kode_inventaris', 'desc')
+                    ->lockForUpdate()
+                    ->first();
+
+                $nextSeq = 1;
+                if ($latestAset) {
+                    $seqString = substr($latestAset->kode_inventaris, strlen($prefix));
+                    $nextSeq = ((int) $seqString) + 1;
+                }
+                $kodeInventaris = $prefix . str_pad($nextSeq, 4, '0', STR_PAD_LEFT);
+
+                // 4. Simpan data aset utama
+                $createdAset = Aset::create([
+                    'kode_inventaris' => $kodeInventaris,
+                    'nama_aset'       => $item['nama_aset'],
+                    'jenis_aset'      => $kategoriAda->nama_kategori,
+                    'id_unit'         => $unitModel->id,
+                    'id_ruangan'      => $ruangan->id,
+                    'jumlah_aset'     => $item['jumlah_aset'],
+                    'kondisi_aset'    => $item['kondisi_aset'],
+                    'tgl_diperoleh'   => $item['tgl_diperoleh'],
+                    'harga_aset'      => $item['harga_aset'],
+                    'sumber_dana'     => $item['sumber_dana'],
+                    'id_pengguna'     => $userId,
+                ]);
+
+                // 5. Buat sub-aset sejumlah unit barang
+                for ($u = 1; $u <= $createdAset->jumlah_aset; $u++) {
+                    \App\Models\SubAset::create([
+                        'id_aset'           => $createdAset->id,
+                        'kode_sub_aset'     => "{$kodeInventaris}-{$u}",
+                        'id_ruangan'        => $createdAset->id_ruangan,
+                        'kondisi_aset'      => $createdAset->kondisi_aset,
+                        'status_penggunaan' => 'Tersedia',
+                    ]);
+                }
+
+                // 6. Catat di riwayat aset
+                RiwayatAset::create([
+                    'id_aset'     => $createdAset->id,
+                    'aksi'        => 'Penambahan',
+                    'id_pengguna' => $userId,
+                    'keterangan'  => 'Menambahkan aset melalui Impor Excel: ' . $createdAset->nama_aset,
+                    'waktu'       => now(),
+                ]);
+
+                $count++;
+            }
+
+            return $count;
+        });
+
+        return response()->json([
+            'success'        => true,
+            'message'        => "Berhasil mengimpor {$importedCount} data aset dari file Excel.",
+            'imported_count' => $importedCount,
+        ], 201);
+    }
+
+    /**
+     * Helper untuk mengonversi nilai tanggal dari Excel (serial number, YYYY-MM-DD, DD-MM-YYYY, atau tahun YYYY).
+     */
+    private function parseImportDate($rawDate): ?string
+    {
+        if ($rawDate === null || $rawDate === '') {
+            return null;
+        }
+
+        try {
+            if (is_numeric($rawDate)) {
+                $num = (float) $rawDate;
+                if ($num >= 1950 && $num <= 2100 && floor($num) == $num) {
+                    return ((int) $num) . '-01-01';
+                }
+                return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($num)->format('Y-m-d');
+            }
+
+            $str = trim((string) $rawDate);
+            if (preg_match('/^\d{4}$/', $str)) {
+                return "{$str}-01-01";
+            }
+            if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/', $str, $m)) {
+                return \Carbon\Carbon::createFromDate((int) $m[3], (int) $m[2], (int) $m[1])->format('Y-m-d');
+            }
+
+            return \Carbon\Carbon::parse($str)->format('Y-m-d');
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     // 2. STORE: Memproses penyimpanan data baru dari ReactJS
     public function store(Request $request)
     {
         if (!in_array(auth()->user()->id_peran, [1, 3])) {
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
+
+        // Jika Admin Unit memiliki unit tanggung jawab, kunci id_unit ke unitnya
+        $unitAdmin = $this->unitAdminAktif();
+        if ($unitAdmin) {
+            $request->merge(['id_unit' => $unitAdmin->id]);
+        }
         
         $sanitizeFields = ['nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan', 'kondisi_aset', 'sumber_dana'];
         $sanitizedData = [];
@@ -104,11 +545,37 @@ class AsetController extends Controller
             'tgl_diperoleh'   => 'required|date'
         ]);
 
+        // Jika Admin Unit menginput kategori (jenis_aset) baru secara manual, simpan ke tabel kategori_aset
+        if ((int) auth()->user()->id_peran === 3 && $request->filled('jenis_aset')) {
+            $namaKategori = preg_replace('/\s+/', ' ', trim($request->jenis_aset));
+            $request->merge(['jenis_aset' => $namaKategori]);
+            $sudahAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();
+            if (!$sudahAda && $namaKategori !== '') {
+                $huruf = strtoupper(preg_replace('/[^a-zA-Z]/', '', $namaKategori));
+                $dasar = substr($huruf !== '' ? $huruf : 'KAT', 0, 3);
+                $kode = $dasar;
+                $suffix = 1;
+                while (\App\Models\KategoriAset::where('kode_kategori', $kode)->exists()) {
+                    $kode = $dasar . $suffix++;
+                }
+                \App\Models\KategoriAset::create([
+                    'kode_kategori' => $kode,
+                    'nama_kategori' => $namaKategori,
+                ]);
+            } elseif ($sudahAda) {
+                $request->merge(['jenis_aset' => $sudahAda->nama_kategori]);
+            }
+        }
+
         $dataAset = $request->only([
             'nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan',
             'jumlah_aset', 'kondisi_aset', 'tgl_diperoleh',
             'harga_aset', 'sumber_dana', 'foto'
         ]);
+        $cleanHarga = isset($dataAset['harga_aset']) && $dataAset['harga_aset'] !== null && $dataAset['harga_aset'] !== ''
+            ? preg_replace('/\D/', '', (string) $dataAset['harga_aset'])
+            : '';
+        $dataAset['harga_aset'] = $cleanHarga !== '' ? (int) $cleanHarga : 0;
         $dataAset['id_pengguna'] = auth()->user()->id; // Mengambil ID dari token Sanctum pengguna yang login
 
         $aset = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $dataAset) {
@@ -189,6 +656,12 @@ class AsetController extends Controller
             return response()->json(['message' => 'This action is unauthorized.'], 403);
         } 
 
+        // Jika Admin Unit memiliki unit tanggung jawab, kunci id_unit ke unitnya
+        $unitAdmin = $this->unitAdminAktif();
+        if ($unitAdmin) {
+            $request->merge(['id_unit' => $unitAdmin->id]);
+        }
+
         $sanitizeFields = ['nama_aset', 'jenis_aset', 'id_unit', 'id_ruangan', 'kondisi_aset', 'sumber_dana'];
         $sanitizedData = [];
         foreach ($sanitizeFields as $field) {
@@ -217,7 +690,43 @@ class AsetController extends Controller
             'jumlah_aset' => 'nullable|numeric|min:1',
         ]);
 
+        if ($request->has('harga_aset')) {
+            $cleanHargaUpdate = $request->input('harga_aset') !== null && $request->input('harga_aset') !== ''
+                ? preg_replace('/\D/', '', (string) $request->input('harga_aset'))
+                : '';
+            $request->merge(['harga_aset' => $cleanHargaUpdate !== '' ? (int) $cleanHargaUpdate : 0]);
+        }
+
+        if ((int) auth()->user()->id_peran === 3 && $request->filled('jenis_aset')) {
+            $namaKategori = preg_replace('/\s+/', ' ', trim($request->jenis_aset));
+            $request->merge(['jenis_aset' => $namaKategori]);
+            $sudahAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();
+            if (!$sudahAda && $namaKategori !== '') {
+                $huruf = strtoupper(preg_replace('/[^a-zA-Z]/', '', $namaKategori));
+                $dasar = substr($huruf !== '' ? $huruf : 'KAT', 0, 3);
+                $kode = $dasar;
+                $suffix = 1;
+                while (\App\Models\KategoriAset::where('kode_kategori', $kode)->exists()) {
+                    $kode = $dasar . $suffix++;
+                }
+                \App\Models\KategoriAset::create([
+                    'kode_kategori' => $kode,
+                    'nama_kategori' => $namaKategori,
+                ]);
+            } elseif ($sudahAda) {
+                $request->merge(['jenis_aset' => $sudahAda->nama_kategori]);
+            }
+        }
+
         $aset = Aset::findOrFail($id);
+
+        if ($unitAdmin && (int) $aset->id_unit !== (int) $unitAdmin->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda hanya dapat mengubah data aset pada unit tanggung jawab Anda (' . $unitAdmin->nama_unit . ').'
+            ], 403);
+        }
+
         $oldJumlah = $aset->jumlah_aset;
         
         $aset->fill($request->except(['_token', '_method']));
@@ -408,6 +917,14 @@ class AsetController extends Controller
         } 
 
         $aset = Aset::findOrFail($id);
+
+        $unitAdmin = $this->unitAdminAktif();
+        if ($unitAdmin && (int) $aset->id_unit !== (int) $unitAdmin->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda hanya dapat menghapus data aset pada unit tanggung jawab Anda (' . $unitAdmin->nama_unit . ').'
+            ], 403);
+        }
 
         // Cek apakah aset utama atau salah satu unit sub-asetnya sedang dalam proses perbaikan
         $activeRepair = \App\Models\LaporanKerusakan::where('id_aset', $id)
