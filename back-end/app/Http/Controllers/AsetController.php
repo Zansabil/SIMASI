@@ -330,6 +330,15 @@ class AsetController extends Controller
         $userId = auth()->user()->id;
         $preparedRows = [];
 
+        // Impor hanya menerima kategori yang sudah terdaftar di database (tidak membuat kategori baru).
+        // Perbedaan huruf besar/kecil, spasi, dan tanda baca disamakan otomatis.
+        $kategoriList = \App\Models\KategoriAset::orderBy('id')->get(['id', 'nama_kategori']);
+        $kategoriMap = [];
+        foreach ($kategoriList as $kat) {
+            $kategoriMap[$this->normalisasiKategori($kat->nama_kategori)] = $kat->nama_kategori;
+        }
+        $kategoriErrors = [];
+
         for ($i = 1; $i < count($rows); $i++) {
             $row = $rows[$i];
             $rowNumber = $i + 1;
@@ -361,6 +370,16 @@ class AsetController extends Controller
             }
             if ($jenisAset === '') {
                 return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Jenis Aset' wajib diisi."], 422);
+            }
+
+            // Cocokkan Jenis Aset dengan kategori terdaftar
+            $kategoriResolved = $kategoriMap[$this->normalisasiKategori($jenisAset)] ?? null;
+            if ($kategoriResolved === null) {
+                $saran = $this->saranKategori($jenisAset, $kategoriList);
+                $kategoriErrors[] = "Baris {$rowNumber}: Kategori '{$jenisAset}' tidak terdaftar."
+                    . ($saran ? " Mungkin maksud Anda '{$saran}'?" : '');
+            } else {
+                $jenisAset = $kategoriResolved;
             }
             if ($ruanganRaw === '') {
                 return response()->json(['success' => false, 'message' => "Baris {$rowNumber}: Kolom 'Ruangan' wajib diisi."], 422);
@@ -436,6 +455,23 @@ class AsetController extends Controller
             ];
         }
 
+        if (!empty($kategoriErrors)) {
+            $maxTampil = 10;
+            $daftarError = array_slice($kategoriErrors, 0, $maxTampil);
+            $sisa = count($kategoriErrors) - count($daftarError);
+            $daftarKategori = $kategoriList->pluck('nama_kategori')->implode(', ');
+
+            return response()->json([
+                'success' => false,
+                'message' => "Impor dibatalkan karena ada kategori (Jenis Aset) yang tidak terdaftar:\n"
+                    . implode("\n", $daftarError)
+                    . ($sisa > 0 ? "\n...dan {$sisa} baris lainnya." : '')
+                    . "\n\nKategori yang tersedia: {$daftarKategori}."
+                    . "\nGunakan pilihan dropdown pada template terbaru. Kategori baru dapat ditambahkan Admin Unit melalui form Tambah Aset.",
+                'errors'  => $kategoriErrors,
+            ], 422);
+        }
+
         if (empty($preparedRows)) {
             return response()->json([
                 'success' => false,
@@ -450,22 +486,8 @@ class AsetController extends Controller
             $rincianImpor = [];
 
             foreach ($preparedRows as $item) {
-                // 1. Pastikan kategori tersimpan di tabel kategori_aset
-                $namaKategori = $item['jenis_aset'];
-                $kategoriAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();
-                if (!$kategoriAda) {
-                    $huruf = strtoupper(preg_replace('/[^a-zA-Z]/', '', $namaKategori));
-                    $dasar = substr($huruf !== '' ? $huruf : 'KAT', 0, 3);
-                    $kode = $dasar;
-                    $suffix = 1;
-                    while (\App\Models\KategoriAset::where('kode_kategori', $kode)->exists()) {
-                        $kode = $dasar . $suffix++;
-                    }
-                    $kategoriAda = \App\Models\KategoriAset::create([
-                        'kode_kategori' => $kode,
-                        'nama_kategori' => $namaKategori,
-                    ]);
-                }
+                // 1. Kategori sudah divalidasi & disamakan dengan data kategori terdaftar sebelum transaksi
+                $namaKategoriFinal = $item['jenis_aset'];
 
                 // 2. Pastikan ruangan tersimpan di tabel ruangan
                 $namaRuangan = $item['nama_ruangan'];
@@ -489,7 +511,7 @@ class AsetController extends Controller
                 $createdAset = Aset::create([
                     'kode_inventaris' => $kodeInventaris,
                     'nama_aset'       => $item['nama_aset'],
-                    'jenis_aset'      => $kategoriAda->nama_kategori,
+                    'jenis_aset'      => $namaKategoriFinal,
                     'id_unit'         => $unitModel->id,
                     'id_ruangan'      => $ruangan->id,
                     'jumlah_aset'     => $item['jumlah_aset'],
@@ -542,6 +564,45 @@ class AsetController extends Controller
             'message'        => "Berhasil mengimpor {$importedCount} data aset dari file Excel.",
             'imported_count' => $importedCount,
         ], 201);
+    }
+
+    /**
+     * Menyamakan nama kategori untuk pencocokan: huruf kecil, tanpa spasi & tanda baca.
+     * Contoh: "Mebel / Furnitur" dan "mebel furnitur" sama-sama menjadi "mebelfurnitur".
+     */
+    private function normalisasiKategori(?string $nama): string
+    {
+        return preg_replace('/[^a-z0-9]/', '', mb_strtolower(trim((string) $nama)));
+    }
+
+    /**
+     * Mencari kategori terdaftar yang paling mirip untuk saran perbaikan salah ketik.
+     */
+    private function saranKategori(string $input, $kategoriList): ?string
+    {
+        $norm = $this->normalisasiKategori($input);
+        if ($norm === '') {
+            return null;
+        }
+
+        $terbaik = null;
+        $jarakTerbaik = PHP_INT_MAX;
+        foreach ($kategoriList as $kat) {
+            $katNorm = $this->normalisasiKategori($kat->nama_kategori);
+            if ($katNorm === '') {
+                continue;
+            }
+            $jarak = (str_contains($katNorm, $norm) || str_contains($norm, $katNorm))
+                ? 0
+                : levenshtein(substr($norm, 0, 255), substr($katNorm, 0, 255));
+            if ($jarak < $jarakTerbaik) {
+                $jarakTerbaik = $jarak;
+                $terbaik = $kat->nama_kategori;
+            }
+        }
+
+        $batas = max(2, (int) ceil(strlen($norm) * 0.4));
+        return ($terbaik !== null && $jarakTerbaik <= $batas) ? $terbaik : null;
     }
 
     /**

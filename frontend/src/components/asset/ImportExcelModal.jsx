@@ -156,7 +156,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }) {
           {errorMessage && (
             <div className="import-excel-alert-error">
               <FiAlertCircle size={18} />
-              <span>{errorMessage}</span>
+              <span style={{ whiteSpace: 'pre-line', maxHeight: '180px', overflowY: 'auto' }}>{errorMessage}</span>
             </div>
           )}
 
@@ -167,7 +167,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }) {
               <div>
                 <h4 className="import-step-title">Gunakan Template Standar</h4>
                 <p className="import-step-desc">
-                  Pastikan kolom data Anda cocok (Nama Aset, Unit, Ruangan, Jumlah, Kondisi, dll) agar tidak terjadi kesalahan.
+                  Unduh template terbaru. Kolom Jenis Aset, Unit, Kondisi, dan Sumber Dana sudah berisi pilihan dropdown sesuai data di sistem.
                 </p>
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function ImportExcelModal({ isOpen, onClose, onSuccess }) {
           <div className="import-columns-hint">
             <FiCheckCircle size={15} className="hint-icon" />
             <span className="hint-text">
-              Kolom wajib terisi: <strong>Nama Aset</strong>, <strong>Jenis Aset</strong>, <strong>Unit</strong>, <strong>Ruangan</strong>, <strong>Jumlah</strong>, <strong>Kondisi</strong>, dan <strong>Tanggal Diperoleh</strong>. Kolom <strong>Harga Aset</strong> dan <strong>Sumber Dana</strong> bersifat opsional.
+              Kolom wajib terisi: <strong>Nama Aset</strong>, <strong>Jenis Aset</strong>, <strong>Unit</strong>, <strong>Ruangan</strong>, <strong>Jumlah</strong>, <strong>Kondisi</strong>, dan <strong>Tanggal Diperoleh</strong>. Kolom <strong>Harga Aset</strong> dan <strong>Sumber Dana</strong> bersifat opsional. <strong>Jenis Aset</strong> harus sesuai kategori yang terdaftar di sistem.
             </span>
           </div>
 

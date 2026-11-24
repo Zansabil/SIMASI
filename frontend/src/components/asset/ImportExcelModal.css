@@ -100,14 +100,20 @@
 /* Error Alert */
 .import-excel-alert-error {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   background-color: #fef2f2;
   border: 1px solid #fecaca;
   color: #b91c1c;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: 8px;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.import-excel-alert-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 /* Step 1: Template Card */
