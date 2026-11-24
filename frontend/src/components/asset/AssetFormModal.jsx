@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { FiX, FiPlus, FiEdit2, FiTrash2, FiCheck, FiSettings } from 'react-icons/fi';
+import { FiX } from 'react-icons/fi';
 import StatusModal from '../ui/StatusModal';
 import ImageUploader from '../ui/ImageUploader';
 import { useFormDraft } from '../../hooks/useFormDraft';
@@ -32,15 +32,6 @@ export default function AssetFormModal({
 
   // State untuk menyimpan pesan kesalahan yang dikirimkan oleh API Laravel
   const [submitError, setSubmitError] = useState('');
-
-  // --- STATE KELOLA & INPUT MANUAL KATEGORI (KHUSUS ADMIN UNIT) ---
-  const [isManualCategory, setIsManualCategory] = useState(false);
-  const [manualCategoryInput, setManualCategoryInput] = useState('');
-  const [isManageCategoriesOpen, setIsManageCategoriesOpen] = useState(false);
-  const [editingCategoryId, setEditingCategoryId] = useState(null);
-  const [editingCategoryName, setEditingCategoryName] = useState('');
-  const [categoryLoading, setCategoryLoading] = useState(false);
-  const [categoryFeedback, setCategoryFeedback] = useState({ type: '', message: '' });
 
   // Ref untuk mengakses elemen DOM body modal guna menyesuaikan tingginya secara dinamis
   const modalBodyRef = useRef(null);
@@ -197,12 +188,6 @@ export default function AssetFormModal({
     if (isOpen) {
       setIsConfirmCloseOpen(false); // Pastikan konfirmasi keluar tertutup
       setSubmitError('');           // Bersihkan error pengiriman sebelumnya
-      setIsManualCategory(false);
-      setManualCategoryInput('');
-      setIsManageCategoriesOpen(false);
-      setEditingCategoryId(null);
-      setEditingCategoryName('');
-      setCategoryFeedback({ type: '', message: '' });
       if (assetToEdit) {
         loadEditData(assetToEdit);  // Muat data jika masuk mode Edit
       } else {
@@ -215,98 +200,6 @@ export default function AssetFormModal({
       });
     }
   }, [isOpen, assetToEdit, loadEditData, resetForm, register, isEditing]);
-
-  // --- HANDLER SIMPAN KATEGORI MANUAL (ADMIN UNIT) ---
-  const handleSaveManualCategory = async () => {
-    const trimmed = manualCategoryInput.trim();
-    if (!trimmed) {
-      setCategoryFeedback({ type: 'error', message: 'Nama kategori tidak boleh kosong.' });
-      return;
-    }
-    if (!onAddCategory) {
-      setValue('category', trimmed, { shouldValidate: true, shouldDirty: true });
-      setIsManualCategory(false);
-      setManualCategoryInput('');
-      return;
-    }
-
-    setCategoryLoading(true);
-    setCategoryFeedback({ type: '', message: '' });
-    try {
-      const created = await onAddCategory(trimmed);
-      const savedName = created?.nama_kategori || trimmed;
-      setValue('category', savedName, { shouldValidate: true, shouldDirty: true });
-      setIsManualCategory(false);
-      setManualCategoryInput('');
-      setCategoryFeedback({
-        type: 'success',
-        message: `Kategori "${savedName}" berhasil disimpan ke database dan dipilih.`
-      });
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Gagal menyimpan kategori baru.';
-      setCategoryFeedback({ type: 'error', message: msg });
-    } finally {
-      setCategoryLoading(false);
-    }
-  };
-
-  // --- HANDLER UBAH NAMA KATEGORI (ADMIN UNIT) ---
-  const handleSaveEditCategory = async (catObj) => {
-    const trimmed = editingCategoryName.trim();
-    if (!trimmed) {
-      setCategoryFeedback({ type: 'error', message: 'Nama kategori tidak boleh kosong.' });
-      return;
-    }
-    if (trimmed === catObj.nama_kategori) {
-      setEditingCategoryId(null);
-      setEditingCategoryName('');
-      return;
-    }
-    if (!onUpdateCategory) return;
-
-    setCategoryLoading(true);
-    setCategoryFeedback({ type: '', message: '' });
-    try {
-      const updated = await onUpdateCategory(catObj.id, trimmed, catObj.nama_kategori);
-      const newName = updated?.nama_kategori || trimmed;
-      if (watch('category') === catObj.nama_kategori) {
-        setValue('category', newName, { shouldValidate: true });
-      }
-      setEditingCategoryId(null);
-      setEditingCategoryName('');
-      setCategoryFeedback({
-        type: 'success',
-        message: `Kategori berhasil diubah menjadi "${newName}".`
-      });
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Gagal mengubah kategori.';
-      setCategoryFeedback({ type: 'error', message: msg });
-    } finally {
-      setCategoryLoading(false);
-    }
-  };
-
-  // --- HANDLER HAPUS KATEGORI (ADMIN UNIT) ---
-  const handleRemoveCategory = async (catObj) => {
-    if (!onDeleteCategory) return;
-    setCategoryLoading(true);
-    setCategoryFeedback({ type: '', message: '' });
-    try {
-      await onDeleteCategory(catObj.id, catObj.nama_kategori);
-      if (watch('category') === catObj.nama_kategori) {
-        setValue('category', '', { shouldValidate: true });
-      }
-      setCategoryFeedback({
-        type: 'success',
-        message: `Kategori "${catObj.nama_kategori}" berhasil dihapus.`
-      });
-    } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Gagal menghapus kategori.';
-      setCategoryFeedback({ type: 'error', message: msg });
-    } finally {
-      setCategoryLoading(false);
-    }
-  };
 
   // --- HANDLER SUBMIT FORM ---
   // Memproses data formulir setelah lolos validasi RHF untuk dikirimkan ke API backend Laravel
@@ -476,187 +369,23 @@ export default function AssetFormModal({
             {errors.unit && <span className="error-text">{errors.unit.message}</span>}
           </div>
 
-          {/* Input: Kategori Barang */}
+          {/* Input: Kategori Barang (Combobox dengan Auto-Suggest seperti Ruangan & Sumber Dana) */}
           <div className="modal-form-group">
-            <div className="category-label-row">
-              <label className="modal-form-label">Kategori Barang <span className="req-star">*</span></label>
-              {canManageCategories && (
-                <div className="category-header-actions">
-                  <button
-                    type="button"
-                    className={`btn-category-inline ${isManualCategory ? 'active' : ''}`}
-                    onClick={() => {
-                      const nextMode = !isManualCategory;
-                      setIsManualCategory(nextMode);
-                      setCategoryFeedback({ type: '', message: '' });
-                      if (nextMode) {
-                        setManualCategoryInput('');
-                      }
-                    }}
-                  >
-                    <FiPlus size={13} />
-                    <span>{isManualCategory ? 'Pilih dari Daftar' : 'Input Kategori Manual'}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn-category-inline secondary ${isManageCategoriesOpen ? 'active' : ''}`}
-                    onClick={() => {
-                      setIsManageCategoriesOpen(prev => !prev);
-                      setCategoryFeedback({ type: '', message: '' });
-                    }}
-                  >
-                    <FiSettings size={13} />
-                    <span>Kelola Kategori</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {canManageCategories && isManualCategory ? (
-              <div className="manual-category-box">
-                <div className="manual-category-input-row">
-                  <input
-                    type="text"
-                    id="asset-category-manual"
-                    placeholder="Ketik nama kategori baru (contoh: Alat Olahraga)..."
-                    className={`modal-form-input ${errors.category ? 'input-error' : ''}`}
-                    value={manualCategoryInput}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setManualCategoryInput(val);
-                      setValue('category', val.trim(), { shouldValidate: true, shouldDirty: true });
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleSaveManualCategory();
-                      }
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="btn-save-category"
-                    onClick={handleSaveManualCategory}
-                    disabled={categoryLoading || !manualCategoryInput.trim()}
-                  >
-                    {categoryLoading ? 'Menyimpan...' : 'Simpan'}
-                  </button>
-                </div>
-                <span className="manual-category-hint">
-                  Klik <strong>Simpan</strong> untuk langsung menyimpan kategori baru ke database dan menampilkannya di Dashboard.
-                </span>
-              </div>
-            ) : (
-              <select
-                id="asset-category"
-                className={`modal-form-select ${errors.category ? 'input-error' : ''}`}
-                {...register('category', { required: 'Kategori wajib diisi' })}
-                onChange={(e) => {
-                  if (canManageCategories && e.target.value === '__MANUAL__') {
-                    setIsManualCategory(true);
-                    setManualCategoryInput('');
-                    setValue('category', '', { shouldValidate: false });
-                    return;
-                  }
-                  setValue('category', e.target.value, { shouldValidate: true, shouldDirty: true });
-                }}
-              >
-                <option value="" disabled hidden>Pilih Kategori</option>
-                {availableCategories.map((cat, i) => (
-                  <option key={i} value={cat}>{cat}</option>
-                ))}
-                {canManageCategories && (
-                  <option value="__MANUAL__">+ Input Kategori Baru Secara Manual...</option>
-                )}
-              </select>
-            )}
-
-            {categoryFeedback.message && (
-              <div className={`category-feedback-msg ${categoryFeedback.type}`}>
-                {categoryFeedback.message}
-              </div>
-            )}
-
-            {canManageCategories && isManageCategoriesOpen && (
-              <div className="manage-categories-panel">
-                <div className="manage-categories-header">
-                  <span>Daftar Kategori Tersimpan ({categoryObjects.length || availableCategories.length})</span>
-                </div>
-                <div className="manage-categories-list">
-                  {(categoryObjects.length > 0
-                    ? categoryObjects
-                    : availableCategories.map((name, idx) => ({ id: idx + 1, nama_kategori: name }))
-                  ).map((catObj) => (
-                    <div key={catObj.id || catObj.nama_kategori} className="manage-category-item">
-                      {editingCategoryId === catObj.id ? (
-                        <div className="manage-category-edit-row">
-                          <input
-                            type="text"
-                            className="modal-form-input manage-category-edit-input"
-                            value={editingCategoryName}
-                            onChange={(e) => setEditingCategoryName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleSaveEditCategory(catObj);
-                              }
-                            }}
-                          />
-                          <button
-                            type="button"
-                            className="btn-cat-icon save"
-                            title="Simpan Perubahan"
-                            disabled={categoryLoading}
-                            onClick={() => handleSaveEditCategory(catObj)}
-                          >
-                            <FiCheck size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-cat-icon cancel"
-                            title="Batal"
-                            onClick={() => {
-                              setEditingCategoryId(null);
-                              setEditingCategoryName('');
-                            }}
-                          >
-                            <FiX size={14} />
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <span className="manage-category-name">{catObj.nama_kategori}</span>
-                          <div className="manage-category-actions">
-                            <button
-                              type="button"
-                              className="btn-cat-icon edit"
-                              title="Ubah Nama Kategori"
-                              disabled={categoryLoading}
-                              onClick={() => {
-                                setEditingCategoryId(catObj.id);
-                                setEditingCategoryName(catObj.nama_kategori);
-                              }}
-                            >
-                              <FiEdit2 size={13} />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-cat-icon delete"
-                              title="Hapus Kategori"
-                              disabled={categoryLoading}
-                              onClick={() => handleRemoveCategory(catObj)}
-                            >
-                              <FiTrash2 size={13} />
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
+            <label className="modal-form-label">Kategori Barang <span className="req-star">*</span></label>
+            <input
+              type="text"
+              id="asset-category"
+              list="kategori-aset-options"
+              placeholder="Pilih atau ketik kategori baru..."
+              autoComplete="off"
+              className={`modal-form-input ${errors.category ? 'input-error' : ''}`}
+              {...register('category', { required: 'Kategori wajib diisi' })}
+            />
+            <datalist id="kategori-aset-options">
+              {availableCategories.map((cat, i) => (
+                <option key={i} value={cat} />
+              ))}
+            </datalist>
             {errors.category && <span className="error-text">{errors.category.message}</span>}
           </div>
 

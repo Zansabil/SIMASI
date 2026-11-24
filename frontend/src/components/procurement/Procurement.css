@@ -572,6 +572,57 @@
   height: 80px; /* Space for physical signature */
 }
 
+/* Digital Signature QR Code styling */
+.sig-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 95px;
+  margin: 6px 0 8px 0;
+}
+
+.sig-qr-box {
+  padding: 4px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sig-qr-caption {
+  font-size: 9.5px;
+  color: #475569;
+  margin-top: 4px;
+  letter-spacing: 0.2px;
+}
+
+.sig-qr-caption.approved {
+  color: #15803d;
+  font-weight: bold;
+}
+
+.sig-pending-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 95px;
+  margin: 6px 0 8px 0;
+}
+
+.sig-pending-badge {
+  font-size: 11px;
+  font-style: italic;
+  color: #94a3b8;
+  border: 1px dashed #cbd5e1;
+  padding: 8px 14px;
+  border-radius: 4px;
+  background-color: #f8fafc;
+}
+
 .sig-name {
   font-weight: bold;
   text-decoration: underline;
@@ -660,6 +711,22 @@
     image-rendering: crisp-edges !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .sig-qr-box {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .sig-qr-caption {
+    font-size: 8pt !important;
+  }
+
+  .sig-pending-badge {
+    border: 1px dashed #666 !important;
+    background: transparent !important;
+    font-size: 9pt !important;
   }
 
   /* Kop Surat (Letterhead) */

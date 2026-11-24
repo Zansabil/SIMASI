@@ -623,8 +623,8 @@ class AsetController extends Controller
             'tgl_diperoleh'   => 'required|date'
         ]);
 
-        // Jika Admin Unit menginput kategori (jenis_aset) baru secara manual, simpan ke tabel kategori_aset
-        if ((int) auth()->user()->id_peran === 3 && $request->filled('jenis_aset')) {
+        // Jika pengguna menginput kategori (jenis_aset) baru secara manual, simpan ke tabel kategori_aset
+        if (in_array((int) auth()->user()->id_peran, [1, 3]) && $request->filled('jenis_aset')) {
             $namaKategori = preg_replace('/\s+/', ' ', trim($request->jenis_aset));
             $request->merge(['jenis_aset' => $namaKategori]);
             $sudahAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();
@@ -757,7 +757,7 @@ class AsetController extends Controller
             $request->merge(['harga_aset' => $cleanHargaUpdate !== '' ? (int) $cleanHargaUpdate : 0]);
         }
 
-        if ((int) auth()->user()->id_peran === 3 && $request->filled('jenis_aset')) {
+        if (in_array((int) auth()->user()->id_peran, [1, 3]) && $request->filled('jenis_aset')) {
             $namaKategori = preg_replace('/\s+/', ' ', trim($request->jenis_aset));
             $request->merge(['jenis_aset' => $namaKategori]);
             $sudahAda = \App\Models\KategoriAset::whereRaw('LOWER(TRIM(nama_kategori)) = ?', [mb_strtolower($namaKategori)])->first();

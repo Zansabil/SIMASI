@@ -1,5 +1,6 @@
 import React from 'react';
 import { FiPrinter } from 'react-icons/fi';
+import { QRCodeSVG } from 'qrcode.react';
 import logo from '../../assets/logo.png';
 
 const formatRupiah = (number) => {
@@ -18,6 +19,11 @@ export default function ProcurementLetterPreview({
   showConfirm,
   isSubmitting = false
 }) {
+  const isApproved = 
+    previewItem?.status === 'approved' || 
+    previewItem?.status === 'disetujui' || 
+    (Array.isArray(previewItem?.items) && previewItem.items.length > 0 && previewItem.items.every(i => i.status === 'approved' || i.status === 'disetujui'));
+
   return (
     <div className="letter-preview-screen">
       <div className="letter-actions-bar">
@@ -113,26 +119,40 @@ export default function ProcurementLetterPreview({
 
         <div className="letter-signatures-block">
           <div className="sig-col">
-            <span>Mengetahui,</span>
-            <span>Kepala Unit Kerja</span>
-            <div className="sig-spacer"></div>
-            <span className="sig-name">...................................................</span>
-            <span>NIP. ..........................................</span>
-          </div>
-          <div className="sig-col">
             <span>Hormat Kami,</span>
             <span>Pengaju</span>
-            <div className="sig-spacer"></div>
+            <div className="sig-qr-container">
+              <div className="sig-qr-box">
+                <QRCodeSVG 
+                  value={`VERIFIKASI-TTD-SIMASI\nDokumen: Surat Pengajuan Pengadaan Aset\nNo: ${previewItem.letter_number || '-'}\nPengaju: ${previewItem.reporter_name}\nJabatan: ${previewItem.reporter_role || '-'}${previewItem.reporter_unit ? ` (Unit ${previewItem.reporter_unit})` : ''}\nTanggal: ${previewItem.date || '-'}\nStatus: Sah Diajukan via SIMASI`}
+                  size={72}
+                  level="M"
+                />
+              </div>
+              <span className="sig-qr-caption">Ditandatangani secara digital</span>
+            </div>
             <span className="sig-name">{previewItem.reporter_name}</span>
             <span className="sig-role">{previewItem.reporter_role} {previewItem.reporter_unit ? `(Unit ${previewItem.reporter_unit})` : ''}</span>
           </div>
-        </div>
-
-        <div className="letter-approval-row">
-          <div className="sig-col" style={{ width: '250px' }}>
+          <div className="sig-col">
             <span>Menyetujui,</span>
             <span>Ketua Yayasan Amir Ash-Shiddiiqi</span>
-            <div className="sig-spacer" style={{ height: '70px' }}></div>
+            {isApproved ? (
+              <div className="sig-qr-container">
+                <div className="sig-qr-box">
+                  <QRCodeSVG 
+                    value={`PENGESAHAN-YAYASAN-SIMASI\nDokumen: Surat Pengadaan Aset\nNo: ${previewItem.letter_number || '-'}\nOleh: H. Amir Ash-Shiddiiqi, M.Pd.\nJabatan: Ketua Yayasan Amir Ash-Shiddiiqi\nTanggal: ${previewItem.date || '-'}\nStatus: SAH & DISETUJUI`}
+                    size={72}
+                    level="M"
+                  />
+                </div>
+                <span className="sig-qr-caption approved">Disetujui secara digital</span>
+              </div>
+            ) : (
+              <div className="sig-pending-box">
+                <span className="sig-pending-badge">(Menunggu Persetujuan)</span>
+              </div>
+            )}
             <span className="sig-name">H. Amir Ash-Shiddiiqi, M.Pd.</span>
             <span>Ketua Yayasan</span>
           </div>

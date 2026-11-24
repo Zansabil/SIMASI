@@ -322,15 +322,22 @@ export default function useAssetList() {
     }
 
     // Jika ada kategori baru yang tersimpan lewat form aset, sinkronkan daftar kategori
-    if (formData.category && !availableCategories.includes(formData.category)) {
-      try {
-        const categoriesData = await assetService.fetchCategories();
-        if (categoriesData && categoriesData.success && categoriesData.data) {
-          setAvailableCategories(categoriesData.data.map(c => c.nama_kategori));
-          setCategoryObjects(categoriesData.data);
+    if (formData.category) {
+      const catExists = availableCategories.some(
+        c => String(c).trim().toLowerCase() === String(formData.category).trim().toLowerCase()
+      );
+      if (!catExists) {
+        try {
+          const categoriesData = await assetService.fetchCategories();
+          if (categoriesData && categoriesData.success && categoriesData.data) {
+            setAvailableCategories(categoriesData.data.map(c => c.nama_kategori));
+            setCategoryObjects(categoriesData.data);
+          } else {
+            setAvailableCategories(prev => [...prev, formData.category]);
+          }
+        } catch {
+          setAvailableCategories(prev => [...prev, formData.category]);
         }
-      } catch {
-        setAvailableCategories(prev => [...prev, formData.category]);
       }
     }
 
